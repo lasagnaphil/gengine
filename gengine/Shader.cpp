@@ -173,6 +173,6 @@ void Shaders::init() {
     Shaders::point = Resources::make<Shader>("gengine/shaders/point.vert", "gengine/shaders/point.frag");
     Shaders::point->compile();
 
-    Shaders::phong = Resources::make<Shader>("gengine/shaders/phong_shadows.vert", "gengine/shaders/phong_shadows.frag");
+    Shaders::phong = Resources::make<Shader>("gengine/shaders/phong.vert", "gengine/shaders/phong.frag");
     Shaders::phong->compile();
 }

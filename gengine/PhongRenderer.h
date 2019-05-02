@@ -30,6 +30,9 @@ class PhongRenderer {
     const static unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
 
 public:
+
+    bool viewDepthBufferDebug = false;
+
     PhongRenderer() {
         dirLight.enabled = true;
         dirLight.direction = {-1.0f, -1.0f, 1.0f};
@@ -44,7 +47,10 @@ public:
         depthShader->compile();
 
         phongShader = Shaders::phong;
-        phongShader->compile();
+
+        debugDepthShader = Resources::make<Shader>(
+                "gengine/shaders/depth_debug.vert", "gengine/shaders/depth_debug.frag");
+        debugDepthShader->compile();
 
         glGenFramebuffers(1, &depthMapFBO);
 
@@ -62,6 +68,9 @@ public:
         glDrawBuffer(GL_NONE);
         glReadBuffer(GL_NONE);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        debugDepthShader->use();
+        debugDepthShader->setInt("depthMap", 0);
     }
 
     void queueRender(const RenderCommand& command) {
@@ -79,14 +88,15 @@ public:
             shader->setVec4("dirLight.specular", dirLight.specular);
             shader->setFloat("dirLight.intensity", dirLight.intensity);
         }
-        renderPass();
-        /*
-        float near_plane = 1.0f;
-        float far_plane = 7.5f;
+
+        // renderPass();
+
+        float near_plane = 0.1f;
+        float far_plane = 200.f;
 
         glm::mat4 dirLightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
-        glm::vec3 dirLightPos = dirLight.direction * -1000.0f;
-        glm::mat4 dirLightView = glm::lookAt(dirLightPos, {0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f});
+        glm::vec3 dirLightPos = dirLight.direction * -100.0f;
+        glm::mat4 dirLightView = glm::lookAt(dirLightPos, glm::vec3(0.0f), {0.0f, 1.0f, 0.0f});
         glm::mat4 dirLightSpaceMatrix = dirLightProjection * dirLightView;
 
         depthShader->use();
@@ -96,24 +106,34 @@ public:
         glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
         {
             glClear(GL_DEPTH_BUFFER_BIT);
-            renderPass();
+            renderPass(depthShader);
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        glViewport(0, 0, (int) ImGui::GetIO().DisplaySize.x, (int) ImGui::GetIO().DisplaySize.x);
+        glViewport(0, 0, (int) ImGui::GetIO().DisplaySize.x, (int) ImGui::GetIO().DisplaySize.y);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glBindTexture(GL_TEXTURE_2D, depthMap);
-        renderPass();
-         */
+
+        if (viewDepthBufferDebug) {
+            debugDepthShader->use();
+            debugDepthShader->setFloat("near_plane", near_plane);
+            debugDepthShader->setFloat("far_plane", far_plane);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, depthMap);
+            renderDepthMapDebug();
+        }
+        else {
+            renderPass(phongShader);
+        }
+
         renderCommands.clear();
     }
 
 private:
-    void renderPass() {
-        phongShader->use();
+    void renderPass(Ref<Shader> shader) {
+        shader->use();
         for (const RenderCommand& command : renderCommands) {
-            phongShader->setMat4("model", command.modelMatrix);
-            phongShader->setMaterial(*command.material);
+            shader->setMat4("model", command.modelMatrix);
+            shader->setMaterial(*command.material);
             if (command.material->texDiffuse) {
                 glActiveTexture(GL_TEXTURE0);
                 command.material->texDiffuse->bind();
@@ -134,8 +154,37 @@ private:
         }
     }
 
+    void renderDepthMapDebug() {
+        static GLuint quadVAO = 0;
+        static GLuint quadVBO;
+        if (quadVAO == 0) {
+            float quadVertices[] = {
+                    // positions        // texture Coords
+                    -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+                    -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+                    1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+                    1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+            };
+            // setup plane VAO
+            glGenVertexArrays(1, &quadVAO);
+            glGenBuffers(1, &quadVBO);
+            glBindVertexArray(quadVAO);
+            glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+            glEnableVertexAttribArray(0);
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+            glEnableVertexAttribArray(1);
+            glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+        }
+        glBindVertexArray(quadVAO);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        glBindVertexArray(0);
+    }
+
     GLuint depthMapFBO;
     GLuint depthMap;
+
+    GLuint depthMapQuadVBO;
 
     std::vector<RenderCommand> renderCommands;
 
@@ -143,6 +192,7 @@ private:
 
     Ref<Shader> depthShader;
     Ref<Shader> phongShader;
+    Ref<Shader> debugDepthShader;
 };
 
 #endif //MOTION_EDITING_PHONGRENDERER_H
