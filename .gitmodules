@@ -1,0 +1,6 @@
+[submodule "gengine/deps/glm"]
+	path = gengine/deps/glm
+	url = https://github.com/g-truc/glm
+[submodule "gengine/deps/imgui"]
+	path = gengine/deps/imgui
+	url = https://github.com/ocornut/imgui
