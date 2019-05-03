@@ -30,7 +30,6 @@ public:
         groundMat->texSpecular = {};
 
         groundMesh = Mesh::makePlane(1000.0f, 100.0f);
-        groundMesh->initVBO();
 
         Ref<Image> cubeImage = Resources::make<Image>("gengine/resources/textures/container2.png");
         Ref<Texture> cubeTexture = Resources::make<Texture>(cubeImage);
@@ -64,7 +63,6 @@ public:
         cubeTransforms[2]->setScale({6.0f, 6.0f, 6.0f});
 
         cubeMesh = Mesh::makeCube();
-        cubeMesh->initVBO();
     }
 
     void processInput(SDL_Event &event) override {
