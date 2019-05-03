@@ -17,6 +17,7 @@
 #include "Storage.h"
 
 struct Material;
+struct Camera;
 
 class Shader {
 public:
@@ -41,6 +42,7 @@ public:
     void setVec4(const char* name, const glm::vec4& value) const;
     void setVec4(GLint uniID, const glm::vec4& value) const;
     void setMaterial(const Material& material) const;
+    void setCamera(const Camera& camera) const;
 
     GLint getUniformLocation(const char* name);
 

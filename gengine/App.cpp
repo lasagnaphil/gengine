@@ -234,10 +234,6 @@ void App::internalLoadResources() {
     rootTransform->update();
 
     trackballCamera = Camera(rootTransform);
-    trackballCamera.addShader(Shaders::line2D);
-    trackballCamera.addShader(Shaders::line3D);
-    trackballCamera.addShader(Shaders::point);
-    trackballCamera.addShader(Shaders::phong);
 
     loadResources();
 }

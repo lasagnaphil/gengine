@@ -6,6 +6,7 @@
 #include "Shader.h"
 #include "GLUtils.h"
 #include "Material.h"
+#include "Camera.h"
 
 GLuint compileShader(GLenum type, const GLchar *source) {
     GLuint shader = glCreateShader(type);
@@ -160,6 +161,12 @@ void Shader::setMaterial(const Material &material) const {
     }
     setInt("material.texDiffuse", 0);
     setInt("material.texSpecular", 1);
+}
+
+void Shader::setCamera(const Camera &camera) const {
+    setMat4("proj", camera.getPerspectiveMatrix());
+    setMat4("view", camera.getViewMatrix());
+    setVec3("viewPos", camera.transform->getPosition());
 }
 
 GLint Shader::getUniformLocation(const char* name) {

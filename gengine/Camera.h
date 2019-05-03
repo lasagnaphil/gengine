@@ -20,10 +20,6 @@ public:
     Camera() = default;
     explicit Camera(Ref<Transform> parent);
 
-    void addShader(Ref<Shader> shader) {
-        shaders.push_back(shader);
-    }
-
     void update(float dt);
     void updateCameraVectors();
     void renderImGui();
@@ -51,8 +47,6 @@ private:
     float mouseSensitivity;
     IntRect viewport;
     bool constrainPitch;
-
-    std::vector<Ref<Shader>> shaders;
 
     // debug
     float theta = 0.0f;

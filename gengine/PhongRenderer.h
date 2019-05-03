@@ -113,9 +113,7 @@ public:
 
         phongShader->use();
 
-        phongShader->setMat4("proj", camera->getPerspectiveMatrix());
-        phongShader->setMat4("view", camera->getViewMatrix());
-        phongShader->setVec3("viewPos", camera->transform->getPosition());
+        phongShader->setCamera(*camera);
 
         phongShader->setBool("dirLight.enabled", dirLight.enabled);
         phongShader->setVec3("dirLight.direction", dirLight.direction);
