@@ -90,7 +90,7 @@ public:
         float near_plane = 0.1f;
         float far_plane = 1000.f;
 
-        glm::mat4 dirLightProjection = glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, near_plane, far_plane);
+        glm::mat4 dirLightProjection = glm::ortho(-25.0f, 25.0f, -25.0f, 25.0f, near_plane, far_plane);
         glm::vec3 dirLightPos = dirLight.direction * -50.0f;
         glm::mat4 dirLightView = glm::lookAt(dirLightPos, glm::vec3(0.0f), {0.0f, 1.0f, 0.0f});
         glm::mat4 dirLightSpaceMatrix = dirLightProjection * dirLightView;
