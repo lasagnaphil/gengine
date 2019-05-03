@@ -29,7 +29,7 @@ public:
         groundMat->texDiffuse = planeTexture;
         groundMat->texSpecular = {};
 
-        groundMesh = Mesh::makePlane(50.0f, 5.0f);
+        groundMesh = Mesh::makePlane(1000.0f, 100.0f);
         groundMesh->initVBO();
 
         Ref<Image> cubeImage = Resources::make<Image>("gengine/resources/textures/container2.png");
@@ -50,18 +50,18 @@ public:
 
         cubeTransforms[0] = Resources::make<Transform>();
         Transform::addChildToParent(cubeTransforms[0], rootTransform);
-        cubeTransforms[0]->setPosition({6.0f, 2.0f, -4.0f});
-        cubeTransforms[0]->setScale({4.0f, 4.0f, 4.0f});
+        cubeTransforms[0]->setPosition({6.0f, 3.0f, -4.0f});
+        cubeTransforms[0]->setScale({6.0f, 6.0f, 6.0f});
 
         cubeTransforms[1] = Resources::make<Transform>();
         Transform::addChildToParent(cubeTransforms[1], rootTransform);
-        cubeTransforms[1]->setPosition({0.0f, 3.0f, 10.0f});
+        cubeTransforms[1]->setPosition({0.0f, 10.0f, 10.0f});
         cubeTransforms[1]->setScale({6.0f, 6.0f, 6.0f});
 
         cubeTransforms[2] = Resources::make<Transform>();
         Transform::addChildToParent(cubeTransforms[2], rootTransform);
-        cubeTransforms[2]->setPosition({0.0f, 4.0f, -6.0f});
-        cubeTransforms[2]->setScale({8.0f, 8.0f, 8.0f});
+        cubeTransforms[2]->setPosition({0.0f, 12.0f, -2.0f});
+        cubeTransforms[2]->setScale({6.0f, 6.0f, 6.0f});
 
         cubeMesh = Mesh::makeCube();
         cubeMesh->initVBO();
