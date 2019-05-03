@@ -62,14 +62,10 @@ in VS_OUT {
     vec3 FragPos;
     vec3 Normal;
     vec2 TexCoords;
-    vec4 FragPosLightSpace;
+    vec4 FragPos_DirLightSpace;
 } fs_in;
 
 out vec4 fragColor;
-
-in vec3 fragPos;
-in vec3 normal;
-in vec2 texCoord;
 
 uniform vec3 viewPos;
 
@@ -86,8 +82,16 @@ uniform SpotLight spotLights[NR_SPOT_LIGHTS];
 uniform int numPointLights;
 uniform int numSpotLights;
 
-float ShadowCalculation(vec4 fragPosLightSpace) {
-    return 0;
+uniform sampler2D shadowMap;
+
+float shadowCalculation(vec4 fragPosLightSpace) {
+    float bias = 0.005;
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    projCoords = projCoords * 0.5 + 0.5;
+    float closestDepth = texture(shadowMap, projCoords.xy).r;
+    float currentDepth = projCoords.z;
+    float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+    return shadow;
 }
 
 vec4 calcDirLight(DirLight light, vec3 normal, vec3 viewDir, vec4 matDiffuse, vec4 matSpecular) {
@@ -103,8 +107,9 @@ vec4 calcDirLight(DirLight light, vec3 normal, vec3 viewDir, vec4 matDiffuse, ve
     vec4 ambient = light.ambient * matDiffuse;
     vec4 diffuse = light.intensity * light.diffuse * diff * matDiffuse;
     vec4 specular = light.intensity * light.specular * spec * matSpecular;
+    float shadow = shadowCalculation(fs_in.FragPos_DirLightSpace);
 
-    return (ambient + diffuse + specular);
+    return ambient + (1.0 - shadow) * (diffuse + specular);
 }
 
 vec4 calcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec4 matDiffuse, vec4 matSpecular) {
@@ -123,8 +128,9 @@ vec4 calcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, v
     vec4 ambient = light.ambient * matDiffuse;
     vec4 diffuse = light.intensity * light.diffuse * diff * matDiffuse;
     vec4 specular = light.intensity * light.specular * spec * matSpecular;
+    float shadow = shadowCalculation(fs_in.FragPos_DirLightSpace);
 
-    return attenuation * (ambient + diffuse + specular);
+    return attenuation * (ambient + (1.0 - shadow) * (diffuse + specular));
 }
 
 vec4 calcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec4 matDiffuse, vec4 matSpecular) {
@@ -147,28 +153,38 @@ vec4 calcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec
     vec4 ambient = light.ambient * matDiffuse;
     vec4 diffuse = light.intensity * light.diffuse * diff * matDiffuse;
     vec4 specular = light.intensity * light.specular * spec * matSpecular;
+    float shadow = shadowCalculation(fs_in.FragPos_DirLightSpace);
 
-    return attenuation * (ambient + intensity * (diffuse + specular));
+    return attenuation * (ambient + (1.0 - shadow) * intensity * (diffuse + specular));
 }
 
 void main() {
-    vec3 norm = normalize(normal);
-    vec3 viewDir = normalize(viewPos - fragPos);
-    vec4 matDiffuse = material.useTexDiffuse? texture(material.texDiffuse, texCoord) : material.diffuse;
-    vec4 matSpecular = material.useTexSpecular? texture(material.texSpecular, texCoord) : material.specular;
+    vec3 norm = normalize(fs_in.Normal);
+    vec3 viewDir = normalize(viewPos - fs_in.FragPos);
+
+    vec4 matDiffuse, matSpecular;
+    if (material.useTexDiffuse)
+        matDiffuse = texture(material.texDiffuse, fs_in.TexCoords);
+    else
+        matDiffuse = material.diffuse;
+
+    if (material.useTexSpecular)
+        matSpecular = texture(material.texSpecular, fs_in.TexCoords);
+    else
+        matSpecular = material.specular;
 
     vec4 result = vec4(0.0);
     if (dirLight.enabled) result = calcDirLight(dirLight, norm, viewDir, matDiffuse, matSpecular);
 
     for (int i = 0; i < numPointLights; ++i) {
         if (pointLights[i].enabled) {
-            result += calcPointLight(pointLights[i], norm, fragPos, viewDir, matDiffuse, matSpecular);
+            result += calcPointLight(pointLights[i], norm, fs_in.FragPos, viewDir, matDiffuse, matSpecular);
         }
     }
 
     for (int i = 0; i < numSpotLights; ++i) {
         if (spotLights[i].enabled) {
-            result += calcSpotLight(spotLights[i], norm, fragPos, viewDir, matDiffuse, matSpecular);
+            result += calcSpotLight(spotLights[i], norm, fs_in.FragPos, viewDir, matDiffuse, matSpecular);
         }
     }
 

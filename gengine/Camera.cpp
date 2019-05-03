@@ -31,27 +31,6 @@ Camera::Camera(Ref<Transform> parent) :
     updateCameraVectors();
 }
 
-void Camera::setupRender() {
-    perspective = glm::perspective(
-            glm::radians(fov),
-            ImGui::GetIO().DisplaySize.x / ImGui::GetIO().DisplaySize.y,
-            0.1f,
-            1000.0f
-    );
-    view = glm::lookAt(
-            transform->getGlobalPosition(),
-            transform->getGlobalPosition() - transform->getGlobalFrontVec(),
-            transform->getGlobalUpVec());
-
-    for (Ref<Shader> ref : shaders) {
-        Shader* shader = ref.get();
-        shader->use();
-        shader->setVec3("viewPos", transform->getPosition());
-        shader->setMat4("proj", perspective);
-        shader->setMat4("view", view);
-    }
-}
-
 void Camera::update(float dt) {
     auto inputMgr = InputManager::get();
 
@@ -211,12 +190,29 @@ Ray Camera::screenPointToRay(glm::vec2 mousePos) const {
             1.0f - 2.0f * mousePos.y / screenSize.y,
             -1.0f,
             1.0f};
-    auto cameraCoord = glm::inverse(perspective) * homogeneousCoord;
+    auto cameraCoord = glm::inverse(getPerspectiveMatrix()) * homogeneousCoord;
     cameraCoord.z = -1.0; cameraCoord.w = 0.0;
-    auto worldCoord = glm::vec3(glm::inverse(view) * cameraCoord);
+    auto worldCoord = glm::vec3(glm::inverse(getViewMatrix()) * cameraCoord);
     worldCoord = glm::normalize(worldCoord);
 
     return Ray {transform->getGlobalPosition(), worldCoord};
+}
+
+// TODO: cache the perspective and view matrices, to reduce repeating the same computation
+glm::mat4 Camera::getPerspectiveMatrix() const {
+    return glm::perspective(
+            glm::radians(fov),
+            ImGui::GetIO().DisplaySize.x / ImGui::GetIO().DisplaySize.y,
+            0.1f,
+            1000.0f
+    );
+}
+
+glm::mat4 Camera::getViewMatrix() const {
+    return glm::lookAt(
+            transform->getGlobalPosition(),
+            transform->getGlobalPosition() - transform->getGlobalFrontVec(),
+            transform->getGlobalUpVec());
 }
 
 glm::vec3 Camera::calcMouseVec(glm::vec2 mousePos) {

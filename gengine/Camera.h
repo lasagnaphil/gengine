@@ -24,14 +24,15 @@ public:
         shaders.push_back(shader);
     }
 
-    void setupRender();
-
     void update(float dt);
     void updateCameraVectors();
     void renderImGui();
     void processInput(SDL_Event& ev);
 
     Ray screenPointToRay(glm::vec2 mousePos) const;
+    glm::mat4 getPerspectiveMatrix() const;
+    glm::mat4 getViewMatrix() const;
+
 
     Ref<Transform> transform;
     // Ref<Transform> trackballFocus;
@@ -50,9 +51,6 @@ private:
     float mouseSensitivity;
     IntRect viewport;
     bool constrainPitch;
-
-    glm::mat4 view;
-    glm::mat4 perspective;
 
     std::vector<Ref<Shader>> shaders;
 

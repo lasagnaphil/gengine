@@ -56,6 +56,8 @@ public:
     static Ref<Shader> line3D;
     static Ref<Shader> point;
     static Ref<Shader> phong;
+    static Ref<Shader> depth;
+    static Ref<Shader> depthDebug;
 
     static void init();
 };

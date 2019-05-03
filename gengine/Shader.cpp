@@ -144,14 +144,22 @@ void Shader::setMaterial(const Material &material) const {
     setFloat("material.shininess", material.shininess);
     setBool("material.useTexDiffuse", !material.texDiffuse.isNull());
     setBool("material.useTexSpecular", !material.texSpecular.isNull());
-    setInt("material.texDiffuse", 0);
-    setInt("material.texSpecular", 1);
-    if (!material.texDiffuse) {
+    if (material.texDiffuse) {
+        glActiveTexture(GL_TEXTURE0);
+        material.texDiffuse->bind();
+    }
+    else {
         setVec4("material.diffuse", material.diffuse);
     }
-    if (!material.texSpecular) {
+    if (material.texSpecular) {
+        glActiveTexture(GL_TEXTURE1);
+        material.texSpecular->bind();
+    }
+    else {
         setVec4("material.specular", material.specular);
     }
+    setInt("material.texDiffuse", 0);
+    setInt("material.texSpecular", 1);
 }
 
 GLint Shader::getUniformLocation(const char* name) {
@@ -162,6 +170,8 @@ Ref<Shader> Shaders::line2D = {};
 Ref<Shader> Shaders::line3D = {};
 Ref<Shader> Shaders::point = {};
 Ref<Shader> Shaders::phong = {};
+Ref<Shader> Shaders::depth = {};
+Ref<Shader> Shaders::depthDebug = {};
 
 void Shaders::init() {
     Shaders::line2D = Resources::make<Shader>("gengine/shaders/line2d.vert", "gengine/shaders/line2d.frag");
@@ -173,6 +183,12 @@ void Shaders::init() {
     Shaders::point = Resources::make<Shader>("gengine/shaders/point.vert", "gengine/shaders/point.frag");
     Shaders::point->compile();
 
-    Shaders::phong = Resources::make<Shader>("gengine/shaders/phong.vert", "gengine/shaders/phong.frag");
+    Shaders::phong = Resources::make<Shader>("gengine/shaders/phong_shadows.vert", "gengine/shaders/phong_shadows.frag");
     Shaders::phong->compile();
+
+    Shaders::depth = Resources::make<Shader>("gengine/shaders/depth.vert", "gengine/shaders/depth.frag");
+    Shaders::depth->compile();
+
+    Shaders::depthDebug = Resources::make<Shader>("gengine/shaders/depth_debug.vert", "gengine/shaders/depth_debug.frag");
+    Shaders::depthDebug->compile();
 }

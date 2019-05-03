@@ -19,7 +19,7 @@
 
 class App {
 public:
-    App(bool useDisplayFPS = false) : useDisplayFPS(useDisplayFPS) {}
+    App(bool useDisplayFPS = false) : useDisplayFPS(useDisplayFPS), phongRenderer(&trackballCamera) {}
     ~App();
     void start();
     virtual void loadResources();

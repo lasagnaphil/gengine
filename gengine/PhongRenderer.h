@@ -33,10 +33,10 @@ public:
 
     bool viewDepthBufferDebug = false;
 
-    PhongRenderer() {
+    PhongRenderer(Camera* camera) : camera(camera) {
         dirLight.enabled = true;
-        dirLight.direction = {-1.0f, -1.0f, 1.0f};
-        dirLight.ambient = {0.5f, 0.5f, 0.5f, 1.0f};
+        dirLight.direction = glm::normalize(glm::vec3 {2.0f, -4.0f, 2.0f});
+        dirLight.ambient = {0.3f, 0.3f, 0.3f, 0.3f};
         dirLight.diffuse = {1.0f, 1.0f, 1.0f, 1.0f};
         dirLight.specular = {1.0f, 1.0f, 1.0f, 1.0f};
         dirLight.intensity = 1.0f;
@@ -60,8 +60,8 @@ public:
                 SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
         glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
@@ -69,6 +69,9 @@ public:
         glReadBuffer(GL_NONE);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+        phongShader->use();
+        phongShader->setInt("diffuseTexture", 0);
+        phongShader->setInt("shadowMap", 1);
         debugDepthShader->use();
         debugDepthShader->setInt("depthMap", 0);
     }
@@ -78,29 +81,20 @@ public:
     }
 
     void render() {
-        for (Ref<Shader> ref : {phongShader}) {
-            auto* shader = ref.get();
-			shader->use();
-            shader->setBool("dirLight.enabled", dirLight.enabled);
-            shader->setVec3("dirLight.direction", dirLight.direction);
-            shader->setVec4("dirLight.ambient", dirLight.ambient);
-            shader->setVec4("dirLight.diffuse", dirLight.diffuse);
-            shader->setVec4("dirLight.specular", dirLight.specular);
-            shader->setFloat("dirLight.intensity", dirLight.intensity);
-        }
-
         // renderPass();
 
+        const unsigned int SCREEN_WIDTH = ImGui::GetIO().DisplaySize.x;
+        const unsigned int SCREEN_HEIGHT = ImGui::GetIO().DisplaySize.y;
         float near_plane = 0.1f;
-        float far_plane = 200.f;
+        float far_plane = 1000.f;
 
-        glm::mat4 dirLightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
-        glm::vec3 dirLightPos = dirLight.direction * -100.0f;
+        glm::mat4 dirLightProjection = glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, near_plane, far_plane);
+        glm::vec3 dirLightPos = dirLight.direction * -50.0f;
         glm::mat4 dirLightView = glm::lookAt(dirLightPos, glm::vec3(0.0f), {0.0f, 1.0f, 0.0f});
         glm::mat4 dirLightSpaceMatrix = dirLightProjection * dirLightView;
 
         depthShader->use();
-        depthShader->setMat4("lightSpaceMatrix", dirLightSpaceMatrix);
+        depthShader->setMat4("dirLightSpaceMatrix", dirLightSpaceMatrix);
 
         glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
         glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
@@ -110,19 +104,37 @@ public:
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        glViewport(0, 0, (int) ImGui::GetIO().DisplaySize.x, (int) ImGui::GetIO().DisplaySize.y);
+        glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        phongShader->use();
+
+        phongShader->setMat4("proj", camera->getPerspectiveMatrix());
+        phongShader->setMat4("view", camera->getViewMatrix());
+        phongShader->setVec3("viewPos", camera->transform->getPosition());
+
+        phongShader->setBool("dirLight.enabled", dirLight.enabled);
+        phongShader->setVec3("dirLight.direction", dirLight.direction);
+        phongShader->setVec4("dirLight.ambient", dirLight.ambient);
+        phongShader->setVec4("dirLight.diffuse", dirLight.diffuse);
+        phongShader->setVec4("dirLight.specular", dirLight.specular);
+        phongShader->setFloat("dirLight.intensity", dirLight.intensity);
+        phongShader->setMat4("dirLightSpaceMatrix", dirLightSpaceMatrix);
+
+        glActiveTexture(GL_TEXTURE8);
+        glBindTexture(GL_TEXTURE_2D, depthMap);
+        phongShader->setInt("shadowMap", 8);
+
+        renderPass(phongShader);
 
         if (viewDepthBufferDebug) {
             debugDepthShader->use();
             debugDepthShader->setFloat("near_plane", near_plane);
             debugDepthShader->setFloat("far_plane", far_plane);
-            glActiveTexture(GL_TEXTURE0);
+            glActiveTexture(GL_TEXTURE8);
             glBindTexture(GL_TEXTURE_2D, depthMap);
+            debugDepthShader->setInt("depthMap", 8);
             renderDepthMapDebug();
-        }
-        else {
-            renderPass(phongShader);
         }
 
         renderCommands.clear();
@@ -134,14 +146,6 @@ private:
         for (const RenderCommand& command : renderCommands) {
             shader->setMat4("model", command.modelMatrix);
             shader->setMaterial(*command.material);
-            if (command.material->texDiffuse) {
-                glActiveTexture(GL_TEXTURE0);
-                command.material->texDiffuse->bind();
-            }
-            if (command.material->texSpecular) {
-                glActiveTexture(GL_TEXTURE1);
-                command.material->texSpecular->bind();
-            }
 
             glBindVertexArray(command.mesh->vao);
             if (command.mesh->indices.empty()) {
@@ -184,11 +188,10 @@ private:
     GLuint depthMapFBO;
     GLuint depthMap;
 
-    GLuint depthMapQuadVBO;
-
     std::vector<RenderCommand> renderCommands;
 
     DirLight dirLight;
+    Camera* camera;
 
     Ref<Shader> depthShader;
     Ref<Shader> phongShader;

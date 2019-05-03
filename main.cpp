@@ -23,39 +23,44 @@ public:
         checkerImage.release();
 
         groundMat = Resources::make<Material>();
-        groundMat->ambient = {0.3f, 0.3f, 0.3f, 1.0f};
-        groundMat->diffuse = {1.0f, 1.0f, 1.0f, 1.0f};
+        groundMat->ambient = {0.1f, 0.1f, 0.1f, 1.0f};
         groundMat->specular = {0.7f, 0.7f, 0.7f, 1.0f};
         groundMat->shininess = 32.0f;
         groundMat->texDiffuse = planeTexture;
         groundMat->texSpecular = {};
 
-        groundMesh = Mesh::makePlane(1000.0f, 100.0f);
+        groundMesh = Mesh::makePlane(50.0f, 5.0f);
         groundMesh->initVBO();
 
+        Ref<Image> cubeImage = Resources::make<Image>("gengine/resources/textures/container2.png");
+        Ref<Texture> cubeTexture = Resources::make<Texture>(cubeImage);
+        cubeImage.release();
+
+        Ref<Image> cubeSpecularImage = Resources::make<Image>("gengine/resources/textures/container2_specular.png");
+        Ref<Texture> cubeSpecularTexture = Resources::make<Texture>(cubeSpecularImage);
+        cubeSpecularImage.release();
+
         cubeMat = Resources::make<Material>();
-        cubeMat->ambient = {0.3f, 0.3f, 0.3f, 1.0f};
-        cubeMat->diffuse = {1.0f, 0.0f, 0.0f, 1.0f};
-        cubeMat->specular = {1.0f, 0.0f, 0.0f, 1.0f};
+        cubeMat->ambient = {0.0f, 0.0f, 0.0f, 1.0f};
         cubeMat->shininess = 32.0f;
-        cubeMat->texDiffuse = {};
-        cubeMat->texSpecular = {};
+        cubeMat->texDiffuse = cubeTexture;
+        cubeMat->texSpecular = cubeSpecularTexture;
 
         cubeTransforms.resize(3);
 
         cubeTransforms[0] = Resources::make<Transform>();
         Transform::addChildToParent(cubeTransforms[0], rootTransform);
-        cubeTransforms[0]->setPosition({0.0f, 5.0f, 0.0f});
+        cubeTransforms[0]->setPosition({6.0f, 2.0f, -4.0f});
         cubeTransforms[0]->setScale({4.0f, 4.0f, 4.0f});
 
         cubeTransforms[1] = Resources::make<Transform>();
         Transform::addChildToParent(cubeTransforms[1], rootTransform);
-        cubeTransforms[1]->setPosition({0.0f, 0.0f, 5.0f});
+        cubeTransforms[1]->setPosition({0.0f, 3.0f, 10.0f});
         cubeTransforms[1]->setScale({6.0f, 6.0f, 6.0f});
 
         cubeTransforms[2] = Resources::make<Transform>();
         Transform::addChildToParent(cubeTransforms[2], rootTransform);
-        cubeTransforms[2]->setPosition({0.0f, 0.0f, -5.0f});
+        cubeTransforms[2]->setPosition({0.0f, 4.0f, -6.0f});
         cubeTransforms[2]->setScale({8.0f, 8.0f, 8.0f});
 
         cubeMesh = Mesh::makeCube();

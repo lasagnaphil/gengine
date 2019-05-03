@@ -8,23 +8,19 @@ out VS_OUT {
     vec3 FragPos;
     vec3 Normal;
     vec2 TexCoords;
-    vec4 FragPosLightSpace;
+    vec4 FragPos_DirLightSpace;
 } vs_out;
 
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 proj;
-uniform mat4 lightSpaceMatrix;
-
-out vec3 fragPos;
-out vec3 normal;
-out vec2 texCoord;
+uniform mat4 dirLightSpaceMatrix;
 
 void main()
 {
     vs_out.FragPos = vec3(model * vec4(inPos, 1.0));
     vs_out.Normal = mat3(transpose(inverse(model))) * inNormal;
     vs_out.TexCoords = inTexCoord;
-    vs_out.FragPosLightSpace = lightSpaceMatrix * vec4(vs_out.FragPos, 1.0);
+    vs_out.FragPos_DirLightSpace = dirLightSpaceMatrix * vec4(vs_out.FragPos, 1.0);
     gl_Position = proj * view * model * vec4(inPos, 1.0);
 }
