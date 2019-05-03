@@ -1,3 +1,6 @@
+# Threads
+find_package(Threads REQUIRED)
+
 # SDL2
 find_package(SDL2 REQUIRED)
 
@@ -35,7 +38,7 @@ add_library(gengine STATIC ${RENDER_SOURCES})
 
 target_include_directories(gengine
         PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(gengine SDL2 glad imgui stb glm span-lite)
+target_link_libraries(gengine ${CMAKE_DL_LIBS} Threads::Threads SDL2 glad imgui stb glm span-lite)
 
 add_custom_command(
         TARGET gengine POST_BUILD
