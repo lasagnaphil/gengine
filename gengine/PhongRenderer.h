@@ -39,7 +39,7 @@ public:
         dirLight.ambient = {0.3f, 0.3f, 0.3f, 0.3f};
         dirLight.diffuse = {1.0f, 1.0f, 1.0f, 1.0f};
         dirLight.specular = {1.0f, 1.0f, 1.0f, 1.0f};
-        dirLight.intensity = 0.8f;
+        dirLight.intensity = 0.5f;
     }
 
     void init() {
@@ -152,11 +152,11 @@ private:
             glBindVertexArray(command.mesh->vao);
             if (command.mesh->indices.empty()) {
                 glDrawArrays(GL_TRIANGLES, 0, command.mesh->vertices.size());
-                glBindVertexArray(0);
             }
             else {
                 glDrawElements(GL_TRIANGLES, command.mesh->indices.size(), GL_UNSIGNED_INT, 0);
             }
+            glBindVertexArray(0);
         }
     }
 
