@@ -85,7 +85,7 @@ uniform int numSpotLights;
 uniform sampler2D shadowMap;
 
 float shadowCalculation(vec4 fragPosLightSpace) {
-    float bias = 0.005;
+    float bias = 0.0005;
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     projCoords = projCoords * 0.5 + 0.5;
     float currentDepth = projCoords.z;
