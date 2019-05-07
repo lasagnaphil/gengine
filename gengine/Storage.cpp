@@ -9,6 +9,7 @@
 #include "Image.h"
 #include "Material.h"
 #include "Mesh.h"
+#include "LineMesh.h"
 
 #define LIST_OF_VARIABLES \
     GLOBAL_TYPE(Transform, 1, 8) \
@@ -16,7 +17,9 @@
     GLOBAL_TYPE(Texture, 3, 8) \
     GLOBAL_TYPE(Image, 4, 8) \
     GLOBAL_TYPE(Material, 5, 8) \
-    GLOBAL_TYPE(Mesh, 6, 8)
+    GLOBAL_TYPE(Mesh, 6, 8) \
+    GLOBAL_TYPE(LineMaterial, 7, 8) \
+    GLOBAL_TYPE(LineMesh, 8, 8)
 
 #define GLOBAL_TYPE(__Type, __id, __capacity) \
 template <> uint16_t TypeRegistry::getID<__Type>() { return __id; } \

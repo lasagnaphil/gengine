@@ -2,8 +2,8 @@
 // Created by lasagnaphil on 19. 3. 11.
 //
 
-#ifndef MOTION_EDITING_LINEMESH3D_H
-#define MOTION_EDITING_LINEMESH3D_H
+#ifndef MOTION_EDITING_LINEMESH_H
+#define MOTION_EDITING_LINEMESH_H
 
 #include <glm/vec3.hpp>
 #include <glm/mat4x4.hpp>
@@ -12,11 +12,20 @@
 
 #include "Storage.h"
 
-class LineMesh3D {
-public:
-    LineMesh3D() = default;
+struct LineMaterial {
+    GLenum lineType;
+    bool drawLines = true;
+    bool drawPoints = true;
+    glm::vec4 lineColor;
+    glm::vec4 pointColor;
+    float lineWidth;
+    float pointSize;
+};
 
-    LineMesh3D(std::vector<glm::vec3> positions) :
+struct LineMesh {
+    LineMesh() = default;
+
+    LineMesh(std::vector<glm::vec3> positions) :
         positions(std::move(positions)) {}
 
     void init();
@@ -35,8 +44,6 @@ public:
 
     void subdivisionBSpline(int interpFactor);
 
-    void draw(const glm::mat4& model);
-
     void updateBuffers();
 
     void updateAllPoints(nonstd::span<glm::vec3> points);
@@ -45,19 +52,8 @@ public:
 
     std::vector<glm::vec3> positions;
 
-    bool drawLines = true;
-    bool drawPoints = false;
-
-    GLenum lineType = GL_LINE_STRIP;
-    float lineWidth = 1.0f;
-    glm::vec4 lineColor = {1.0f, 0.0f, 0.0f, 1.0f};
-
-    float pointSize = 4.0f;
-    glm::vec4 pointColor;
-
-private:
     GLuint vao;
     GLuint vbo;
 };
 
-#endif //MOTION_EDITING_LINEMESH3D_H
+#endif //MOTION_EDITING_LINEMESH_H

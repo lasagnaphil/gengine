@@ -16,10 +16,15 @@
 #include "Shader.h"
 #include "Camera.h"
 #include "PhongRenderer.h"
+#include "GizmosRenderer.h"
 
 class App {
 public:
-    App(bool useDisplayFPS = false) : useDisplayFPS(useDisplayFPS), phongRenderer(&trackballCamera) {}
+    App(bool useDisplayFPS = false) :
+        useDisplayFPS(useDisplayFPS),
+        phongRenderer(&trackballCamera),
+        gizmosRenderer(&trackballCamera) {}
+
     ~App();
     void start();
     virtual void loadResources();
@@ -32,6 +37,7 @@ public:
 
 protected:
     PhongRenderer phongRenderer;
+    GizmosRenderer gizmosRenderer;
     Ref<Transform> rootTransform;
     Camera trackballCamera;
 

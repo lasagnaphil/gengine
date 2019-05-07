@@ -161,6 +161,7 @@ void App::start() {
     internalLoadResources();
 
     phongRenderer.init();
+    gizmosRenderer.init();
 
     //
     // Program loop

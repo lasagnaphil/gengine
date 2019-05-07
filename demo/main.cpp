@@ -8,6 +8,7 @@
 #include <InputManager.h>
 #include "App.h"
 #include "PhongRenderer.h"
+#include "GizmosRenderer.h"
 
 class MyApp : public App {
 public:
@@ -63,6 +64,24 @@ public:
         cubeTransforms[2]->setScale({6.0f, 6.0f, 6.0f});
 
         cubeMesh = Mesh::makeCube();
+
+        std::vector<glm::vec3> positions = {
+                {0.0f, 0.0f, 0.0f},
+                {0.0f, 5.0f, 0.0f},
+                {5.0f, 5.0f, 0.0f},
+        };
+
+        lineMesh = Resources::make<LineMesh>(positions);
+        lineMesh->subdivisionBSpline(3);
+        lineMesh->init();
+        lineMat = Resources::make<LineMaterial>();
+        lineMat->lineType = GL_LINE_STRIP;
+        lineMat->drawLines = true;
+        lineMat->drawPoints = true;
+        lineMat->lineColor = {1.0f, 0.0f, 0.0f, 1.0f};
+        lineMat->lineWidth = 1.0f;
+        lineMat->pointColor = {1.0f, 0.0f, 0.0f, 1.0f};
+        lineMat->pointSize = 3.0f;
     }
 
     void processInput(SDL_Event &event) override {
@@ -81,6 +100,9 @@ public:
             phongRenderer.queueRender({cubeMesh, cubeMat, transform->getWorldTransform()});
         }
         phongRenderer.render();
+
+        gizmosRenderer.queueLine({lineMesh, lineMat, glm::mat4(1.0f)});
+        gizmosRenderer.render();
     }
 
     void release() override {
@@ -91,6 +113,8 @@ private:
     Ref<Material> cubeMat;
     Ref<Mesh> groundMesh;
     Ref<Mesh> cubeMesh;
+    Ref<LineMesh> lineMesh;
+    Ref<LineMaterial> lineMat;
     std::vector<Ref<Transform>> cubeTransforms;
 };
 
