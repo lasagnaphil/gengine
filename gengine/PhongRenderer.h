@@ -43,14 +43,9 @@ public:
     }
 
     void init() {
-        depthShader = Resources::make<Shader>("gengine/shaders/depth.vert", "gengine/shaders/depth.frag");
-        depthShader->compile();
-
+        depthShader = Shaders::depth;
+        debugDepthShader = Shaders::depthDebug;
         phongShader = Shaders::phong;
-
-        debugDepthShader = Resources::make<Shader>(
-                "gengine/shaders/depth_debug.vert", "gengine/shaders/depth_debug.frag");
-        debugDepthShader->compile();
 
         glGenFramebuffers(1, &depthMapFBO);
 

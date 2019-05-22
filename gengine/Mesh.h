@@ -43,7 +43,7 @@ struct Mesh {
     void initVBO();
     void updateVBO();
 
-    static Ref<Mesh> makeCube(const glm::vec3& scale = {1.0f, 1.0f, 1.0f});;
+    static Ref<Mesh> makeCube(const glm::vec3& scale = {1.0f, 1.0f, 1.0f});
     static Ref<Mesh> makePlane(float size = 1.0f, float uvSize = 1.0f);
     static Ref<Mesh> makeCylinder(unsigned int numQuads, float r, float h);
     static Ref<Mesh> makeCone(unsigned int numTriangles, float r, float h);

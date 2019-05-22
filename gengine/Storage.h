@@ -11,6 +11,8 @@
 #include <vector>
 #include <cstdint>
 #include <cstdlib>
+#include <optional>
+
 #include "IDisposable.h"
 
 class TypeRegistry {
@@ -21,8 +23,7 @@ public:
 template <typename T>
 struct Ref {
     uint32_t index;
-    uint16_t generation;
-    uint16_t tid;
+    uint32_t generation;
 
     static Ref fromInt64(int64_t data) {
         return *reinterpret_cast<Ref*>(&data);
@@ -36,11 +37,11 @@ struct Ref {
     }
 
     bool isNull() const {
-        return tid == 0;
+        return generation == 0;
     }
 
     explicit operator bool() const {
-        return tid != 0;
+        return generation != 0;
     }
 
     T* operator->() const;
@@ -55,55 +56,47 @@ template <typename T>
 struct Storage {
 
     struct ItemNode {
-        T item;
+        std::optional<T> item;
         uint32_t nextIndex;
-        uint16_t generation;
-        uint16_t free : 1;
+        uint32_t generation;
     };
 
-    ItemNode* nodes;
+    std::vector<ItemNode> nodes;
 
     uint32_t count;
     uint32_t capacity;
 
     uint32_t firstAvailable;
 
-    uint16_t tid;
-
     Storage(uint32_t capacity = 1) :
-        count(0), capacity(capacity), firstAvailable(0), tid(TypeRegistry::getID<T>())
+        count(0), capacity(capacity), nodes(capacity), firstAvailable(0)
     {
-        nodes = (ItemNode*) malloc(sizeof(ItemNode) * capacity);
         for (uint32_t i = 0; i < capacity; ++i) {
+            nodes[i].item = std::nullopt;
             nodes[i].nextIndex = i + 1;
-            nodes[i].generation = 0;
-            nodes[i].free = 1;
+            nodes[i].generation = 1;
         }
     }
 
     ~Storage() {
         for (uint32_t i = 0; i < capacity; ++i) {
-            if (!nodes[i].free) {
+            if (nodes[i].item) {
                 if constexpr (std::is_base_of<IDisposable, T>()) {
-                    nodes[i].item.dispose();
+                    nodes[i].item->dispose();
                 }
-                nodes[i].item.~T();
             }
         }
-        free(nodes);
     }
 
     void expand(uint32_t newCapacity) {
         assert (newCapacity >= capacity);
 
-        ItemNode* tempNodes = nodes;
-        nodes = (ItemNode*) malloc(sizeof(ItemNode) * newCapacity);
-        memcpy(nodes, tempNodes, sizeof(ItemNode) * capacity);
+        nodes.resize(newCapacity);
 
         for (uint32_t i = capacity; i < newCapacity; ++i) {
+            nodes[i].item = std::nullopt;
             nodes[i].nextIndex = i + 1;
-            nodes[i].generation = 0;
-            nodes[i].free = 1;
+            nodes[i].generation = 1;
         }
 
         capacity = newCapacity;
@@ -119,22 +112,17 @@ struct Storage {
         // delete node from free list
         uint32_t newIndex = firstAvailable;
         ItemNode& node = nodes[newIndex];
-        new (&node.item) T(args...);
+        node.item = T(args...);
         firstAvailable = node.nextIndex;
 
         node.generation++;
-        node.free = 0;
 
         count++;
 
         Ref<T> ref;
 
         // also return the reference object of the resource
-        ref.index = newIndex;
-        ref.generation = node.generation;
-        ref.tid = tid;
-
-        return ref;
+        return Ref<T> {newIndex, node.generation};
     }
 
     bool has(Ref<T> ref) const {
@@ -145,7 +133,7 @@ struct Storage {
     const T* get(Ref<T> ref) const {
         const ItemNode& node = nodes[ref.index];
 
-        assert(!node.free);
+        assert(node.item);
         assert(node.generation == ref.generation);
 
         return &node.item;
@@ -154,17 +142,17 @@ struct Storage {
     T* get(Ref<T> ref) {
         ItemNode& node = nodes[ref.index];
 
-        assert(!node.free);
+        assert(node.item);
         assert(node.generation == ref.generation);
 
-        return &node.item;
+        return &*node.item;
     }
 
     const T* tryGet(Ref<T> ref) const {
         const ItemNode& node = nodes[ref.index];
 
-        if (!node.free && node.generation == ref.generation) {
-            return &node.item;
+        if (node.item && node.generation == ref.generation) {
+            return &*node.item;
         }
         else {
             return nullptr;
@@ -174,8 +162,8 @@ struct Storage {
     T* tryGet(Ref<T> ref) {
         ItemNode& node = nodes[ref.index];
 
-        if (!node.free && node.generation == ref.generation) {
-            return &node.item;
+        if (node.item && node.generation == ref.generation) {
+            return &*node.item;
         }
         else {
             return nullptr;
@@ -185,15 +173,14 @@ struct Storage {
     void release(Ref<T> ref) {
         ItemNode& node = nodes[ref.index];
 
-        assert(!node.free);
+        assert(node.item);
         assert(node.generation == ref.generation);
 
-        node.free = 1;
         std::swap(node.nextIndex, firstAvailable);
         if constexpr (std::is_base_of<IDisposable, T>()) {
-            node.item.dispose();
+            node.item->dispose();
         }
-        node.item.~T();
+        node.item = std::nullopt;
 
         count--;
     }
