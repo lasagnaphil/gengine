@@ -6,6 +6,7 @@
 #define GENGINE_GIZMOSRENDERER_H
 
 #include "LineMesh.h"
+#include "Camera.h"
 
 struct LineRenderCommand {
     Ref<LineMesh> mesh;
