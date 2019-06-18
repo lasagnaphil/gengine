@@ -27,6 +27,11 @@ set(STB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/stb)
 add_library(stb INTERFACE)
 target_include_directories(stb INTERFACE ${STB_DIR})
 
+# tinyml2
+set(TINYXML2_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/tinyxml2)
+add_library(tinyxml2 STATIC ${TINYXML2_DIR}/tinyxml2.cpp)
+target_include_directories(tinyxml2 PUBLIC ${TINYXML2_DIR})
+
 # span-lite
 set(SPAN_LITE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/span-lite)
 add_library(span-lite INTERFACE)
@@ -38,7 +43,7 @@ add_library(gengine STATIC ${RENDER_SOURCES})
 
 target_include_directories(gengine
         PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(gengine ${CMAKE_DL_LIBS} Threads::Threads SDL2 glad imgui stb glm span-lite)
+target_link_libraries(gengine ${CMAKE_DL_LIBS} Threads::Threads SDL2 glad imgui stb glm tinyxml2 span-lite)
 
 add_custom_command(
         TARGET gengine POST_BUILD
