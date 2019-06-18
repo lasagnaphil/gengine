@@ -8,6 +8,19 @@
 #include "Material.h"
 #include "Camera.h"
 
+#include "shaders/line2d.vert.h"
+#include "shaders/line2d.frag.h"
+#include "shaders/line3d.vert.h"
+#include "shaders/line3d.frag.h"
+#include "shaders/point.vert.h"
+#include "shaders/point.frag.h"
+#include "shaders/phong_shadows.vert.h"
+#include "shaders/phong_shadows.frag.h"
+#include "shaders/depth.vert.h"
+#include "shaders/depth.frag.h"
+#include "shaders/depth_debug.vert.h"
+#include "shaders/depth_debug.frag.h"
+
 GLuint compileShader(GLenum type, const GLchar *source) {
     GLuint shader = glCreateShader(type);
 
@@ -30,7 +43,7 @@ GLuint compileShader(GLenum type, const GLchar *source) {
     return shader;
 }
 
-static std::string loadFile(const std::string& path) {
+std::string loadFile(const std::string& path) {
     std::string contents;
     std::ifstream fs;
 
@@ -46,10 +59,8 @@ static std::string loadFile(const std::string& path) {
     return buf.str();
 }
 
-void Shader::compile() {
-    bool hasGeom = !geometryPath.empty();
-
-    program = glCreateProgram();
+void Shader::compileFromFile(const char *vertexPath, const char *fragmentPath, const char *geometryPath) {
+    bool hasGeom = geometryPath != nullptr;
 
     std::string vertexCode = loadFile(vertexPath);
     std::string fragmentCode = loadFile(fragmentPath);
@@ -61,16 +72,23 @@ void Shader::compile() {
 
     const GLchar* vertexCodePtr = vertexCode.data();
     const GLchar* fragmentCodePtr = fragmentCode.data();
+    const GLchar* geometryCodePtr = hasGeom? geometryCode.data() : nullptr;
 
-    GLuint vertexShaderPtr = compileShader(GL_VERTEX_SHADER, vertexCodePtr);
-    GLuint fragmentShaderPtr = compileShader(GL_FRAGMENT_SHADER, fragmentCodePtr);
+    compileFromString(vertexCodePtr, fragmentCodePtr, geometryCodePtr);
+}
+
+void Shader::compileFromString(const char* vertexSrc, const char* fragmentSrc, const char* geomSrc) {
+
+    program = glCreateProgram();
+
+    GLuint vertexShaderPtr = compileShader(GL_VERTEX_SHADER, vertexSrc);
+    GLuint fragmentShaderPtr = compileShader(GL_FRAGMENT_SHADER, fragmentSrc);
     glAttachShader(program, vertexShaderPtr);
     glAttachShader(program, fragmentShaderPtr);
 
     GLuint geometryShaderPtr;
-    if (hasGeom) {
-        const GLchar* geometryCodePtr = geometryCode.data();
-        geometryShaderPtr = compileShader(GL_GEOMETRY_SHADER, geometryCodePtr);
+    if (geomSrc) {
+        geometryShaderPtr = compileShader(GL_GEOMETRY_SHADER, geomSrc);
         glAttachShader(program, geometryShaderPtr);
     }
 
@@ -85,7 +103,7 @@ void Shader::compile() {
 
     glDeleteShader(vertexShaderPtr);
     glDeleteShader(fragmentShaderPtr);
-    if (hasGeom) glDeleteShader(geometryShaderPtr);
+    if (geomSrc) glDeleteShader(geometryShaderPtr);
 }
 
 void Shader::use() const {
@@ -173,6 +191,7 @@ GLint Shader::getUniformLocation(const char* name) {
     return glGetUniformLocation(program, name);
 }
 
+
 Ref<Shader> Shaders::line2D = {};
 Ref<Shader> Shaders::line3D = {};
 Ref<Shader> Shaders::point = {};
@@ -181,21 +200,21 @@ Ref<Shader> Shaders::depth = {};
 Ref<Shader> Shaders::depthDebug = {};
 
 void Shaders::init() {
-    Shaders::line2D = Resources::make<Shader>("gengine/shaders/line2d.vert", "gengine/shaders/line2d.frag");
-    Shaders::line2D->compile();
+    Shaders::line2D = Resources::make<Shader>("line2d");
+    Shaders::line2D->compileFromString(line2d_vert_shader, line2d_frag_shader);
 
-    Shaders::line3D = Resources::make<Shader>("gengine/shaders/line3d.vert", "gengine/shaders/line3d.frag");
-    Shaders::line3D->compile();
+    Shaders::line3D = Resources::make<Shader>("line3d");
+    Shaders::line3D->compileFromString(line3d_vert_shader, line3d_frag_shader);
 
-    Shaders::point = Resources::make<Shader>("gengine/shaders/point.vert", "gengine/shaders/point.frag");
-    Shaders::point->compile();
+    Shaders::point = Resources::make<Shader>("point");
+    Shaders::point->compileFromString(point_vert_shader, point_frag_shader);
 
-    Shaders::phong = Resources::make<Shader>("gengine/shaders/phong_shadows.vert", "gengine/shaders/phong_shadows.frag");
-    Shaders::phong->compile();
+    Shaders::phong = Resources::make<Shader>("phong");
+    Shaders::phong->compileFromString(phong_shadows_vert_shader, phong_shadows_frag_shader);
 
-    Shaders::depth = Resources::make<Shader>("gengine/shaders/depth.vert", "gengine/shaders/depth.frag");
-    Shaders::depth->compile();
+    Shaders::depth = Resources::make<Shader>("depth");
+    Shaders::depth->compileFromString(depth_vert_shader, depth_frag_shader);
 
-    Shaders::depthDebug = Resources::make<Shader>("gengine/shaders/depth_debug.vert", "gengine/shaders/depth_debug.frag");
-    Shaders::depthDebug->compile();
+    Shaders::depthDebug = Resources::make<Shader>("depth_debug");
+    Shaders::depthDebug->compileFromString(depth_debug_vert_shader, depth_debug_frag_shader);
 }

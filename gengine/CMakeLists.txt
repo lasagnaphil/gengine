@@ -37,25 +37,29 @@ set(SPAN_LITE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/span-lite)
 add_library(span-lite INTERFACE)
 target_include_directories(span-lite INTERFACE ${SPAN_LITE_DIR})
 
-file(GLOB RENDER_SOURCES *.cpp)
 
+# Add the source files to the library
+file(GLOB RENDER_SOURCES *.cpp)
 add_library(gengine STATIC ${RENDER_SOURCES})
+
 
 target_include_directories(gengine
         PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(gengine ${CMAKE_DL_LIBS} Threads::Threads SDL2 glad imgui stb glm tinyxml2 span-lite)
 
-add_custom_command(
-        TARGET gengine POST_BUILD
-        DEPENDS ${CMAKE_SOURCE_DIR}/shaders
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${CMAKE_CURRENT_SOURCE_DIR}/shaders $<TARGET_FILE_DIR:gengine>/shaders
-        COMMENT "Copying shaders" VERBATIM
-)
-add_custom_command(
-        TARGET gengine POST_BUILD
-        DEPENDS ${CMAKE_SOURCE_DIR}/shaders
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${CMAKE_CURRENT_SOURCE_DIR}/resources $<TARGET_FILE_DIR:gengine>/resources
-        COMMENT "Copying resources" VERBATIM
-)
+# Compile shaders into header files
+add_executable(embed_shader embed_shader.cpp)
+file(GLOB shaders_src
+        "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.vert"
+        "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.frag"
+        "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.geom")
+
+foreach(shader ${shaders_src})
+    get_filename_component(shader_name ${shader} NAME)
+    add_custom_target(
+            ${shader_name}_build_target
+            COMMAND embed_shader ${shader} ${shader}.h
+            DEPENDS ${shader}
+    )
+    add_dependencies(gengine ${shader_name}_build_target)
+endforeach()
