@@ -19,7 +19,7 @@ public:
         cameraTransform->move({10.0f, 20.0f, -10.0f});
         cameraTransform->rotate(M_PI/4, {0.0f, 0.0f, 1.0f});
 
-        Ref<Image> checkerImage = Resources::make<Image>("gengine/resources/textures/checker.png");
+        Ref<Image> checkerImage = Resources::make<Image>("resources/textures/checker.png");
         Ref<Texture> planeTexture = Resources::make<Texture>(checkerImage);
         checkerImage.release();
 
@@ -32,11 +32,11 @@ public:
 
         groundMesh = Mesh::makePlane(1000.0f, 100.0f);
 
-        Ref<Image> cubeImage = Resources::make<Image>("gengine/resources/textures/container2.png");
+        Ref<Image> cubeImage = Resources::make<Image>("resources/textures/container2.png");
         Ref<Texture> cubeTexture = Resources::make<Texture>(cubeImage);
         cubeImage.release();
 
-        Ref<Image> cubeSpecularImage = Resources::make<Image>("gengine/resources/textures/container2_specular.png");
+        Ref<Image> cubeSpecularImage = Resources::make<Image>("resources/textures/container2_specular.png");
         Ref<Texture> cubeSpecularTexture = Resources::make<Texture>(cubeSpecularImage);
         cubeSpecularImage.release();
 
