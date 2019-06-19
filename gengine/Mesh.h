@@ -48,5 +48,6 @@ struct Mesh {
     static Ref<Mesh> makeCylinder(unsigned int numQuads, float r, float h);
     static Ref<Mesh> makeCone(unsigned int numTriangles, float r, float h);
     static Ref<Mesh> makeSphere(float radius = 1.0f, unsigned int sectorCount = 36, unsigned int stackCount = 18);
+    static Ref<Mesh> makeCapsule(float radius = 1.0f, float height = 1.0f, unsigned int sectorCount = 36, unsigned int stackCount = 18);
 };
 #endif //MOTION_EDITING_UVMESH_H
