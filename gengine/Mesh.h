@@ -14,7 +14,7 @@
 #include <vector>
 
 #include "Shader.h"
-#include "Storage.h"
+#include "GenAllocator.h"
 
 struct Mesh {
     static float cubeVertices[8*36];

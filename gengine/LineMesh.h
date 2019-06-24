@@ -10,7 +10,7 @@
 #include <glad/glad.h>
 #include <span.hpp>
 
-#include "Storage.h"
+#include "GenAllocator.h"
 
 struct LineMaterial {
     GLenum lineType;

@@ -7,11 +7,11 @@
 
 #include <glad/glad.h>
 #include "Image.h"
-#include "Storage.h"
+#include "GenAllocator.h"
 #include <string>
 #include "IDisposable.h"
 
-struct Texture : IDisposable {
+struct Texture {
     GLuint id = 0;
     GLuint width, height;
     GLuint internalFormat;

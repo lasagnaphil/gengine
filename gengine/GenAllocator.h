@@ -53,10 +53,10 @@ struct Ref {
 };
 
 template <typename T>
-struct Storage {
+struct GenAllocator {
 
     struct ItemNode {
-        std::optional<T> item;
+        uint8_t bytes[sizeof(T)];
         uint32_t nextIndex;
         uint32_t generation;
     };
@@ -68,21 +68,20 @@ struct Storage {
 
     uint32_t firstAvailable;
 
-    Storage(uint32_t capacity = 1) :
+    GenAllocator(uint32_t capacity = 0) :
         count(0), capacity(capacity), nodes(capacity), firstAvailable(0)
     {
         for (uint32_t i = 0; i < capacity; ++i) {
-            nodes[i].item = std::nullopt;
             nodes[i].nextIndex = i + 1;
-            nodes[i].generation = 1;
+            nodes[i].generation = 0;
         }
     }
 
-    ~Storage() {
+    void dispose() {
         for (uint32_t i = 0; i < capacity; ++i) {
-            if (nodes[i].item) {
+            if (nodes[i].generation == 0) {
                 if constexpr (std::is_base_of<IDisposable, T>()) {
-                    nodes[i].item->dispose();
+                    reinterpret_cast<T*>(nodes[i].bytes)->dispose();
                 }
             }
         }
@@ -94,9 +93,8 @@ struct Storage {
         nodes.resize(newCapacity);
 
         for (uint32_t i = capacity; i < newCapacity; ++i) {
-            nodes[i].item = std::nullopt;
             nodes[i].nextIndex = i + 1;
-            nodes[i].generation = 1;
+            nodes[i].generation = 0;
         }
 
         capacity = newCapacity;
@@ -106,20 +104,18 @@ struct Storage {
     Ref<T> make(Args... args) {
         // if the item list is full
         if (firstAvailable == capacity) {
-            expand(capacity * 2);
+            expand(capacity == 0? 4 : capacity * 2);
         }
 
         // delete node from free list
         uint32_t newIndex = firstAvailable;
         ItemNode& node = nodes[newIndex];
-        node.item = T(args...);
+        new (node.bytes) T(args...);
         firstAvailable = node.nextIndex;
 
         node.generation++;
 
         count++;
-
-        Ref<T> ref;
 
         // also return the reference object of the resource
         return Ref<T> {newIndex, node.generation};
@@ -127,32 +123,32 @@ struct Storage {
 
     bool has(Ref<T> ref) const {
         ItemNode& node = nodes[ref.index];
-        return !node.free && node.generation == ref.generation;
+        return node.generation != 0 && node.generation == ref.generation;
     }
 
     const T* get(Ref<T> ref) const {
         const ItemNode& node = nodes[ref.index];
 
-        assert(node.item);
+        assert(node.generation != 0);
         assert(node.generation == ref.generation);
 
-        return &node.item;
+        return reinterpret_cast<T*>(node.bytes);
     }
 
     T* get(Ref<T> ref) {
         ItemNode& node = nodes[ref.index];
 
-        assert(node.item);
+        assert(node.generation != 0);
         assert(node.generation == ref.generation);
 
-        return &*node.item;
+        return reinterpret_cast<T*>(node.bytes);
     }
 
     const T* tryGet(Ref<T> ref) const {
         const ItemNode& node = nodes[ref.index];
 
-        if (node.item && node.generation == ref.generation) {
-            return &*node.item;
+        if (node.generation != 0 && node.generation == ref.generation) {
+            return reinterpret_cast<T*>(node.bytes);
         }
         else {
             return nullptr;
@@ -162,8 +158,8 @@ struct Storage {
     T* tryGet(Ref<T> ref) {
         ItemNode& node = nodes[ref.index];
 
-        if (node.item && node.generation == ref.generation) {
-            return &*node.item;
+        if (node.generation != 0 && node.generation == ref.generation) {
+            return reinterpret_cast<T*>(node.bytes);
         }
         else {
             return nullptr;
@@ -173,22 +169,27 @@ struct Storage {
     void release(Ref<T> ref) {
         ItemNode& node = nodes[ref.index];
 
-        assert(node.item);
+        assert(node.generation != 0);
         assert(node.generation == ref.generation);
 
         std::swap(node.nextIndex, firstAvailable);
         if constexpr (std::is_base_of<IDisposable, T>()) {
-            node.item->dispose();
+            reinterpret_cast<T*>(node.bytes)->dispose();
         }
-        node.item = std::nullopt;
 
         count--;
     }
 };
 
 struct Resources {
+    friend class constructor;
+    struct constructor {
+        constructor();
+    };
+    static constructor cons;
+
     template <class T>
-    static Storage<T>& getStorage();
+    static GenAllocator<T>& getStorage();
 
     template <class T>
     static T* get(Ref<T> ref) {
@@ -209,6 +210,5 @@ struct Resources {
     static void release(Ref<T> ref) {
         return getStorage<T>().release(ref);
     }
-
 };
 #endif //MOTION_EDITING_GLOBALSTORAGE_H

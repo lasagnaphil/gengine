@@ -16,7 +16,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-#include "Storage.h"
+#include "GenAllocator.h"
 
 static void sdl_die(const char * message) {
     fprintf(stderr, "%s: %s\n", message, SDL_GetError());

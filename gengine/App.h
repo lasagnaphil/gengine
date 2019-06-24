@@ -12,7 +12,7 @@
 
 #include <memory>
 
-#include "Storage.h"
+#include "GenAllocator.h"
 #include "Shader.h"
 #include "Camera.h"
 #include "PhongRenderer.h"

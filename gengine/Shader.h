@@ -14,7 +14,7 @@
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
-#include "Storage.h"
+#include "GenAllocator.h"
 
 struct Material;
 struct Camera;
