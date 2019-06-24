@@ -16,11 +16,7 @@
 #include <stack>
 
 #include "Storage.h"
-
-struct PoseState {
-    glm::vec3 rootPos;
-    std::vector<glm::quat> jointRot;
-};
+#include "Pose.h"
 
 struct PoseTreeNode {
     std::string name;
@@ -55,7 +51,7 @@ struct PoseTree {
         return const_cast<PoseTreeNode*>(const_cast<const PoseTree*>(this)->operator[](name));
     }
 
-    uint32_t findIdx(const std::string& name) {
+    uint32_t findIdx(const std::string& name) const {
         auto it = std::find_if(allNodes.begin(), allNodes.end(), [&](const PoseTreeNode& node) {
             return node.name == name;
         });
@@ -75,7 +71,7 @@ struct PoseTree {
         return allNodes[0];
     }
 
-    uint32_t getChildIdx(const PoseTreeNode& node, const std::string& name) {
+    uint32_t getChildIdx(const PoseTreeNode& node, const std::string& name) const {
         for (uint32_t childIdx : node.childJoints) {
             if (allNodes[childIdx].name == name) {
                 return childIdx;
@@ -84,7 +80,7 @@ struct PoseTree {
         return (uint32_t)-1;
     }
 
-    uint32_t getChildIdx(const uint32_t nodeIdx, const std::string& name) {
+    uint32_t getChildIdx(const uint32_t nodeIdx, const std::string& name) const {
         for (uint32_t childIdx : allNodes[nodeIdx].childJoints) {
             if (allNodes[childIdx].name == name) {
                 return childIdx;
@@ -133,7 +129,7 @@ struct PoseTree {
 
 struct MotionClipData {
     PoseTree poseTree;
-    std::vector<PoseState> poseStates;
+    std::vector<Pose> poseStates;
 
     // Motion data
     enum class ChannelType : uint8_t {
@@ -149,14 +145,14 @@ struct MotionClipData {
 
     void print() const;
 
-    PoseState& getFrameState(uint32_t frameIdx) { return poseStates[frameIdx]; }
-    const PoseState& getFrameState(uint32_t frameIdx) const { return poseStates[frameIdx]; }
+    Pose& getFrameState(uint32_t frameIdx) { return poseStates[frameIdx]; }
+    const Pose& getFrameState(uint32_t frameIdx) const { return poseStates[frameIdx]; }
 
-    glm::vec3& getRootPos(uint32_t frameIdx) { return poseStates[frameIdx].rootPos; }
-    const glm::vec3& getRootPos(uint32_t frameIdx) const { return poseStates[frameIdx].rootPos; }
+    glm::vec3& getRootPos(uint32_t frameIdx) { return poseStates[frameIdx].v; }
+    const glm::vec3& getRootPos(uint32_t frameIdx) const { return poseStates[frameIdx].v; }
 
-    glm::quat& getJointRot(uint32_t frameIdx, uint32_t jointIdx) { return poseStates[frameIdx].jointRot[jointIdx]; }
-    const glm::quat& getJointRot(uint32_t frameIdx, uint32_t jointIdx) const { return poseStates[frameIdx].jointRot[jointIdx]; }
+    glm::quat& getJointRot(uint32_t frameIdx, uint32_t jointIdx) { return poseStates[frameIdx].q[jointIdx]; }
+    const glm::quat& getJointRot(uint32_t frameIdx, uint32_t jointIdx) const { return poseStates[frameIdx].q[jointIdx]; }
 
 private:
     void printRecursive(uint32_t jointID, int depth) const;

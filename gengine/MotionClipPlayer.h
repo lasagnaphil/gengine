@@ -25,11 +25,11 @@ struct MotionClipPlayer {
 
     void init();
 
-    const PoseState& getPoseState() const {
+    const Pose& getPoseState() const {
         return data->getFrameState(currentFrameIdx);
     }
 
-    PoseState& getPoseState() {
+    Pose& getPoseState() {
         return data->getFrameState(currentFrameIdx);
     }
 

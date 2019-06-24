@@ -229,7 +229,7 @@ bool MotionClipData::loadFromFile(const std::string &filename, MotionClipData &d
                             break;
                         }
                         if (c < 3) {
-                            poseState.rootPos[c] = num * scale;
+                            poseState.v[c] = num * scale;
                         }
                         else {
                             switch (channelTypeData[c]) {
@@ -250,7 +250,7 @@ bool MotionClipData::loadFromFile(const std::string &filename, MotionClipData &d
                                     break;
                             }
                             if (rotCount == 3) {
-                                poseState.jointRot.push_back(rot);
+                                poseState.q.push_back(rot);
                                 rot = glm::identity<glm::quat>();
                                 rotCount = 0;
                             }
