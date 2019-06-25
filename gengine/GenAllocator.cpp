@@ -11,6 +11,8 @@
 #include "Mesh.h"
 #include "LineMesh.h"
 
+#ifdef USE_SHARED_PTR
+#else
 #define LIST_OF_VARIABLES \
     GLOBAL_TYPE(Transform, 1, 8) \
     GLOBAL_TYPE(Shader, 2, 8) \
@@ -43,3 +45,4 @@ Resources::constructor::constructor() {
 
 #undef GLOBAL_TYPE
 
+#endif

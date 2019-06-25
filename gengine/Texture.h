@@ -25,7 +25,8 @@ struct Texture {
     std::string imagePath;
 
     Texture() = default;
-    explicit Texture(Ref<Image> image);
+    static Ref<Texture> fromImage(Ref<Image> image);
+    void loadFromImage(Ref<Image> image);
     void dispose();
 
     void bind();

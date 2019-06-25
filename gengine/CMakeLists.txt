@@ -42,7 +42,10 @@ target_include_directories(span-lite INTERFACE ${SPAN_LITE_DIR})
 file(GLOB RENDER_SOURCES *.cpp)
 add_library(gengine STATIC ${RENDER_SOURCES})
 
+# Use this compile definition to use std::shared_ptr instead of generational storage
+# target_compile_definitions(gengine PUBLIC USE_SHARED_PTR)
 
+# include/linking
 target_include_directories(gengine
         PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(gengine ${CMAKE_DL_LIBS} Threads::Threads SDL2 glad imgui stb glm tinyxml2 span-lite)

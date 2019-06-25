@@ -5,7 +5,13 @@
 #include <iostream>
 #include "Texture.h"
 
-Texture::Texture(Ref<Image> image) {
+Ref<Texture> Texture::fromImage(Ref<Image> image) {
+    Ref<Texture> tex = Resources::make<Texture>();
+    tex->loadFromImage(image);
+    return tex;
+}
+
+void Texture::loadFromImage(Ref<Image> image) {
     imagePath = image->path;
 
     width = image->width;

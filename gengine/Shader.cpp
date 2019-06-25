@@ -161,8 +161,8 @@ void Shader::setVec4(GLint uniID, const glm::vec4& value) const {
 void Shader::setMaterial(const Material &material) const {
     setVec4("material.ambient", material.ambient);
     setFloat("material.shininess", material.shininess);
-    setBool("material.useTexDiffuse", !material.texDiffuse.isNull());
-    setBool("material.useTexSpecular", !material.texSpecular.isNull());
+    setBool("material.useTexDiffuse", (bool)material.texDiffuse);
+    setBool("material.useTexSpecular", (bool)material.texSpecular);
     if (material.texDiffuse) {
         glActiveTexture(GL_TEXTURE0);
         material.texDiffuse->bind();

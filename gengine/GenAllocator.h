@@ -15,6 +15,19 @@
 
 #include "IDisposable.h"
 
+#ifdef USE_SHARED_PTR
+#include <memory>
+template <class T>
+using Ref = std::shared_ptr<T>;
+
+struct Resources {
+    template <class T, class ...Args>
+    static Ref<T> make(Args&&... args) {
+        return std::shared_ptr<T>(new T(std::forward<Args>(args)...));
+    }
+};
+
+#else
 class TypeRegistry {
 public:
     template <typename T> static uint16_t getID();
@@ -50,13 +63,16 @@ struct Ref {
     T* get();
     T* tryGet();
     void release();
+    void reset() {
+        release();
+    }
 };
 
 template <typename T>
 struct GenAllocator {
 
     struct ItemNode {
-        uint8_t bytes[sizeof(T)];
+        std::aligned_storage_t<sizeof(T), alignof(T)> bytes;
         uint32_t nextIndex;
         uint32_t generation;
     };
@@ -81,7 +97,7 @@ struct GenAllocator {
         for (uint32_t i = 0; i < capacity; ++i) {
             if (nodes[i].generation == 0) {
                 if constexpr (std::is_base_of<IDisposable, T>()) {
-                    reinterpret_cast<T*>(nodes[i].bytes)->dispose();
+                    std::launder(reinterpret_cast<T*>(&nodes[i].bytes))->dispose();
                 }
             }
         }
@@ -101,7 +117,7 @@ struct GenAllocator {
     }
 
     template <class ...Args>
-    Ref<T> make(Args... args) {
+    Ref<T> make(Args&&... args) {
         // if the item list is full
         if (firstAvailable == capacity) {
             expand(capacity == 0? 4 : capacity * 2);
@@ -110,7 +126,7 @@ struct GenAllocator {
         // delete node from free list
         uint32_t newIndex = firstAvailable;
         ItemNode& node = nodes[newIndex];
-        new (node.bytes) T(args...);
+        new (&node.bytes) T(std::forward<Args>(args)...);
         firstAvailable = node.nextIndex;
 
         node.generation++;
@@ -132,7 +148,7 @@ struct GenAllocator {
         assert(node.generation != 0);
         assert(node.generation == ref.generation);
 
-        return reinterpret_cast<T*>(node.bytes);
+        return std::launder(reinterpret_cast<T*>(&node.bytes));
     }
 
     T* get(Ref<T> ref) {
@@ -141,14 +157,14 @@ struct GenAllocator {
         assert(node.generation != 0);
         assert(node.generation == ref.generation);
 
-        return reinterpret_cast<T*>(node.bytes);
+        return std::launder(reinterpret_cast<T*>(&node.bytes));
     }
 
     const T* tryGet(Ref<T> ref) const {
         const ItemNode& node = nodes[ref.index];
 
         if (node.generation != 0 && node.generation == ref.generation) {
-            return reinterpret_cast<T*>(node.bytes);
+            return std::launder(reinterpret_cast<T*>(&node.bytes));
         }
         else {
             return nullptr;
@@ -159,7 +175,7 @@ struct GenAllocator {
         ItemNode& node = nodes[ref.index];
 
         if (node.generation != 0 && node.generation == ref.generation) {
-            return reinterpret_cast<T*>(node.bytes);
+            return std::launder(reinterpret_cast<T*>(&node.bytes));
         }
         else {
             return nullptr;
@@ -174,7 +190,7 @@ struct GenAllocator {
 
         std::swap(node.nextIndex, firstAvailable);
         if constexpr (std::is_base_of<IDisposable, T>()) {
-            reinterpret_cast<T*>(node.bytes)->dispose();
+            std::launder(reinterpret_cast<T*>(&node.bytes))->dispose();
         }
 
         count--;
@@ -211,4 +227,6 @@ struct Resources {
         return getStorage<T>().release(ref);
     }
 };
+#endif
+
 #endif //MOTION_EDITING_GLOBALSTORAGE_H
