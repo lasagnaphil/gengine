@@ -51,7 +51,7 @@ target_include_directories(gengine
 target_link_libraries(gengine ${CMAKE_DL_LIBS} Threads::Threads SDL2 glad imgui stb glm tinyxml2 span-lite)
 
 # Compile shaders into header files
-add_executable(embed_shader embed_shader.cpp)
+add_executable(embed_shader shaders/embed_shader.cpp)
 file(GLOB shaders_src
         "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.vert"
         "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.frag"

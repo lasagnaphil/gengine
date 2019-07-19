@@ -5,6 +5,7 @@
 #ifndef MOTION_EDITING_PHONGRENDERER_H
 #define MOTION_EDITING_PHONGRENDERER_H
 
+#include <imgui.h>
 #include "Mesh.h"
 #include "Material.h"
 

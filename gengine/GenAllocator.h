@@ -97,7 +97,7 @@ struct GenAllocator {
         for (uint32_t i = 0; i < capacity; ++i) {
             if (nodes[i].generation == 0) {
                 if constexpr (std::is_base_of<IDisposable, T>()) {
-                    std::launder(reinterpret_cast<T*>(&nodes[i].bytes))->dispose();
+                    reinterpret_cast<T*>(&nodes[i].bytes)->dispose();
                 }
             }
         }
@@ -148,7 +148,7 @@ struct GenAllocator {
         assert(node.generation != 0);
         assert(node.generation == ref.generation);
 
-        return std::launder(reinterpret_cast<T*>(&node.bytes));
+        return reinterpret_cast<T*>(&node.bytes);
     }
 
     T* get(Ref<T> ref) {
@@ -157,14 +157,14 @@ struct GenAllocator {
         assert(node.generation != 0);
         assert(node.generation == ref.generation);
 
-        return std::launder(reinterpret_cast<T*>(&node.bytes));
+        return reinterpret_cast<T*>(&node.bytes);
     }
 
     const T* tryGet(Ref<T> ref) const {
         const ItemNode& node = nodes[ref.index];
 
         if (node.generation != 0 && node.generation == ref.generation) {
-            return std::launder(reinterpret_cast<T*>(&node.bytes));
+            return reinterpret_cast<T*>(&node.bytes);
         }
         else {
             return nullptr;
@@ -175,7 +175,7 @@ struct GenAllocator {
         ItemNode& node = nodes[ref.index];
 
         if (node.generation != 0 && node.generation == ref.generation) {
-            return std::launder(reinterpret_cast<T*>(&node.bytes));
+            return reinterpret_cast<T*>(&node.bytes);
         }
         else {
             return nullptr;
@@ -190,7 +190,7 @@ struct GenAllocator {
 
         std::swap(node.nextIndex, firstAvailable);
         if constexpr (std::is_base_of<IDisposable, T>()) {
-            std::launder(reinterpret_cast<T*>(&node.bytes))->dispose();
+            reinterpret_cast<T*>(&node.bytes)->dispose();
         }
 
         count--;
