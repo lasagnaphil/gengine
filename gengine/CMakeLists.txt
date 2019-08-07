@@ -37,6 +37,8 @@ set(SPAN_LITE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/span-lite)
 add_library(span-lite INTERFACE)
 target_include_directories(span-lite INTERFACE ${SPAN_LITE_DIR})
 
+# ez3cd
+add_subdirectory(deps/ezc3d)
 
 # Add the source files to the library
 file(GLOB RENDER_SOURCES *.cpp)
@@ -48,7 +50,7 @@ add_library(gengine STATIC ${RENDER_SOURCES})
 # include/linking
 target_include_directories(gengine
         PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(gengine ${CMAKE_DL_LIBS} Threads::Threads SDL2 glad imgui stb glm tinyxml2 span-lite)
+target_link_libraries(gengine ${CMAKE_DL_LIBS} Threads::Threads SDL2 glad imgui stb glm tinyxml2 span-lite ezc3d)
 
 # Compile shaders into header files
 add_executable(embed_shader shaders/embed_shader.cpp)

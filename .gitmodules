@@ -4,3 +4,6 @@
 [submodule "gengine/deps/imgui"]
 	path = gengine/deps/imgui
 	url = https://github.com/ocornut/imgui
+[submodule "gengine/deps/ezc3d"]
+	path = gengine/deps/ezc3d
+	url = https://github.com/pyomeca/ezc3d.git

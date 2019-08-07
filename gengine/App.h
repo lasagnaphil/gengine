@@ -25,7 +25,7 @@ public:
         phongRenderer(&trackballCamera),
         gizmosRenderer(&trackballCamera) {}
 
-    ~App();
+    virtual ~App();
     void start();
     virtual void loadResources();
     virtual void processInput(SDL_Event& event);

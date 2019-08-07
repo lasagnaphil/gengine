@@ -29,22 +29,22 @@ public:
     glm::mat4 getPerspectiveMatrix() const;
     glm::mat4 getViewMatrix() const;
 
-
     Ref<Transform> transform;
     // Ref<Transform> trackballFocus;
+
+    float fov = 90.0f;
+    float near = 0.1f;
+    float far = 1000.0f;
+    float movementSpeed = 10.0f;
+    float mouseSensitivity = 0.1f;
 
 private:
     glm::vec3 calcMouseVec(glm::vec2 mousePos);
 
     float radius = 300.0f;
     float distance = 10.0f;
-    float translationSpeed = 10.0f;
-    float fov = 90.0f;
-
-    float pitch;
-    float yaw;
-    float movementSpeed;
-    float mouseSensitivity;
+    float pitch = 0.0f;
+    float yaw = -90.0f;
     IntRect viewport;
     bool constrainPitch;
 

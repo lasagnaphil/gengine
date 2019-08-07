@@ -4,3 +4,4 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_subdirectory(gengine)
 add_subdirectory(demo)
+add_subdirectory(viewer)

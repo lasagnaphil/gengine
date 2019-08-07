@@ -15,8 +15,7 @@
 #include "InputManager.h"
 #include "imgui_impl_sdl.h"
 
-Camera::Camera(Ref<Transform> parent) :
-        yaw(-90.0f), pitch(0.0f), movementSpeed(10.0f), mouseSensitivity(0.1f)
+Camera::Camera(Ref<Transform> parent)
 {
     transform = Resources::make<Transform>();
     transform->setPosition(glm::vec3(0.f, 0.f, distance));
@@ -203,8 +202,8 @@ glm::mat4 Camera::getPerspectiveMatrix() const {
     return glm::perspective(
             glm::radians(fov),
             ImGui::GetIO().DisplaySize.x / ImGui::GetIO().DisplaySize.y,
-            0.1f,
-            1000.0f
+            near,
+            far
     );
 }
 

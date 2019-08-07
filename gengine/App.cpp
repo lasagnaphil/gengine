@@ -288,7 +288,7 @@ void App::internalRender() {
     render();
 
     ImGui::SetNextWindowBgAlpha(0.3f);
-    ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f), ImGuiCond_Always, ImVec2(0.0f, 0.0f));
+    ImGui::SetNextWindowPos(ImVec2(10.0f, 30.0f), ImGuiCond_Always, ImVec2(0.0f, 0.0f));
     bool overlayOpen = true;
     ImGui::Begin("Simple Overlay", &overlayOpen, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar);
     ImGui::Text("Update: %f ms", 1000.f * dt);
