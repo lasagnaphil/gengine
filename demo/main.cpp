@@ -20,7 +20,7 @@ public:
         cameraTransform->rotate(M_PI/4, {0.0f, 0.0f, 1.0f});
 
         Ref<Image> checkerImage = Resources::make<Image>("resources/textures/checker.png");
-        Ref<Texture> planeTexture = Resources::make<Texture>(checkerImage);
+        Ref<Texture> planeTexture = Texture::fromImage(checkerImage);
         checkerImage.release();
 
         groundMat = Resources::make<Material>();
@@ -33,11 +33,11 @@ public:
         groundMesh = Mesh::makePlane(1000.0f, 100.0f);
 
         Ref<Image> cubeImage = Resources::make<Image>("resources/textures/container2.png");
-        Ref<Texture> cubeTexture = Resources::make<Texture>(cubeImage);
+        Ref<Texture> cubeTexture = Texture::fromImage(cubeImage);
         cubeImage.release();
 
         Ref<Image> cubeSpecularImage = Resources::make<Image>("resources/textures/container2_specular.png");
-        Ref<Texture> cubeSpecularTexture = Resources::make<Texture>(cubeSpecularImage);
+        Ref<Texture> cubeSpecularTexture = Texture::fromImage(cubeSpecularImage);
         cubeSpecularImage.release();
 
         cubeMat = Resources::make<Material>();
