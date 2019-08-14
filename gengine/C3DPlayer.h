@@ -6,6 +6,9 @@
 #define GENGINE_C3DPLAYER_H
 
 #include "ezc3d.h"
+#include "Data.h"
+#include "Header.h"
+
 #include "LineMesh.h"
 #include "GizmosRenderer.h"
 
