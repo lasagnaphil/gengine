@@ -1,6 +1,7 @@
-file(GLOB GENGINE_DEMO_SOURCES *.cpp)
-add_executable(gengine_demo ${GENGINE_DEMO_SOURCES})
+add_executable(gengine_demo_boxes boxes.cpp)
+target_include_directories(gengine_demo_boxes PUBLIC gengine)
+target_link_libraries(gengine_demo_boxes gengine)
 
-target_include_directories(gengine_demo PUBLIC gengine)
-
-target_link_libraries(gengine_demo gengine)
+add_executable(gengine_demo_trackball trackball.cpp)
+target_include_directories(gengine_demo_trackball PUBLIC gengine)
+target_link_libraries(gengine_demo_trackball gengine)

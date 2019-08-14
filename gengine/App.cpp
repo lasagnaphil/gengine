@@ -160,6 +160,9 @@ void App::start() {
 
     internalLoadResources();
 
+    phongRenderer.setCamera(camera.get());
+    gizmosRenderer.setCamera(camera.get());
+
     phongRenderer.init();
     gizmosRenderer.init();
 
@@ -234,8 +237,6 @@ void App::internalLoadResources() {
     rootTransform = Resources::make<Transform>();
     rootTransform->update();
 
-    trackballCamera = Camera(rootTransform);
-
     loadResources();
 }
 
@@ -253,7 +254,7 @@ void App::internalProcessInput() {
                     break;
             }
         }
-        trackballCamera.processInput(event);
+        camera->processInput(event);
         processInput(event);
     }
 }
@@ -262,10 +263,7 @@ void App::internalUpdate(float dt) {
     auto inputMgr = InputManager::get();
     inputMgr->update();
 
-    trackballCamera.update(dt);
-    if (inputMgr->isMouseEntered(SDL_BUTTON_LEFT)) {
-        Ray ray = trackballCamera.screenPointToRay(inputMgr->getMousePos());
-    }
+    camera->update(dt);
 
     rootTransform->update();
 

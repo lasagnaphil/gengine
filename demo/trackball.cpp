@@ -9,15 +9,14 @@
 #include "App.h"
 #include "PhongRenderer.h"
 #include "GizmosRenderer.h"
+#include "TrackballCamera.h"
 
 class MyApp : public App {
 public:
     MyApp() : App(false) {}
 
     void loadResources() override {
-        Ref<Transform> cameraTransform = trackballCamera.transform;
-        cameraTransform->move({10.0f, 20.0f, -10.0f});
-        cameraTransform->rotate(M_PI/4, {0.0f, 0.0f, 1.0f});
+        TrackballCamera* camera = initCamera<TrackballCamera>();
 
         Ref<Image> checkerImage = Resources::make<Image>("resources/textures/checker.png");
         Ref<Texture> planeTexture = Texture::fromImage(checkerImage);
@@ -46,42 +45,12 @@ public:
         cubeMat->texDiffuse = cubeTexture;
         cubeMat->texSpecular = cubeSpecularTexture;
 
-        cubeTransforms.resize(3);
-
-        cubeTransforms[0] = Resources::make<Transform>();
-        Transform::addChildToParent(cubeTransforms[0], rootTransform);
-        cubeTransforms[0]->setPosition({6.0f, 3.0f, -4.0f});
-        cubeTransforms[0]->setScale({6.0f, 6.0f, 6.0f});
-
-        cubeTransforms[1] = Resources::make<Transform>();
-        Transform::addChildToParent(cubeTransforms[1], rootTransform);
-        cubeTransforms[1]->setPosition({0.0f, 10.0f, 10.0f});
-        cubeTransforms[1]->setScale({6.0f, 6.0f, 6.0f});
-
-        cubeTransforms[2] = Resources::make<Transform>();
-        Transform::addChildToParent(cubeTransforms[2], rootTransform);
-        cubeTransforms[2]->setPosition({0.0f, 12.0f, -2.0f});
-        cubeTransforms[2]->setScale({6.0f, 6.0f, 6.0f});
+        cubeTransform = Resources::make<Transform>();
+        Transform::addChildToParent(cubeTransform, rootTransform);
+        cubeTransform->setPosition({0.f, 0.f, 0.f});
+        cubeTransform->setScale({5.0f, 5.0f, 5.0f});
 
         cubeMesh = Mesh::makeCube();
-
-        std::vector<glm::vec3> positions = {
-                {0.0f, 0.0f, 0.0f},
-                {0.0f, 5.0f, 0.0f},
-                {5.0f, 5.0f, 0.0f},
-        };
-
-        lineMesh = Resources::make<LineMesh>(positions);
-        lineMesh->subdivisionBSpline(3);
-        lineMesh->init();
-        lineMat = Resources::make<LineMaterial>();
-        lineMat->lineType = GL_LINE_STRIP;
-        lineMat->drawLines = true;
-        lineMat->drawPoints = true;
-        lineMat->lineColor = {1.0f, 0.0f, 0.0f, 1.0f};
-        lineMat->lineWidth = 1.0f;
-        lineMat->pointColor = {1.0f, 0.0f, 0.0f, 1.0f};
-        lineMat->pointSize = 3.0f;
     }
 
     void processInput(SDL_Event &event) override {
@@ -95,13 +64,10 @@ public:
     }
 
     void render() override {
-        phongRenderer.queueRender({groundMesh, groundMat, rootTransform->getWorldTransform()});
-        for (auto& transform : cubeTransforms) {
-            phongRenderer.queueRender({cubeMesh, cubeMat, transform->getWorldTransform()});
-        }
+        // phongRenderer.queueRender({groundMesh, groundMat, rootTransform->getWorldTransform()});
+        phongRenderer.queueRender({cubeMesh, cubeMat, cubeTransform->getWorldTransform()});
         phongRenderer.render();
 
-        gizmosRenderer.queueLine({lineMesh, lineMat, glm::mat4(1.0f)});
         gizmosRenderer.render();
     }
 
@@ -113,9 +79,8 @@ private:
     Ref<Material> cubeMat;
     Ref<Mesh> groundMesh;
     Ref<Mesh> cubeMesh;
-    Ref<LineMesh> lineMesh;
-    Ref<LineMaterial> lineMat;
-    std::vector<Ref<Transform>> cubeTransforms;
+
+    Ref<Transform> cubeTransform;
 };
 
 int main(int argc, char** argv) {

@@ -6,7 +6,7 @@
 #define GENGINE_GIZMOSRENDERER_H
 
 #include "LineMesh.h"
-#include "Camera.h"
+#include "FlyCamera.h"
 
 struct LineRenderCommand {
     Ref<LineMesh> mesh;
@@ -15,7 +15,11 @@ struct LineRenderCommand {
 };
 
 struct GizmosRenderer {
-    GizmosRenderer(Camera* camera) : camera(camera) {}
+    GizmosRenderer(Camera* camera = nullptr) : camera(camera) {}
+
+    void setCamera(Camera* camera) {
+        this->camera = camera;
+    }
 
     void init() {
 
@@ -27,9 +31,9 @@ struct GizmosRenderer {
 
     void render() {
         Shaders::line3D->use();
-        Shaders::line3D->setCamera(*camera);
+        Shaders::line3D->setCamera(camera);
         Shaders::point->use();
-        Shaders::point->setCamera(*camera);
+        Shaders::point->setCamera(camera);
 
         for (auto& command : lineRenderCommands) {
             glBindVertexArray(command.mesh->vao);

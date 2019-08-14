@@ -14,6 +14,7 @@
 #include "App.h"
 #include "PhongRenderer.h"
 #include "GizmosRenderer.h"
+#include "TrackballCamera.h"
 #include "portable_file_dialogs.h"
 
 
@@ -55,16 +56,17 @@ public:
     bool isC3dLoaded = false;
 
     void loadResources() override {
-        trackballCamera.movementSpeed = 100.0f;
-        trackballCamera.far = 100000.0f;
+        TrackballCamera* trackballCamera = initCamera<TrackballCamera>();
+        // flyCamera->movementSpeed = 100.0f;
+        // flyCamera->far = 100000.0f;
 
-        Ref<Transform> cameraTransform = trackballCamera.transform;
+        Ref<Transform> cameraTransform = trackballCamera->transform;
         cameraTransform->move({10.0f, 20.0f, -10.0f});
         cameraTransform->rotate(M_PI/4, {0.0f, 0.0f, 1.0f});
 
         Ref<Image> checkerImage = Resources::make<Image>("resources/textures/checker.png");
         Ref<Texture> planeTexture = Texture::fromImage(checkerImage);
-        checkerImage.release();
+        checkerImage.reset();
 
         groundMat = Resources::make<Material>();
         groundMat->ambient = {0.1f, 0.1f, 0.1f, 1.0f};

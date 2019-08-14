@@ -1,59 +1,48 @@
 //
-// Created by lasagnaphil on 4/7/18.
+// Created by lasagnaphil on 19. 8. 14..
 //
 
-#ifndef GENGINE_TRACKBALLCAMERA_H
-#define GENGINE_TRACKBALLCAMERA_H
+#ifndef GENGINE_CAMERA_H
+#define GENGINE_CAMERA_H
 
-#include "Shader.h"
-#include "Ray.h"
-#include "Transform.h"
 #include <imgui.h>
-#include <SDL2/SDL_events.h>
+#include <SDL2/SDL.h>
 
 struct IntRect {
     int x, y, width, height;
 };
 
-class Camera {
-public:
+struct Camera {
     Camera() = default;
-    explicit Camera(Ref<Transform> parent);
+    virtual ~Camera() = default;
 
-    void update(float dt);
-    void updateCameraVectors();
-    void renderImGui();
-    void processInput(SDL_Event& ev);
+    virtual void update(float dt) = 0;
+    virtual void updateCameraVectors() = 0;
+    virtual void renderImGui() = 0;
+    virtual void processInput(SDL_Event& ev) = 0;
 
-    Ray screenPointToRay(glm::vec2 mousePos) const;
-    glm::mat4 getPerspectiveMatrix() const;
-    glm::mat4 getViewMatrix() const;
+    Ray screenPointToRay(glm::vec2 mousePos) const {
+        auto io = ImGui::GetIO();
+        auto screenSize = glm::vec2 {io.DisplaySize.x, io.DisplaySize.y};
 
-    Ref<Transform> transform;
-    // Ref<Transform> trackballFocus;
+        // Thanks to http://antongerdelan.net/opengl/raycasting.html
+        auto homogeneousCoord = glm::vec4 {
+                2.0f * mousePos.x / screenSize.x - 1.0f,
+                1.0f - 2.0f * mousePos.y / screenSize.y,
+                -1.0f,
+                1.0f};
+        auto cameraCoord = glm::inverse(getPerspectiveMatrix()) * homogeneousCoord;
+        cameraCoord.z = -1.0; cameraCoord.w = 0.0;
+        auto worldCoord = glm::vec3(glm::inverse(getViewMatrix()) * cameraCoord);
+        worldCoord = glm::normalize(worldCoord);
 
-    float fov = 90.0f;
-    float near = 0.1f;
-    float far = 1000.0f;
-    float movementSpeed = 10.0f;
-    float mouseSensitivity = 0.1f;
+        return Ray {getGlobalPosition(), worldCoord};
+    }
 
-private:
-    glm::vec3 calcMouseVec(glm::vec2 mousePos);
-
-    float radius = 300.0f;
-    float distance = 10.0f;
-    float pitch = 0.0f;
-    float yaw = -90.0f;
-    IntRect viewport;
-    bool constrainPitch;
-
-    // debug
-    float theta = 0.0f;
-
-    // UI state
-    bool enableZoom = false;
+    virtual glm::mat4 getPerspectiveMatrix() const = 0;
+    virtual glm::mat4 getViewMatrix() const = 0;
+    virtual glm::vec3 getPosition() const = 0;
+    virtual glm::vec3 getGlobalPosition() const = 0;
 };
 
-
-#endif //GENGINE_TRACKBALLCAMERA_H
+#endif //GENGINE_CAMERA_H

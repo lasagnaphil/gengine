@@ -5,9 +5,11 @@
 #ifndef MOTION_EDITING_PHONGRENDERER_H
 #define MOTION_EDITING_PHONGRENDERER_H
 
-#include <imgui.h>
 #include "Mesh.h"
 #include "Material.h"
+
+#include <imgui.h>
+#include <glm/gtc/matrix_transform.hpp>
 
 struct RenderCommand {
     Ref<Mesh> mesh;
@@ -34,13 +36,17 @@ public:
 
     bool viewDepthBufferDebug = false;
 
-    PhongRenderer(Camera* camera) : camera(camera) {
+    PhongRenderer(Camera* camera = nullptr) : camera(camera) {
         dirLight.enabled = true;
         dirLight.direction = glm::normalize(glm::vec3 {2.0f, -3.0f, 2.0f});
         dirLight.ambient = {0.3f, 0.3f, 0.3f, 0.3f};
         dirLight.diffuse = {1.0f, 1.0f, 1.0f, 1.0f};
         dirLight.specular = {1.0f, 1.0f, 1.0f, 1.0f};
         dirLight.intensity = 0.5f;
+    }
+
+    void setCamera(Camera* camera) {
+        this->camera = camera;
     }
 
     void init() {
@@ -109,7 +115,12 @@ public:
 
         phongShader->use();
 
-        phongShader->setCamera(*camera);
+        if (camera) {
+            phongShader->setCamera(camera);
+        }
+        else {
+            std::cerr << "Error in PhongRenderer: camera not set" << std::endl;
+        }
 
         phongShader->setBool("dirLight.enabled", dirLight.enabled);
         phongShader->setVec3("dirLight.direction", dirLight.direction);

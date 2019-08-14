@@ -14,16 +14,14 @@
 
 #include "GenAllocator.h"
 #include "Shader.h"
-#include "Camera.h"
 #include "PhongRenderer.h"
 #include "GizmosRenderer.h"
+#include "Camera.h"
 
 class App {
 public:
     App(bool useDisplayFPS = false) :
-        useDisplayFPS(useDisplayFPS),
-        phongRenderer(&trackballCamera),
-        gizmosRenderer(&trackballCamera) {}
+        useDisplayFPS(useDisplayFPS) {}
 
     virtual ~App();
     void start();
@@ -39,7 +37,13 @@ protected:
     PhongRenderer phongRenderer;
     GizmosRenderer gizmosRenderer;
     Ref<Transform> rootTransform;
-    Camera trackballCamera;
+    std::unique_ptr<Camera> camera = nullptr;
+
+    template <typename T>
+    T* initCamera() {
+        camera = std::make_unique<T>(rootTransform);
+        return dynamic_cast<T*>(camera.get());
+    }
 
 private:
     void internalProcessInput();

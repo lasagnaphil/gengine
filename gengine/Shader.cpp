@@ -6,7 +6,7 @@
 #include "Shader.h"
 #include "GLUtils.h"
 #include "Material.h"
-#include "Camera.h"
+#include "FlyCamera.h"
 
 #include "shaders/line2d.vert.h"
 #include "shaders/line2d.frag.h"
@@ -181,10 +181,10 @@ void Shader::setMaterial(const Material &material) const {
     setInt("material.texSpecular", 1);
 }
 
-void Shader::setCamera(const Camera &camera) const {
-    setMat4("proj", camera.getPerspectiveMatrix());
-    setMat4("view", camera.getViewMatrix());
-    setVec3("viewPos", camera.transform->getPosition());
+void Shader::setCamera(const Camera* camera) const {
+    setMat4("proj", camera->getPerspectiveMatrix());
+    setMat4("view", camera->getViewMatrix());
+    setVec3("viewPos", camera->getPosition());
 }
 
 GLint Shader::getUniformLocation(const char* name) {

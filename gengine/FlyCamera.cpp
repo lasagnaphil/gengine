@@ -10,12 +10,12 @@
 #include <glm/gtc/quaternion.hpp>
 
 #include "GenAllocator.h"
-#include "Camera.h"
+#include "FlyCamera.h"
 #include "Transform.h"
 #include "InputManager.h"
 #include "imgui_impl_sdl.h"
 
-Camera::Camera(Ref<Transform> parent)
+FlyCamera::FlyCamera(Ref<Transform> parent)
 {
     transform = Resources::make<Transform>();
     transform->setPosition(glm::vec3(0.f, 0.f, distance));
@@ -30,7 +30,7 @@ Camera::Camera(Ref<Transform> parent)
     updateCameraVectors();
 }
 
-void Camera::update(float dt) {
+void FlyCamera::update(float dt) {
     auto inputMgr = InputManager::get();
 
     bool pressStart = false;
@@ -76,74 +76,18 @@ void Camera::update(float dt) {
             transform->move(-transform->getUpVec() * velocity);
         }
     }
-    else if (inputMgr->isMousePressed(SDL_BUTTON_MIDDLE)) {
-        // Trackball controls are crap; disable it
-        /*
-        static glm::ivec2 refMousePos = {};
-        static glm::ivec2 prevMousePos = {};
-        static glm::ivec2 mousePos = {};
-
-        auto displaySize = ImGui::GetIO().DisplaySize;
-        glm::vec3 vref;
-
-        if (inputMgr->isMouseEntered(SDL_BUTTON_MIDDLE)) {
-            refMousePos = inputMgr->getMousePos();
-            mousePos = refMousePos;
-            prevMousePos = refMousePos;
-            auto mref = glm::vec2 {refMousePos.x - displaySize.x/2, -refMousePos.y + displaySize.y/2};
-            vref = calcMouseVec(mref);
-        }
-
-        mousePos = inputMgr->getMousePos();
-
-        auto m1 = glm::vec2 {prevMousePos.x - displaySize.x/2, -prevMousePos.y + displaySize.y/2};
-        auto m2 = glm::vec2 {mousePos.x - displaySize.x/2, -mousePos.y + displaySize.y/2};
-
-        glm::vec3 v1 = calcMouseVec(m1);
-        glm::vec3 v2 = calcMouseVec(m2);
-
-        glm::quat q;
-        float dotProduct = glm::dot(v2, v1);
-        float lengthProduct = std::sqrt(glm::length2(v1) * glm::length2(v2));
-        if (dotProduct / lengthProduct == -1) {
-            q = glm::quat(1.f, 0.f, 0.f, 0.f);
-        } else {
-            q = glm::quat(lengthProduct + dotProduct, glm::cross(v2, v1));
-            q = glm::normalize(q);
-        }
-
-        trackballFocus->rotateLocal(q);
-
-        prevMousePos = mousePos;
-
-        auto upDir = transform->getGlobalUpVec();
-        auto rightDir = transform->getGlobalRightVec();
-        if (inputMgr->isKeyPressed(SDL_SCANCODE_LEFT) || inputMgr->isKeyPressed(SDL_SCANCODE_A)) {
-            trackballFocus->moveGlobal(-translationSpeed * dt * rightDir);
-        }
-        else if (inputMgr->isKeyPressed(SDL_SCANCODE_RIGHT) || inputMgr->isKeyPressed(SDL_SCANCODE_D)) {
-            trackballFocus->moveGlobal(translationSpeed * dt * rightDir);
-        }
-        else if (inputMgr->isKeyPressed(SDL_SCANCODE_UP) || inputMgr->isKeyPressed(SDL_SCANCODE_W)) {
-            trackballFocus->moveGlobal(translationSpeed * dt * upDir);
-        }
-        else if (inputMgr->isKeyPressed(SDL_SCANCODE_DOWN) || inputMgr->isKeyPressed(SDL_SCANCODE_S)) {
-            trackballFocus->moveGlobal(-translationSpeed * dt * upDir);
-        }
-         */
-    }
     else if (inputMgr->isMouseExited(SDL_BUTTON_RIGHT)) {
         SDL_SetRelativeMouseMode(SDL_FALSE);
     }
 }
 
-void Camera::updateCameraVectors() {
+void FlyCamera::updateCameraVectors() {
     glm::quat quatX = glm::angleAxis(-glm::radians(yaw), glm::vec3(0.0f, 1.0f, 0.0f));
     glm::quat quatY = glm::angleAxis(-glm::radians(pitch), glm::vec3(1.0f, 0.0f, 0.0f));
     transform->setRotation(glm::normalize(quatX * quatY));
 }
 
-void Camera::renderImGui() {
+void FlyCamera::renderImGui() {
     auto trans = transform.get();
     // auto focusTrans = trackballFocus.get();
 
@@ -161,7 +105,7 @@ void Camera::renderImGui() {
      */
 }
 
-void Camera::processInput(SDL_Event& ev) {
+void FlyCamera::processInput(SDL_Event& ev) {
     auto trans = transform.get();
     if (ev.type == SDL_MOUSEWHEEL) {
         if (enableZoom) {
@@ -179,26 +123,8 @@ void Camera::processInput(SDL_Event& ev) {
     }
 }
 
-Ray Camera::screenPointToRay(glm::vec2 mousePos) const {
-    auto io = ImGui::GetIO();
-    auto screenSize = glm::vec2 {io.DisplaySize.x, io.DisplaySize.y};
-
-    // Thanks to http://antongerdelan.net/opengl/raycasting.html
-    auto homogeneousCoord = glm::vec4 {
-            2.0f * mousePos.x / screenSize.x - 1.0f,
-            1.0f - 2.0f * mousePos.y / screenSize.y,
-            -1.0f,
-            1.0f};
-    auto cameraCoord = glm::inverse(getPerspectiveMatrix()) * homogeneousCoord;
-    cameraCoord.z = -1.0; cameraCoord.w = 0.0;
-    auto worldCoord = glm::vec3(glm::inverse(getViewMatrix()) * cameraCoord);
-    worldCoord = glm::normalize(worldCoord);
-
-    return Ray {transform->getGlobalPosition(), worldCoord};
-}
-
 // TODO: cache the perspective and view matrices, to reduce repeating the same computation
-glm::mat4 Camera::getPerspectiveMatrix() const {
+glm::mat4 FlyCamera::getPerspectiveMatrix() const {
     return glm::perspective(
             glm::radians(fov),
             ImGui::GetIO().DisplaySize.x / ImGui::GetIO().DisplaySize.y,
@@ -207,24 +133,11 @@ glm::mat4 Camera::getPerspectiveMatrix() const {
     );
 }
 
-glm::mat4 Camera::getViewMatrix() const {
+glm::mat4 FlyCamera::getViewMatrix() const {
     return glm::lookAt(
             transform->getGlobalPosition(),
             transform->getGlobalPosition() - transform->getGlobalFrontVec(),
             transform->getGlobalUpVec());
 }
 
-glm::vec3 Camera::calcMouseVec(glm::vec2 mousePos) {
-    float z;
-    float mouseRadiusSq = mousePos.x * mousePos.x + mousePos.y + mousePos.y;
-    float radiusSq = radius * radius;
-    if (mouseRadiusSq <= 0.5f * radiusSq) {
-        z = std::sqrt(radiusSq - mouseRadiusSq);
-    }
-    else {
-        z = 0.5f * radiusSq / std::sqrt(mouseRadiusSq);
-    }
-
-    return glm::normalize(glm::vec3(mousePos.x, mousePos.y, z));
-}
 
