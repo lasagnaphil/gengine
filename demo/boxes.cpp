@@ -9,14 +9,14 @@
 #include "App.h"
 #include "PhongRenderer.h"
 #include "GizmosRenderer.h"
-#include "TrackballCamera.h"
+#include "FlyCamera.h"
 
 class MyApp : public App {
 public:
     MyApp() : App(false) {}
 
     void loadResources() override {
-        TrackballCamera* camera = initCamera<TrackballCamera>();
+        FlyCamera* camera = initCamera<FlyCamera>();
         Ref<Transform> cameraTransform = camera->transform;
         cameraTransform->move({10.0f, 20.0f, -10.0f});
         cameraTransform->rotate(M_PI/4, {0.0f, 0.0f, 1.0f});
