@@ -32,6 +32,22 @@ struct PoseTree {
     uint32_t numJoints = 0;
     uint32_t numNodes = 0;
 
+    // Creates a pose tree from a node list.
+    // It automatically fills childJoints field, so you don't have to specify it.
+    static PoseTree fromNodeList(std::vector<PoseTreeNode>& nodes) {
+        PoseTree tree;
+        tree.allNodes = nodes;
+        for (uint32_t nodeIdx = 1; nodeIdx < nodes.size(); nodeIdx++) {
+            tree.numNodes++;
+            auto& node = tree[nodeIdx];
+            if (node.isEndSite) {
+                tree.numJoints++;
+                tree[node.parent].childJoints.push_back(nodeIdx);
+            }
+        }
+        return tree;
+    }
+
     const PoseTreeNode& operator[](uint32_t idx) const { return allNodes[idx]; }
     PoseTreeNode& operator[](uint32_t idx) { return allNodes[idx]; }
 

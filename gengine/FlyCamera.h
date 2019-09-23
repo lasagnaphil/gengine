@@ -46,7 +46,7 @@ private:
     float radius = 300.0f;
     float distance = 10.0f;
     float pitch = 0.0f;
-    float yaw = -90.0f;
+    float yaw = 0.0f;
     IntRect viewport;
     bool constrainPitch = true;
 

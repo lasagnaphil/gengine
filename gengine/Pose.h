@@ -30,6 +30,11 @@ struct Pose {
     Pose(glm::vec3 rootPos, std::vector<glm::quat> jointRot) :
         v(rootPos), q(std::move(jointRot)) {}
 
+    static Pose empty(std::size_t n) {
+        auto q = std::vector<glm::quat>(n, glm::identity<glm::quat>());
+        return {glm::vec3 {0.f, 0.f, 0.f}, q};
+    }
+
     std::size_t size() const { return q.size(); }
 };
 

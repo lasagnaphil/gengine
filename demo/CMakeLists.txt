@@ -5,3 +5,7 @@ target_link_libraries(gengine_demo_boxes gengine)
 add_executable(gengine_demo_trackball trackball.cpp)
 target_include_directories(gengine_demo_trackball PUBLIC gengine)
 target_link_libraries(gengine_demo_trackball gengine)
+
+add_executable(gengine_demo_hw1_human hw1-human.cpp)
+target_include_directories(gengine_demo_hw1_human PUBLIC gengine)
+target_link_libraries(gengine_demo_hw1_human gengine)
