@@ -70,8 +70,6 @@ inline void renderMotionClip(PhongRenderer& renderer,
             if (nodeIdx != 0 && glm::length(node.offset) > glm::epsilon<float>()) {
                 glm::vec3 a = glm::normalize(node.offset);
                 glm::vec3 b = {0, 1, 0};
-                glm::vec3 v = glm::cross(a, b);
-                float s2 = glm::dot(v, v);
                 glm::mat4 initialRot, initialTrans;
                 if (node.offset.y >= 0) {
                     initialRot = rotationBetweenVecs(a, b);
@@ -92,7 +90,7 @@ inline void renderMotionClip(PhongRenderer& renderer,
                 }
             }
 
-            curTransform = curTransform * glm::translate(glm::mat4_cast(poseState.q[nodeIdx]), node.offset);
+            curTransform = curTransform * glm::translate(node.offset) * glm::mat4_cast(poseState.q[nodeIdx]);
             for (auto childID : node.childJoints) {
                 recursionStack.push({childID, curTransform});
             }

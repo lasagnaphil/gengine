@@ -69,6 +69,7 @@ public:
         MotionClipData tmpBvh;
         MotionClipData::loadFromFile("resources/cmu_07_02_1.bvh", tmpBvh);
         poseTree = tmpBvh.poseTree;
+
         for (auto& node : poseTree.allNodes) {
             node.offset *= 0.01f;
         }
