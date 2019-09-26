@@ -7,7 +7,14 @@
 
 #include <vector>
 #include <glm/vec3.hpp>
-#include <glm/gtc/quaternion.hpp>
+
+#ifndef GLM_ENABLE_EXPERIMENTAL
+#define GLM_ENABLE_EXPERIMENTAL
+#endif
+
+#include <glm/ext/quaternion_common.hpp>
+#include <glm/ext/quaternion_float.hpp>
+#include <glm/ext/quaternion_trigonometric.hpp>
 
 /*
  * The mathmatical formulation of the following classes are at:
@@ -45,21 +52,36 @@ struct Pose {
 struct PoseDisp {
     std::vector<glm::vec3> diff;
 
-    std::size_t size() const { return diff.size(); }
+    std::size_t size() const { return diff.size() - 1; }
 
     PoseDisp() = default;
-    PoseDisp(std::vector<glm::vec3> diff) : diff(diff) {}
+    explicit PoseDisp(std::vector<glm::vec3> diff) : diff(std::move(diff)) {}
+
+    static PoseDisp empty(std::size_t n) {
+        return PoseDisp(std::vector<glm::vec3>(n + 1, glm::vec3(0.0f)));
+    }
 
     const glm::vec3& operator[](std::size_t i) const { return diff[i]; }
     glm::vec3& operator[](std::size_t i) { return diff[i]; }
 };
 
-/*
+inline Pose slerp(const Pose& p1, const Pose& p2, float alpha) {
+    assert(p1.size() == p2.size());
+    Pose p = Pose::empty(p1.size());
+
+    p.v = alpha * p1.v + (1 - alpha) * p2.v;
+    for (int i = 0; i < p.size(); i++) {
+        p.q[i] = glm::slerp(p1.q[i], p2.q[i], alpha);
+    }
+
+    return p;
+}
+
 inline Pose operator*(const Pose& p1, const Pose& p2) {
     assert(p1.size() == p2.size());
 
     Pose p;
-    p.v = p1.q[0] * p2.v * glm::conjugate(p1.q[0]) + p1.v;
+    p.v = p1.q[0] * p2.v + p1.v;
     p.q.resize(p1.size());
     for (int i = 0; i < p.q.size(); i++) {
         p.q[i] = p1.q[i] * p2.q[i];
@@ -70,9 +92,8 @@ inline Pose operator*(const Pose& p1, const Pose& p2) {
 inline Pose operator/(const Pose& p1, const Pose& p2) {
     assert(p1.size() == p2.size());
 
-    Pose p;
-    p.v = glm::conjugate(p2.q[0]) * (p1.v - p2.v) * p2.q[0];
-    p.q.resize(p1.size());
+    Pose p = Pose::empty(p1.size());
+    p.v = glm::conjugate(p2.q[0]) * (p1.v - p2.v);
     for (int i = 0; i < p.q.size(); i++) {
         p.q[i] = glm::conjugate(p2.q[i]) * p1.q[i];
     }
@@ -82,7 +103,7 @@ inline Pose operator/(const Pose& p1, const Pose& p2) {
 inline PoseDisp operator+(const PoseDisp& d1, const PoseDisp& d2) {
     assert(d1.size() == d2.size());
 
-    PoseDisp d;
+    PoseDisp d = PoseDisp::empty(d1.size());
     d.diff.resize(d1.size());
     for (int i = 0; i < d.size(); i++) {
         d[i] = d1[i] + d2[i];
@@ -93,8 +114,7 @@ inline PoseDisp operator+(const PoseDisp& d1, const PoseDisp& d2) {
 inline PoseDisp operator-(const PoseDisp& d1, const PoseDisp& d2) {
     assert(d1.size() == d2.size());
 
-    PoseDisp d;
-    d.diff.resize(d1.size());
+    PoseDisp d = PoseDisp::empty(d1.size());
     for (int i = 0; i < d.size(); i++) {
         d[i] = d1[i] - d2[i];
     }
@@ -102,8 +122,7 @@ inline PoseDisp operator-(const PoseDisp& d1, const PoseDisp& d2) {
 }
 
 inline PoseDisp operator*(float k, const PoseDisp& d) {
-    PoseDisp dnew;
-    dnew.diff.resize(d.size());
+    PoseDisp dnew = PoseDisp::empty(d.size());
     for (int i = 0; i < d.size(); i++) {
         dnew[i] = k * d[i];
     }
@@ -115,7 +134,7 @@ inline PoseDisp operator*(const PoseDisp& d, float k) {
 }
 
 inline Pose exp(const PoseDisp& d) {
-    Pose p;
+    Pose p = Pose::empty(d.size());
     p.v = d[0];
     for (int i = 0; i < d.size() - 1; i++) {
         glm::vec3 u = d[i + 1] / 2.0f;
@@ -125,13 +144,14 @@ inline Pose exp(const PoseDisp& d) {
 }
 
 inline PoseDisp log(const Pose& p) {
-    PoseDisp d;
+    PoseDisp d = PoseDisp::empty(p.size());
     d[0] = p.v;
     for (int i = 0; i < p.size(); i++) {
         d[i + 1] = glm::angle(p.q[i]) * glm::axis(p.q[i]);
     }
     return d;
 }
- */
+
+void renderImGui(const Pose& pose);
 
 #endif //PHYSICS_BENCHMARKS_POSE_H

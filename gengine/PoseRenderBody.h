@@ -11,6 +11,24 @@
 #include <glm/gtx/transform.hpp>
 #include <deps/glm/glm/gtx/string_cast.hpp>
 
+inline glm::mat4 rotationBetweenVecs(glm::vec3 a, glm::vec3 b) {
+    glm::vec3 v = glm::cross(a, b);
+    float s2 = glm::dot(v, v);
+    if (s2 < glm::epsilon<float>()) {
+        return glm::mat4(1.0f);
+    }
+    else {
+        // Rodrigue's formula
+        float c = glm::dot(a, b);
+        glm::mat3 vhat;
+        vhat[0][0] = vhat[1][1] = vhat[2][2] = 0;
+        vhat[2][1] = v[0]; vhat[1][2] = -v[0];
+        vhat[0][2] = v[1]; vhat[2][0] = -v[1];
+        vhat[1][0] = v[2]; vhat[0][1] = -v[2];
+        return glm::mat3(1.0f) + vhat + vhat*vhat*(1 - c)/(s2);
+    }
+}
+
 struct PoseRenderBody {
     std::vector<Ref<Mesh>> meshes;
     std::vector<Ref<Material>> materials;
@@ -35,7 +53,7 @@ struct PoseRenderBody {
     }
 };
 
-void renderMotionClip(PhongRenderer& renderer,
+inline void renderMotionClip(PhongRenderer& renderer,
         const Pose& poseState, const PoseTree& poseTree, const PoseRenderBody& body,
         const glm::mat4& globalTrans = glm::mat4(1.0f)) {
 
@@ -49,21 +67,20 @@ void renderMotionClip(PhongRenderer& renderer,
         const PoseTreeNode& node = poseTree[nodeIdx];
         if (!node.isEndSite) {
             // render bone related to current node (we exclude root node)
-            if (nodeIdx != 0) {
-                glm::vec3 offset = node.offset;
-                glm::vec3 a = glm::normalize(offset);
+            if (nodeIdx != 0 && glm::length(node.offset) > glm::epsilon<float>()) {
+                glm::vec3 a = glm::normalize(node.offset);
                 glm::vec3 b = {0, 1, 0};
                 glm::vec3 v = glm::cross(a, b);
                 float s2 = glm::dot(v, v);
-                glm::mat4 initialRot;
-                if (s2 < glm::epsilon<float>()) {
-                    initialRot = glm::mat4(1.0f);
+                glm::mat4 initialRot, initialTrans;
+                if (node.offset.y >= 0) {
+                    initialRot = rotationBetweenVecs(a, b);
+                    initialTrans = glm::translate(glm::vec3{0.0f, glm::length(node.offset)/2, 0.0f});
                 }
                 else {
-                    initialRot = glm::rotate(glm::dot(a, b), v);
+                    initialRot = rotationBetweenVecs(a, -b);
+                    initialTrans = glm::translate(glm::vec3{0.0f, -glm::length(node.offset)/2, 0.0f});
                 }
-                std::cout << glm::dot(a, b) << std::endl;
-                glm::mat4 initialTrans = glm::translate(glm::vec3{0.0f, glm::length(offset)/2, 0.0f});
                 glm::mat4 initialBoneTransform = initialRot * initialTrans;
 
                 if (body.meshes[nodeIdx - 1]) {
