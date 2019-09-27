@@ -18,3 +18,8 @@ add_executable(gengine_demo_hw1_human hw1-human.cpp)
 target_include_directories(gengine_demo_hw1_human PUBLIC gengine)
 target_link_libraries(gengine_demo_hw1_human gengine)
 add_dependencies(gengine_demo_hw1_human copy_resource_folder)
+
+add_executable(gengine_demo_hw2_bvh hw2-bvh.cpp)
+target_include_directories(gengine_demo_hw2_bvh PUBLIC gengine)
+target_link_libraries(gengine_demo_hw2_bvh gengine)
+add_dependencies(gengine_demo_hw2_bvh copy_resource_folder)

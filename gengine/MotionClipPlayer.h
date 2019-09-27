@@ -71,7 +71,7 @@ struct MotionClipPlayer {
 
     void queueGizmosRender(GizmosRenderer& renderer, glm::mat4 modelMatrix);
 
-    void drawImGui();
+    void renderImGui();
 };
 
 #endif //PHYSICS_BENCHMARKS_MOTIONCLIPPLAYER_H

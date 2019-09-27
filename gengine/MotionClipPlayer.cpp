@@ -44,7 +44,7 @@ void MotionClipPlayer::queueGizmosRender(GizmosRenderer &renderer, glm::mat4 mod
     renderer.queueLine({trajectoryMesh, trajectoryMat, modelMatrix});
 }
 
-void MotionClipPlayer::drawImGui() {
+void MotionClipPlayer::renderImGui() {
     ImGui::Begin("Motion Clip Player");
 
     ImGui::Text("Current Frame: %d", currentFrameIdx);

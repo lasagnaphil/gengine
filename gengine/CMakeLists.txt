@@ -8,6 +8,11 @@ find_package(SDL2 REQUIRED)
 option(GLM_TEST_ENABLE OFF)
 add_subdirectory(deps/glm)
 
+# Eigen
+set(EIGEN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/Eigen-3.3.7)
+add_library(eigen INTERFACE)
+target_include_directories(eigen INTERFACE ${EIGEN_DIR})
+
 # GLAD
 set(GLAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/glad)
 add_library(glad STATIC ${GLAD_DIR}/src/glad.c)

@@ -39,10 +39,26 @@ struct Pose {
 
     static Pose empty(std::size_t n) {
         auto q = std::vector<glm::quat>(n, glm::identity<glm::quat>());
-        return {glm::vec3 {0.f, 0.f, 0.f}, q};
+        return {glm::vec3(0.0f), q};
     }
 
     std::size_t size() const { return q.size(); }
+};
+
+struct PoseEuler {
+    glm::vec3 v;
+    std::vector<glm::vec3> eulerAngles;
+
+    PoseEuler() = default;
+    PoseEuler(glm::vec3 rootPos, std::vector<glm::vec3> jointRot) :
+        v(rootPos), eulerAngles(std::move(jointRot)) {}
+
+    static PoseEuler empty(std::size_t n) {
+        auto q = std::vector<glm::vec3>(n, glm::vec3(0.0f));
+        return {glm::vec3(0.0f), q};
+    }
+
+    std::size_t size() const { return eulerAngles.size(); }
 };
 
 /*
