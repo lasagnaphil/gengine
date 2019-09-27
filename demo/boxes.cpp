@@ -18,8 +18,7 @@ public:
     void loadResources() override {
         FlyCamera* camera = initCamera<FlyCamera>();
         Ref<Transform> cameraTransform = camera->transform;
-        cameraTransform->move({10.0f, 20.0f, -10.0f});
-        cameraTransform->rotate(M_PI/4, {0.0f, 0.0f, 1.0f});
+        cameraTransform->move({-10.0f, 20.0f, 10.0f});
 
         Ref<Image> checkerImage = Resources::make<Image>("resources/textures/checker.png");
         Ref<Texture> planeTexture = Texture::fromImage(checkerImage);
