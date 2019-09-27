@@ -1,6 +1,9 @@
 # Remove generated shader header files
 gengine/shaders/*.h
 
+# Build directory
+build/
+
 #
 # CLion gitignore
 # Created by https://www.gitignore.io/api/jetbrains+all

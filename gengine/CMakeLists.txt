@@ -12,6 +12,7 @@ add_subdirectory(deps/glm)
 set(GLAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/glad)
 add_library(glad STATIC ${GLAD_DIR}/src/glad.c)
 target_include_directories(glad PUBLIC ${GLAD_DIR}/include)
+target_link_libraries(glad PUBLIC ${CMAKE_DL_LIBS})
 
 # IMGUI
 set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui)
@@ -54,7 +55,7 @@ add_library(gengine STATIC ${RENDER_SOURCES})
 # include/linking
 target_include_directories(gengine
         PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(gengine ${CMAKE_DL_LIBS} Threads::Threads SDL2 glad imgui stb glm tinyxml2 span-lite ezc3d)
+target_link_libraries(gengine Threads::Threads SDL2 glad imgui stb glm tinyxml2 span-lite ezc3d)
 
 # Compile shaders into header files
 add_executable(embed_shader shaders/embed_shader.cpp)

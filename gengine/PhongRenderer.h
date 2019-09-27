@@ -159,6 +159,10 @@ public:
     }
 
     void renderImGui() {
+
+        ImGui::SetNextWindowPos(ImVec2(1620, 30), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2(250, 250), ImGuiCond_FirstUseEver);
+
         ImGui::Begin("PhongRenderer Settings");
 
         if (ImGui::TreeNode("Directional Light Settings")) {

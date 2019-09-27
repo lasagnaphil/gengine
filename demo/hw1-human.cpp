@@ -186,6 +186,8 @@ public:
         phongRenderer.render();
         gizmosRenderer.render();
 
+        ImGui::SetNextWindowPos(ImVec2(60, 150), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2(500, 900), ImGuiCond_FirstUseEver);
         ImGui::Begin("Human Control");
 
         if (ImGui::SliderInt("Frame Idx", &frameIdx, 0, poseAnim.length())) {
