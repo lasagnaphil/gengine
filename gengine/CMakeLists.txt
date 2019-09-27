@@ -5,6 +5,7 @@ find_package(Threads REQUIRED)
 find_package(SDL2 REQUIRED)
 
 # GLM
+option(GLM_TEST_ENABLE OFF)
 add_subdirectory(deps/glm)
 
 # GLAD
@@ -38,6 +39,9 @@ add_library(span-lite INTERFACE)
 target_include_directories(span-lite INTERFACE ${SPAN_LITE_DIR})
 
 # ez3cd
+option(BUILD_TESTS OFF)
+option(BUILD_EXAMPLE OFF)
+option(BUILD_DOC OFF)
 add_subdirectory(deps/ezc3d)
 
 # Add the source files to the library
@@ -59,12 +63,17 @@ file(GLOB shaders_src
         "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.frag"
         "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.geom")
 
+set(SHADER_HEADER_FILES "")
+
 foreach(shader ${shaders_src})
     get_filename_component(shader_name ${shader} NAME)
-    add_custom_target(
-            ${shader_name}_build_target
+    add_custom_command(
+            OUTPUT ${shader}.h
             COMMAND embed_shader ${shader} ${shader}.h
             DEPENDS ${shader}
     )
-    add_dependencies(gengine ${shader_name}_build_target)
+    set(SHADER_HEADER_FILES ${SHADER_HEADER_FILES} ${shader}.h)
 endforeach()
+
+add_custom_target(compile_shaders DEPENDS ${SHADER_HEADER_FILES})
+add_dependencies(gengine compile_shaders)

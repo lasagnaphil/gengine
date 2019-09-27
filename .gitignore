@@ -1,6 +1,11 @@
+# Remove generated shader header files
+gengine/shaders/*.h
 
+#
+# CLion gitignore
 # Created by https://www.gitignore.io/api/jetbrains+all
 # Edit at https://www.gitignore.io/?templates=jetbrains+all
+#
 
 ### JetBrains+all ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and WebStorm
@@ -90,3 +95,4 @@ modules.xml
 .idea/sonarlint
 
 # End of https://www.gitignore.io/api/jetbrains+all
+
