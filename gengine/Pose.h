@@ -65,17 +65,6 @@ struct PoseDisp {
     glm::vec3& operator[](std::size_t i) { return diff[i]; }
 };
 
-inline Pose slerp(const Pose& p1, const Pose& p2, float alpha) {
-    assert(p1.size() == p2.size());
-    Pose p = Pose::empty(p1.size());
-
-    p.v = alpha * p1.v + (1 - alpha) * p2.v;
-    for (int i = 0; i < p.size(); i++) {
-        p.q[i] = glm::slerp(p1.q[i], p2.q[i], alpha);
-    }
-
-    return p;
-}
 
 inline Pose operator*(const Pose& p1, const Pose& p2) {
     assert(p1.size() == p2.size());

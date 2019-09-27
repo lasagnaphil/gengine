@@ -11,6 +11,10 @@
 #include <imgui.h>
 #include <glm/gtc/matrix_transform.hpp>
 
+struct Rect3f {
+    float left, right, bottom, top, zNear, zFar;
+};
+
 struct RenderCommand {
     Ref<Mesh> mesh;
     Ref<Material> material;
@@ -30,13 +34,16 @@ struct DirLight {
 };
 
 class PhongRenderer {
-    const static unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
-
 public:
-
     bool viewDepthBufferDebug = false;
 
-    PhongRenderer(Camera* camera = nullptr) : camera(camera) {
+    PhongRenderer(Rect3f projVolume = {-5.f, 5.f, -5.f, 5.f, 0.f, 1000.f},
+            glm::ivec2 shadowFBSize = {1024, 1024},
+            Camera* camera = nullptr) :
+
+            camera(camera), shadowFramebufferSize(shadowFBSize),
+            dirLightProjVolume(projVolume) {
+
         dirLight.enabled = true;
         dirLight.direction = glm::normalize(glm::vec3 {2.0f, -3.0f, 2.0f});
         dirLight.ambient = {0.3f, 0.3f, 0.3f, 0.3f};
@@ -59,7 +66,7 @@ public:
         glGenTextures(1, &depthMap);
         glBindTexture(GL_TEXTURE_2D, depthMap);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
-                SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+                shadowFramebufferSize.x, shadowFramebufferSize.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -92,15 +99,17 @@ public:
         float near_plane = 0.1f;
         float far_plane = 1000.f;
 
-        glm::mat4 dirLightProjection = glm::ortho(-25.0f, 25.0f, -25.0f, 25.0f, near_plane, far_plane);
-        glm::vec3 dirLightPos = dirLight.direction * -50.0f;
+        glm::mat4 dirLightProjection = glm::ortho(dirLightProjVolume.left, dirLightProjVolume.right,
+                dirLightProjVolume.bottom, dirLightProjVolume.top, dirLightProjVolume.zNear, dirLightProjVolume.zFar);
+
+        glm::vec3 dirLightPos = -glm::normalize(dirLight.direction) * dirLightProjVolume.zFar * 0.5f;
         glm::mat4 dirLightView = glm::lookAt(dirLightPos, glm::vec3(0.0f), {0.0f, 1.0f, 0.0f});
         glm::mat4 dirLightSpaceMatrix = dirLightProjection * dirLightView;
 
         depthShader->use();
         depthShader->setMat4("dirLightSpaceMatrix", dirLightSpaceMatrix);
 
-        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+        glViewport(0, 0, shadowFramebufferSize.x, shadowFramebufferSize.y);
         glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
         {
             glClear(GL_DEPTH_BUFFER_BIT);
@@ -147,6 +156,28 @@ public:
         }
 
         renderCommands.clear();
+    }
+
+    void renderImGui() {
+        ImGui::Begin("PhongRenderer Settings");
+
+        if (ImGui::TreeNode("Directional Light Settings")) {
+            ImGui::Checkbox("Enabled", &dirLight.enabled);
+
+            ImGui::SliderFloat3("Direction", (float *) &dirLight.direction, -5.0f, 5.0f);
+            ImGui::SliderFloat3("Ambient", (float *) &dirLight.ambient, 0.0f, 1.0f);
+            ImGui::SliderFloat3("Diffuse", (float *) &dirLight.diffuse, 0.0f, 1.0f);
+            ImGui::SliderFloat3("Specular", (float *) &dirLight.specular, 0.0f, 1.0f);
+            ImGui::SliderFloat("Intensity", (float *) &dirLight.intensity, 0.0f, 1.0f);
+
+            ImGui::InputFloat2("Left/Right", (float *) &dirLightProjVolume.left);
+            ImGui::InputFloat2("Bottom/Top", (float *) &dirLightProjVolume.bottom);
+            ImGui::InputFloat2("zNear/zFar", (float *) &dirLightProjVolume.zNear);
+
+            ImGui::TreePop();
+        }
+
+        ImGui::End();
     }
 
 private:
@@ -201,6 +232,9 @@ private:
 
     DirLight dirLight;
     Camera* camera;
+
+    Rect3f dirLightProjVolume;
+    glm::ivec2 shadowFramebufferSize;
 
     Ref<Shader> depthShader;
     Ref<Shader> phongShader;

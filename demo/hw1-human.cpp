@@ -12,6 +12,19 @@
 
 #include <map>
 #include <glm/gtx/euler_angles.hpp>
+#include <tinyxml2.h>
+
+inline Pose slerp(const Pose& p1, const Pose& p2, float alpha) {
+    assert(p1.size() == p2.size());
+    Pose p = Pose::empty(p1.size());
+
+    p.v = (1 - alpha) * p1.v + alpha * p2.v;
+    for (int i = 0; i < p.size(); i++) {
+        p.q[i] = glm::slerp(p1.q[i], p2.q[i], alpha);
+    }
+
+    return p;
+}
 
 struct PoseAnimation {
     std::map<uint32_t, Pose> poseKeyframes;
@@ -42,7 +55,9 @@ struct PoseAnimation {
     std::size_t length() {
         return poseKeyframes.rbegin()->first;
     }
+
 };
+
 
 class MyApp : public App {
 public:
@@ -82,36 +97,53 @@ public:
 
         auto LHipJointIdx = poseTree.findIdx("LHipJoint");
         auto RHipJointIdx = poseTree.findIdx("RHipJoint");
+        auto LeftShoulderIdx = poseTree.findIdx("LeftShoulder");
+        auto RightShoulderIdx = poseTree.findIdx("RightShoulder");
         auto LeftArmIdx = poseTree.findIdx("LeftArm");
         auto RightArmIdx = poseTree.findIdx("RightArm");
 
-        p1.q[LHipJointIdx] = glm::rotate(basePose.q[LHipJointIdx],
-                                               glm::radians(-20.0f), {0, 0, 1});
+        auto Zrot = [](float z) -> glm::quat {
+            return glm::rotate(glm::identity<glm::quat>(), glm::radians(z), {0, 0, 1});
+        };
 
-        p1.q[RHipJointIdx] = glm::rotate(basePose.q[RHipJointIdx],
-                                               glm::radians(20.0f), {0, 0, 1});
+        p1.q[LHipJointIdx] = Zrot(-5.0f);
+        p1.q[RHipJointIdx] = Zrot(5.0f);
 
-        p1.q[LeftArmIdx] = glm::rotate(basePose.q[LeftArmIdx],
-                                             glm::radians(-30.0f), {0, 0, 1});
+        p2.q[LeftShoulderIdx] = Zrot(-40.0f);
+        p2.q[RightShoulderIdx] = Zrot(40.0f);
+        p2.q[LeftArmIdx] = Zrot(-40.0f);
+        p2.q[RightArmIdx] = Zrot(40.0f);
+        p2.q[LHipJointIdx] = Zrot(-15.0f);
+        p2.q[RHipJointIdx] = Zrot(15.0f);
 
-        p1.q[RightArmIdx] = glm::rotate(basePose.q[RightArmIdx],
-                                              glm::radians(30.0f), {0, 0, 1});
+        p3.q[LeftShoulderIdx] = Zrot(20.0f);
+        p3.q[RightShoulderIdx] = Zrot(-20.0f);
+        p3.q[LeftArmIdx] = Zrot(90.0f);
+        p3.q[RightArmIdx] = Zrot(-90.0f);
 
-        p2.q[LHipJointIdx] = glm::rotate(basePose.q[LHipJointIdx],
-                glm::radians(50.0f), {0, 0, 1});
+        p4 = p2;
 
-        p2.q[RHipJointIdx] = glm::rotate(basePose.q[RHipJointIdx],
-                glm::radians(-50.0f), {0, 0, 1});
+        Pose p15 = slerp(p1, p2, 0.5f);
+        p15.v.y += 0.3f;
 
-        p2.q[LeftArmIdx] = glm::rotate(basePose.q[LeftArmIdx],
-                glm::radians(-30.0f), {0, 0, 1});
+        Pose p25 = slerp(p2, p3, 0.5f);
+        p25.v.y += 0.3f;
 
-        p2.q[RightArmIdx] = glm::rotate(basePose.q[RightArmIdx],
-                glm::radians(30.0f), {0, 0, 1});
+        Pose p35 = slerp(p3, p4, 0.5f);
+        p35.v.y += 0.3f;
 
-        poseAnim.insertFrame(0, p1);
-        poseAnim.insertFrame(10, p2);
-        poseAnim.insertFrame(20, p3);
+        Pose p45 = slerp(p4, p1, 0.5f);
+        p45.v.y += 0.3f;
+
+        poseAnim.insertFrame(0*12, p1);
+        poseAnim.insertFrame(1*12, p15);
+        poseAnim.insertFrame(2*12, p2);
+        poseAnim.insertFrame(3*12, p25);
+        poseAnim.insertFrame(4*12, p3);
+        poseAnim.insertFrame(5*12, p35);
+        poseAnim.insertFrame(6*12, p4);
+        poseAnim.insertFrame(7*12, p45);
+        poseAnim.insertFrame(8*12, p1);
 
         currentPose = poseAnim.getPoseAtFrame(0);
 
@@ -132,11 +164,19 @@ public:
     }
 
     void update(float dt) override {
+        static float time = 0.0f;
+        time += dt;
         auto inputMgr = InputManager::get();
         if (inputMgr->isKeyEntered(SDL_SCANCODE_1)) {
             phongRenderer.viewDepthBufferDebug = !phongRenderer.viewDepthBufferDebug;
         }
-        currentPose = poseAnim.getPoseAtFrame(frameIdx);
+        if (isPlaying) {
+            while (time >= 1.0f / 60.0f) {
+                frameIdx = (frameIdx + 1) % poseAnim.length();
+                currentPose = poseAnim.getPoseAtFrame(frameIdx);
+                time -= 1.0f / 60.0f;
+            }
+        }
     }
 
     void render() override {
@@ -147,7 +187,13 @@ public:
         gizmosRenderer.render();
 
         ImGui::Begin("Human Control");
-        ImGui::SliderInt("Frame Idx", &frameIdx, 0, poseAnim.length());
+
+        if (ImGui::SliderInt("Frame Idx", &frameIdx, 0, poseAnim.length())) {
+            currentPose = poseAnim.getPoseAtFrame(frameIdx);
+        }
+        if (ImGui::Button("Play / Pause")) {
+            isPlaying = !isPlaying;
+        }
         Pose pose = poseAnim.getPoseAtFrame(frameIdx);
         for (uint32_t i = 0; i < poseTree.numJoints; i++) {
             auto& node = poseTree[i];
@@ -157,6 +203,8 @@ public:
                     glm::identity<glm::quat>(), v.x, {1, 0, 0}), v.y, {0, 1, 0}), v.z, {0, 0, 1});
         }
         ImGui::End();
+
+        phongRenderer.renderImGui();
     }
 
     void release() override {
@@ -170,6 +218,7 @@ private:
     PoseRenderBody poseRenderBody;
 
     int frameIdx = 0;
+    bool isPlaying = true;
 
     Ref<Material> groundMat;
     Ref<Mesh> groundMesh;
