@@ -45,9 +45,9 @@ add_library(span-lite INTERFACE)
 target_include_directories(span-lite INTERFACE ${SPAN_LITE_DIR})
 
 # optional
-set(OPTIONAL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/optional)
-add_library(optional INTERFACE)
-target_include_directories(optional INTERFACE ${OPTIONAL_DIR})
+# set(OPTIONAL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/optional)
+# add_library(optional INTERFACE)
+# target_include_directories(optional INTERFACE ${OPTIONAL_DIR})
 
 # ez3cd
 option(BUILD_TESTS OFF)
@@ -65,7 +65,7 @@ add_library(gengine STATIC ${RENDER_SOURCES})
 # include/linking
 target_include_directories(gengine
         PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(gengine Threads::Threads SDL2 glad imgui stb glm tinyxml2 span-lite optional ezc3d)
+target_link_libraries(gengine Threads::Threads SDL2 glad imgui stb glm tinyxml2 span-lite ezc3d)
 
 # Compile shaders into header files
 add_executable(embed_shader shaders/embed_shader.cpp)

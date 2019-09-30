@@ -7,13 +7,13 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include <optional.hpp>
+#include <optional>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-tl::optional<MotionClipData::ChannelType> stringToChannelType(const std::string& name) {
+std::optional<MotionClipData::ChannelType> stringToChannelType(const std::string& name) {
     switch (name[0]) {
         case 'X':
             if (name == "Xposition") return MotionClipData::ChannelType::Xpos;

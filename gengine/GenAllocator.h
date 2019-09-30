@@ -105,11 +105,9 @@ struct GenAllocator {
             if (nodes[i].generation == 0) {
                 // This doesn't work in C++14 because of the lack of constexpr if
                 // So we need to manually free resources before deleting allocator
-                /*
                 IF_CONSTEXPR(std::is_base_of<IDisposable, T>()) {
                     reinterpret_cast<T*>(&nodes[i].bytes)->dispose();
                 }
-                 */
             }
         }
     }
@@ -200,13 +198,9 @@ struct GenAllocator {
         assert(node.generation == ref.generation);
 
         std::swap(node.nextIndex, firstAvailable);
-        // This doesn't work in C++14 because of the lack of constexpr if
-        // So we need to manually free resources before deleting allocator
-        /*
         IF_CONSTEXPR(std::is_base_of<IDisposable, T>()) {
             reinterpret_cast<T*>(&node.bytes)->dispose();
         }
-         */
 
         count--;
     }
