@@ -28,6 +28,13 @@ struct Resources {
 };
 
 #else
+
+#if __cplusplus == 201402L
+#define IF_CONSTEXPR if
+#else
+#define IF_CONSTEXPR if constexpr
+#endif
+
 class TypeRegistry {
 public:
     template <typename T> static uint16_t getID();
@@ -96,9 +103,13 @@ struct GenAllocator {
     void dispose() {
         for (uint32_t i = 0; i < capacity; ++i) {
             if (nodes[i].generation == 0) {
-                if constexpr (std::is_base_of<IDisposable, T>()) {
+                // This doesn't work in C++14 because of the lack of constexpr if
+                // So we need to manually free resources before deleting allocator
+                /*
+                IF_CONSTEXPR(std::is_base_of<IDisposable, T>()) {
                     reinterpret_cast<T*>(&nodes[i].bytes)->dispose();
                 }
+                 */
             }
         }
     }
@@ -189,9 +200,13 @@ struct GenAllocator {
         assert(node.generation == ref.generation);
 
         std::swap(node.nextIndex, firstAvailable);
-        if constexpr (std::is_base_of<IDisposable, T>()) {
+        // This doesn't work in C++14 because of the lack of constexpr if
+        // So we need to manually free resources before deleting allocator
+        /*
+        IF_CONSTEXPR(std::is_base_of<IDisposable, T>()) {
             reinterpret_cast<T*>(&node.bytes)->dispose();
         }
+         */
 
         count--;
     }

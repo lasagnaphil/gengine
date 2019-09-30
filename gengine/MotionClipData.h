@@ -12,7 +12,6 @@
 #include <glm/mat4x4.hpp>
 #include <glm/ext.hpp>
 #include <span.hpp>
-#include <optional>
 #include <stack>
 
 #include "GenAllocator.h"
