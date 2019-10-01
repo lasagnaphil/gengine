@@ -17,6 +17,7 @@
 #include "PhongRenderer.h"
 #include "GizmosRenderer.h"
 #include "Camera.h"
+#include "DebugRenderer.h"
 
 class App {
 public:
@@ -36,6 +37,8 @@ public:
 protected:
     PhongRenderer phongRenderer;
     GizmosRenderer gizmosRenderer;
+    DebugRenderer imRenderer;
+
     Ref<Transform> rootTransform;
     std::unique_ptr<Camera> camera = nullptr;
 

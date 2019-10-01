@@ -5,6 +5,12 @@
 #ifndef GENGINE_CAMERA_H
 #define GENGINE_CAMERA_H
 
+#include "Ray.h"
+
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
+#include <glm/mat4x4.hpp>
 #include <imgui.h>
 #include <SDL2/SDL.h>
 

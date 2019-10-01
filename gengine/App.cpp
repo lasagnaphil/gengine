@@ -162,9 +162,11 @@ void App::start() {
 
     phongRenderer.setCamera(camera.get());
     gizmosRenderer.setCamera(camera.get());
+    imRenderer.setCamera(camera.get());
 
     phongRenderer.init();
     gizmosRenderer.init();
+    imRenderer.init();
 
     //
     // Program loop

@@ -5,7 +5,7 @@
 #include <InputManager.h>
 #include "App.h"
 #include "PhongRenderer.h"
-#include "GizmosRenderer.h"
+#include "DebugRenderer.h"
 #include "FlyCamera.h"
 #include "Pose.h"
 #include "PoseRenderBody.h"
@@ -21,26 +21,26 @@ Eigen::Vector3f GLMToEigen(const glm::vec3& v) {
     return Eigen::Vector3f(v.x, v.y, v.z);
 }
 
-namespace glm {
+namespace glmx {
     struct transform {
-        vec3 v;
-        quat q;
+        glm::vec3 v;
+        glm::quat q;
 
         transform() = default;
-        transform(vec3 v) : v(v), q(identity<quat>()) {}
-        transform(quat q) : v(vec3()), q(q) {}
-        transform(vec3 v, quat q) : v(v), q(q) {}
+        transform(glm::vec3 v) : v(v), q(glm::identity<glm::quat>()) {}
+        transform(glm::quat q) : v(glm::vec3()), q(q) {}
+        transform(glm::vec3 v, glm::quat q) : v(v), q(q) {}
     };
 
     struct transform_disp {
-        vec3 v;
-        vec3 u;
+        glm::vec3 v;
+        glm::vec3 u;
 
         transform_disp() = default;
-        transform_disp(vec3 v, vec3 u) : v(v), u(u) {}
+        transform_disp(glm::vec3 v, glm::vec3 u) : v(v), u(u) {}
     };
 
-    inline mat4 mat4_cast(const glm::transform& t) {
+    inline glm::mat4 mat4_cast(const transform& t) {
         return translate(mat4_cast(t.q), t.v);
     }
 
@@ -78,24 +78,24 @@ namespace glm {
 
 }
 
-glm::transform calcFK(const PoseTree& poseTree, const Pose& pose, uint32_t mIdx) {
+glmx::transform calcFK(const PoseTree& poseTree, const Pose& pose, uint32_t mIdx) {
     uint32_t i = mIdx;
     if (poseTree[i].isEndSite) {
         i = poseTree[i].parent;
     }
 
-    glm::transform t(glm::vec3(0.0f), glm::identity<glm::quat>());
+    glmx::transform t(glm::vec3(0.0f), glm::identity<glm::quat>());
 
     while (true) {
         auto& node = poseTree[i];
         if (poseTree[i].isEndSite) {
-            t = glm::transform(node.offset) * t;
+            t = glmx::transform(node.offset) * t;
         }
         else {
-            t = glm::transform(node.offset, pose.q[i]) * t;
+            t = glmx::transform(node.offset, pose.q[i]) * t;
         }
         if (i == 0) {
-            t = glm::transform(pose.v) * t;
+            t = glmx::transform(pose.v) * t;
             break;
         }
         else {
@@ -134,9 +134,9 @@ Eigen::MatrixXf calcEulerJacobian(
 
     Eigen::MatrixXf J(3, 3*pose.size());
 
-    glm::transform mT = calcFK(poseTree, pose, mIdx);
+    glmx::transform mT = calcFK(poseTree, pose, mIdx);
     for (int i = 0; i < pose.size(); i++) {
-        glm::transform axisT = calcFK(poseTree, pose, i);
+        glmx::transform axisT = calcFK(poseTree, pose, i);
         glm::vec3 v = axisT.v - mT.v;
 
         glm::vec3 wx = axisT.q * glm::vec3 {1, 0, 0};
@@ -221,7 +221,11 @@ public:
         renderMotionClip(phongRenderer, currentPose, poseTree, poseRenderBody);
 
         phongRenderer.render();
-        gizmosRenderer.render();
+
+        glm::mat4 rootTrans = glm::mat4_cast(currentPose.q[0]) * glm::translate(currentPose.v);
+        imRenderer.drawAxisTriad(rootTrans, 0.1f, 1.0f, false);
+        // imRenderer.drawBox(glm::vec3 {1.0f, 1.0f, 1.0f}, colors::Blue, 1.0f, 1.0f, 1.0f, false);
+        imRenderer.render();
 
         ImGui::SetNextWindowPos(ImVec2(60, 150), ImGuiCond_FirstUseEver);
         ImGui::SetNextWindowSize(ImVec2(500, 900), ImGuiCond_FirstUseEver);
