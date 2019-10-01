@@ -5,6 +5,9 @@
 #ifndef GENGINE_GLMX_TRANSFORM_H
 #define GENGINE_GLMX_TRANSFORM_H
 
+#include <glm/vec3.hpp>
+#include <glm/gtx/quaternion.hpp>
+
 namespace glmx {
     struct transform {
         glm::vec3 v;

@@ -5,7 +5,9 @@
 #ifndef GENGINE_GLMX_EIGEN_H
 #define GENGINE_GLMX_EIGEN_H
 
-Eigen::Vector3f GLMToEigen(const glm::vec3& v) {
+#include "Eigen/Dense"
+
+inline Eigen::Vector3f GLMToEigen(const glm::vec3& v) {
     return Eigen::Vector3f(v.x, v.y, v.z);
 }
 
