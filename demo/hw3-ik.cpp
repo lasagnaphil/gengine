@@ -16,67 +16,9 @@
 #include <glm/ext/quaternion_common.hpp>
 #include <glm/ext/quaternion_float.hpp>
 #include <glm/ext/quaternion_trigonometric.hpp>
-
-Eigen::Vector3f GLMToEigen(const glm::vec3& v) {
-    return Eigen::Vector3f(v.x, v.y, v.z);
-}
-
-namespace glmx {
-    struct transform {
-        glm::vec3 v;
-        glm::quat q;
-
-        transform() = default;
-        transform(glm::vec3 v) : v(v), q(glm::identity<glm::quat>()) {}
-        transform(glm::quat q) : v(glm::vec3()), q(q) {}
-        transform(glm::vec3 v, glm::quat q) : v(v), q(q) {}
-    };
-
-    struct transform_disp {
-        glm::vec3 v;
-        glm::vec3 u;
-
-        transform_disp() = default;
-        transform_disp(glm::vec3 v, glm::vec3 u) : v(v), u(u) {}
-    };
-
-    inline glm::mat4 mat4_cast(const transform& t) {
-        return translate(mat4_cast(t.q), t.v);
-    }
-
-    inline transform operator*(const transform& t1, const transform& t2) {
-        return {t1.q * t2.v + t1.v, t1.q * t2.q};
-    }
-
-    inline transform operator/(const transform& t1, const transform& t2) {
-        return {conjugate(t2.q) * (t1.v - t2.v), glm::conjugate(t2.q) * t1.q};
-    }
-
-    inline transform_disp operator+(const transform_disp& d1, const transform_disp& d2) {
-        return {d1.v + d2.v, d1.u + d2.u};
-    }
-
-    inline transform_disp operator-(const transform_disp& d1, const transform_disp& d2) {
-        return {d1.v - d2.v, d1.u - d2.u};
-    }
-
-    inline transform_disp operator*(float k, const transform_disp& d) {
-        return {k * d.v, k * d.u};
-    }
-
-    inline transform_disp operator/(float k, const transform_disp& d) {
-        return {d.v / k, d.u / k};
-    }
-
-    inline transform exp(const transform_disp& d) {
-        return {d.v, glm::angleAxis(glm::length(d.u), glm::normalize(d.u))};
-    }
-
-    inline transform_disp log(const transform& t) {
-        return {t.v, glm::angle(t.q) * glm::axis(t.q)};
-    }
-
-}
+#include <glmx/transform.h>
+#include <glmx/eigen.h>
+#include <glmx/euler.h>
 
 glmx::transform calcFK(const PoseTree& poseTree, const Pose& pose, uint32_t mIdx) {
     uint32_t i = mIdx;
@@ -105,58 +47,47 @@ glmx::transform calcFK(const PoseTree& poseTree, const Pose& pose, uint32_t mIdx
     return t;
 }
 
-/*
-Eigen::MatrixXf calcJacobianApprox(
-        const PoseTree& poseTree, Pose pose, uint32_t mIdx) {
-
-    constexpr float dv = 1e-3;
-
-    Eigen::MatrixXf J(3, pose.size());
-
-    // TODO: Not finished
-    Pose newPose = pose;
-    for (int i = 0; i < poseTree.numJoints; i++) {
-        glm::vec3 p = calcFK(poseTree, pose, mIdx);
-        for (int d = 0; d < 3; d++) {
-            newPose.q[i][d] += dv;
-            float p_d = calcFK(poseTree, newPose, mIdx)[d];
-            J(d, i) = (p_d - p[d]) / dv;
-            newPose.q[i][d] = pose.q[i][d];
-        }
-    }
-
-    return J;
-}
- */
-
 Eigen::MatrixXf calcEulerJacobian(
-        const PoseTree& poseTree, Pose& pose, uint32_t mIdx) {
+        const PoseTree& poseTree, Pose& pose, uint32_t mIdx, nonstd::span<uint32_t> relevantJoints) {
 
-    Eigen::MatrixXf J(3, 3*pose.size());
+    Eigen::MatrixXf J(3, 3*relevantJoints.size());
 
     glmx::transform mT = calcFK(poseTree, pose, mIdx);
-    for (int i = 0; i < pose.size(); i++) {
+    int c = 0;
+    for (uint32_t i : relevantJoints) {
         glmx::transform axisT = calcFK(poseTree, pose, i);
-        glm::vec3 v = axisT.v - mT.v;
+        glm::vec3 v = mT.v - axisT.v;
 
         glm::vec3 wx = axisT.q * glm::vec3 {1, 0, 0};
-        J.col(3*i) = GLMToEigen(glm::cross(wx, v));
+        J.col(3*c) = GLMToEigen(glm::cross(wx, v));
         glm::vec3 wy = axisT.q * glm::vec3 {0, 1, 0};
-        J.col(3*i+1) = GLMToEigen(glm::cross(wy, v));
+        J.col(3*c+1) = GLMToEigen(glm::cross(wy, v));
         glm::vec3 wz = axisT.q * glm::vec3 {0, 0, 1};
-        J.col(3*i+2) = GLMToEigen(glm::cross(wz, v));
+        J.col(3*c+2) = GLMToEigen(glm::cross(wz, v));
+
+        c++;
     }
 
     return J;
 }
 
 void solveIK(const PoseTree& poseTree, Pose& pose, uint32_t mIdx, glm::vec3 mPos) {
-    PoseEuler poseEuler = toEuler(pose);
-    Eigen::MatrixXf J = calcEulerJacobian(poseTree, pose, mIdx);
+    PoseEuler poseEuler = toEuler(pose, EulOrdXYZs);
+    uint32_t relevantJoints[] = {
+            mIdx, mIdx-1, mIdx-2, mIdx-3, mIdx-4, mIdx-5
+    };
+    Eigen::MatrixXf J = calcEulerJacobian(poseTree, pose, mIdx, relevantJoints);
     Eigen::Vector3f dp = GLMToEigen(mPos - calcFK(poseTree, pose, mIdx).v);
-    Eigen::VectorXf dq = J.colPivHouseholderQr().solve(dp);
-    for (int i = 0; i < pose.size(); i++) {
-        poseEuler.eulerAngles[i] += glm::vec3(dq[3*i], dq[3*i+1], dq[3*i+2]);
+    Eigen::VectorXf dq = J.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(dp);
+    // Eigen::VectorXf dq = (J.transpose() * J).ldlt().solve(J.transpose() * dp);
+    // Eigen::VectorXf dq = J.transpose() * dp;
+    int c = 0;
+    for (uint32_t i : relevantJoints) {
+        assert(i < poseEuler.eulerAngles.size());
+        poseEuler.eulerAngles[i].x += dq[3*c];
+        poseEuler.eulerAngles[i].y += dq[3*c+1];
+        poseEuler.eulerAngles[i].z += dq[3*c+2];
+        c++;
     }
     pose = toQuat(poseEuler);
 }
@@ -214,6 +145,15 @@ public:
         if (inputMgr->isKeyEntered(SDL_SCANCODE_1)) {
             phongRenderer.viewDepthBufferDebug = !phongRenderer.viewDepthBufferDebug;
         }
+        if (inputMgr->isMousePressed(SDL_BUTTON_LEFT)) {
+            glm::vec2 mPos = inputMgr->getMousePos();
+            Ray ray = camera->screenPointToRay(mPos);
+            uint32_t leftHandIdx = poseTree["LeftHandIndex1"]->childJoints[0];
+            if (ray.intersectWithPlane(ikTargetPlane, ikTarget)) {
+                handPos = calcFK(poseTree, currentPose, leftHandIdx).v;
+                solveIK(poseTree, currentPose, leftHandIdx, ikTarget);
+            }
+        }
     }
 
     void render() override {
@@ -224,7 +164,9 @@ public:
 
         glm::mat4 rootTrans = glm::mat4_cast(currentPose.q[0]) * glm::translate(currentPose.v);
         imRenderer.drawAxisTriad(rootTrans, 0.1f, 1.0f, false);
-        // imRenderer.drawBox(glm::vec3 {1.0f, 1.0f, 1.0f}, colors::Blue, 1.0f, 1.0f, 1.0f, false);
+        imRenderer.drawSphere(handPos, colors::Red, 0.1f, true);
+        imRenderer.drawSphere(ikTarget, colors::Green, 0.1f, true);
+        imRenderer.drawPlane(ikTargetPlane.pos, colors::Blue, ikTargetPlane.dir, colors::Blue, 1.0f, 0.1f, true);
         imRenderer.render();
 
         ImGui::SetNextWindowPos(ImVec2(60, 150), ImGuiCond_FirstUseEver);
@@ -233,10 +175,9 @@ public:
 
         for (uint32_t i = 0; i < poseTree.numJoints; i++) {
             auto& node = poseTree[i];
-            glm::vec3 v = glm::eulerAngles(currentPose.q[i]);
-            ImGui::SliderFloat3(node.name.c_str(), (float*)&v, -M_PIf32, M_PIf32);
-            currentPose.q[i] = glm::rotate(glm::rotate(glm::rotate(
-                    glm::identity<glm::quat>(), v.x, {1, 0, 0}), v.y, {0, 1, 0}), v.z, {0, 0, 1});
+            glm::vec4 v = glmx::quatToEuler(currentPose.q[i], EulOrdXYZs);
+            ImGui::InputFloat3(node.name.c_str(), (float*)&v);
+            currentPose.q[i] = glmx::eulerToQuat(v);
         }
         ImGui::End();
 
@@ -254,6 +195,10 @@ private:
 
     Ref<Material> groundMat;
     Ref<Mesh> groundMesh;
+
+    glm::vec3 handPos;
+    glm::vec3 ikTarget = {0.f, 0.f, 0.f};
+    Ray ikTargetPlane = {{0.f, 1.f, 0.5f}, {0.f, 0.f, 1.f}};
 };
 
 int main(int argc, char** argv) {

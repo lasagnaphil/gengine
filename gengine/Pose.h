@@ -16,6 +16,7 @@
 #include <glm/ext/quaternion_common.hpp>
 #include <glm/ext/quaternion_float.hpp>
 #include <glm/ext/quaternion_trigonometric.hpp>
+#include <glmx/euler.h>
 
 /*
  * The mathmatical formulation of the following classes are at:
@@ -48,25 +49,25 @@ struct Pose {
 
 struct PoseEuler {
     glm::vec3 v;
-    std::vector<glm::vec3> eulerAngles;
+    std::vector<glm::vec4> eulerAngles;
 
     PoseEuler() = default;
-    PoseEuler(glm::vec3 rootPos, std::vector<glm::vec3> jointRot) :
+    PoseEuler(glm::vec3 rootPos, std::vector<glm::vec4> jointRot) :
         v(rootPos), eulerAngles(std::move(jointRot)) {}
 
     static PoseEuler empty(std::size_t n) {
-        auto q = std::vector<glm::vec3>(n, glm::vec3(0.0f));
+        auto q = std::vector<glm::vec4>(n, glm::vec4(0.0f, 0.0f, 0.0f, EulOrdXYZs));
         return {glm::vec3(0.0f), q};
     }
 
     std::size_t size() const { return eulerAngles.size(); }
 };
 
-inline PoseEuler toEuler(const Pose& p) {
+inline PoseEuler toEuler(const Pose& p, int order) {
     PoseEuler pe = PoseEuler::empty(p.size());
     pe.v = p.v;
     for (int i = 0; i < pe.size(); i++) {
-        pe.eulerAngles[i] = glm::eulerAngles(p.q[i]);
+        pe.eulerAngles[i] = glmx::quatToEuler(p.q[i], order);
     }
     return pe;
 }
@@ -75,9 +76,8 @@ inline Pose toQuat(const PoseEuler& pe) {
     Pose p = Pose::empty(pe.size());
     p.v = pe.v;
     for (int i = 0; i < p.size(); i++) {
-        glm::vec3 e = pe.eulerAngles[i];
-        p.q[i] = glm::rotate(glm::rotate(glm::rotate(
-                glm::identity<glm::quat>(), e.x, {1, 0, 0}), e.y, {0, 1, 0}), e.z, {0, 0, 1});
+        glm::vec4 e = pe.eulerAngles[i];
+        p.q[i] = glmx::eulerToQuat(e);
     }
     return p;
 }
