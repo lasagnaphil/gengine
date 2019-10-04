@@ -7,16 +7,23 @@
 #include "Eigen/Dense"
 #include "Eigen/Householder"
 
+glm::vec3 quatToTwist(glm::quat q) {
+    float im_size = sqrtf(q.x*q.x + q.y*q.y + q.z*q.z);
+    glm::vec3 twist = glm::vec3(q.x, q.y, q.z);
+    twist *= (2 * atan2f(im_size, q.w) / im_size);
+    return twist;
+}
+
 Eigen::MatrixXf calcEulerJacobian(
         const PoseTree& poseTree, Pose& pose, uint32_t mIdx, nonstd::span<uint32_t> relevantJoints) {
 
     Eigen::MatrixXf J(3, 3 * relevantJoints.size());
 
-    glmx::transform mT = calcFK(poseTree, pose, mIdx);
+    std::vector<glmx::transform> Ts = calcFK(poseTree, pose);
     int c = 0;
     for (uint32_t i : relevantJoints) {
-        glmx::transform axisT = calcFK(poseTree, pose, i);
-        glm::vec3 v = mT.v - axisT.v;
+        glmx::transform axisT = Ts[i];
+        glm::vec3 v = Ts[mIdx].v - axisT.v;
 
         glm::vec3 wx = axisT.q * glm::vec3{1, 0, 0};
         J.col(3*c) = GLMToEigen(glm::cross(wx, v));
@@ -30,6 +37,37 @@ Eigen::MatrixXf calcEulerJacobian(
 
     return J;
 }
+
+/*
+Eigen::MatrixXf calcTwistJacobian(
+        const PoseTree& poseTree, Pose& pose, uint32_t mIdx, uint32_t rIdx) {
+
+    std::vector<glmx::transform> Ts = calcFK(poseTree, pose);
+
+    int c = 1;
+    int i = mIdx;
+    while (i == 0) {
+        i = poseTree[i].parent;
+        c++;
+    }
+    Eigen::MatrixXf J(3, c + 1);
+
+    i = mIdx;
+    c = 0;
+    while (true) {
+        auto& node = poseTree[i];
+        glm::quat parentQ = Ts[node.parent].q;
+        glmx::transform t = glmx::transform(parentQ) * Ts[i] * glmx::transform(glm::conjugate(parentQ));
+        J.col(3*c) = GLMToEigen(quatToTwist(t.q));
+        if (i == 0) {
+            break;
+        }
+        else {
+            i = node.parent;
+        }
+    }
+}
+ */
 
 glmx::transform calcFK(const PoseTree &poseTree, const Pose &pose, uint32_t mIdx) {
     uint32_t i = mIdx;
@@ -58,6 +96,33 @@ glmx::transform calcFK(const PoseTree &poseTree, const Pose &pose, uint32_t mIdx
     return t;
 }
 
+std::vector<glmx::transform> calcFK(const PoseTree &poseTree, const Pose &pose) {
+    std::vector<glmx::transform> transforms(poseTree.numNodes);
+    std::stack<std::tuple<uint32_t, uint32_t>> recursionStack;
+
+    transforms[0] = glmx::transform {pose.v, glm::identity<glm::quat>()};
+    recursionStack.push({0, 0});
+
+    while (!recursionStack.empty()) {
+        auto [idx, parentIdx] = recursionStack.top();
+        recursionStack.pop();
+
+        auto& node = poseTree[idx];
+        if (poseTree[idx].isEndSite) {
+            transforms[idx] = transforms[parentIdx] * glmx::transform(node.offset);
+        }
+        else {
+            transforms[idx] = transforms[parentIdx] * glmx::transform(node.offset, pose.q[idx]);
+        }
+
+        for (uint32_t childIdx : node.childJoints) {
+            recursionStack.push({childIdx, idx});
+        }
+    }
+
+    return transforms;
+}
+
 void
 solveIK(const PoseTree &poseTree, Pose &pose, uint32_t mIdx, nonstd::span <uint32_t> relevantJoints, glm::vec3 mPos) {
     PoseEuler poseEuler = toEuler(pose, EulOrdXYZs);
@@ -76,3 +141,44 @@ solveIK(const PoseTree &poseTree, Pose &pose, uint32_t mIdx, nonstd::span <uint3
     }
     pose = toQuat(poseEuler);
 }
+
+void solveIK(const PoseTree& poseTree, Pose& pose, uint32_t mIdx, nonstd::span<uint32_t> relevantJoints,
+        std::function<float(const PoseEuler&)> costFunction) {
+
+    PoseEuler poseEuler = toEuler(pose, EulOrdXYZs);
+    std::vector<glmx::transform> transforms = calcFK(poseTree, pose);
+    float epsilon = 1e-6;
+    float alpha = 1000;
+    const int numIters = 10000;
+    float cost;
+
+    // Gradient descent on cost function!
+    for (int iter = 0; iter < numIters; iter++) {
+        cost = costFunction(poseEuler);
+        if (iter % 100 == 0) {
+            printf("Iteration %d: cost = %f\n", iter, cost);
+        }
+        if (cost < 1e-4) break;
+        Eigen::VectorXf grad_cost(3*relevantJoints.size());
+        int c = 0;
+        for (uint32_t i : relevantJoints) {
+            for (int d = 0; d < 3; d++) {
+                poseEuler.eulerAngles[i][d] += epsilon;
+                grad_cost[3 * c + d] = costFunction(poseEuler) - cost;
+                poseEuler.eulerAngles[i][d] -= epsilon;
+            }
+            c++;
+        }
+
+        c = 0;
+        for (uint32_t i : relevantJoints) {
+            for (int d = 0; d < 3; d++) {
+                poseEuler.eulerAngles[i][d] -= alpha * grad_cost(3 * c + d);
+            }
+            c++;
+        }
+    }
+
+    pose = toQuat(poseEuler);
+}
+

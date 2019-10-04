@@ -80,8 +80,11 @@ public:
                     spine1Idx, spine1Idx-1, spine1Idx-2
             };
             if (ray.intersectWithPlane(ikTargetPlane, ikTarget)) {
+                // solveIK(poseTree, currentPose, leftHandIdx, relevantIndices, ikTarget);
+                solveIK(poseTree, currentPose, leftHandIdx, relevantIndices, [&](const PoseEuler& pose) {
+                    return glm::length2(calcFK(poseTree, toQuat(pose), leftHandIdx).v - ikTarget);
+                });
                 handPos = calcFK(poseTree, currentPose, leftHandIdx).v;
-                solveIK(poseTree, currentPose, leftHandIdx, relevantIndices, ikTarget);
             }
         }
     }

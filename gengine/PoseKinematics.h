@@ -14,6 +14,24 @@
 
 glmx::transform calcFK(const PoseTree& poseTree, const Pose& pose, uint32_t mIdx);
 
+std::vector<glmx::transform> calcFK(const PoseTree& poseTree, const Pose& pose);
+
 void solveIK(const PoseTree& poseTree, Pose& pose, uint32_t mIdx, nonstd::span<uint32_t> relevantJoints, glm::vec3 mPos);
+
+void solveIK(const PoseTree& poseTree, Pose& pose, uint32_t mIdx, nonstd::span<uint32_t> relevantJoints,
+        std::function<float(const PoseEuler&)> costFunction);
+
+/*
+void solveIKWithCostFunction(const PoseTree& poseTree, Pose& pose, uint32_t mIdx, nonstd::span<uint32_t> relevantJoints,
+        std::function<float(nonstd::span<float> jointValues)> costFunction) {
+    for (uint32_t idx : relevantJoints) {
+        pose.q[idx]
+    }
+    float cost = costFunction();
+    for (uint32_t idx : relevantJoints) {
+        pose.q[idx]
+    }
+}
+ */
 
 #endif //GENGINE_INVERSEKINEMATICS_H
