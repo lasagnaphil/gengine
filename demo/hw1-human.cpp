@@ -200,7 +200,7 @@ public:
         for (uint32_t i = 0; i < poseTree.numJoints; i++) {
             auto& node = poseTree[i];
             glm::vec3 v = glm::eulerAngles(currentPose.q[i]);
-            ImGui::SliderFloat3(node.name.c_str(), (float*)&v, -M_PIf32, M_PIf32);
+            ImGui::SliderFloat3(node.name.c_str(), (float*)&v, -M_PI, M_PI);
             currentPose.q[i] = glm::rotate(glm::rotate(glm::rotate(
                     glm::identity<glm::quat>(), v.x, {1, 0, 0}), v.y, {0, 1, 0}), v.z, {0, 0, 1});
         }

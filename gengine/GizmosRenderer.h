@@ -43,7 +43,9 @@ struct GizmosRenderer {
                 Shaders::line3D->use();
                 Shaders::line3D->setMat4("model", command.modelMatrix);
                 Shaders::line3D->setVec4("color", material->lineColor);
+#ifndef __APPLE__
                 glLineWidth(material->lineWidth);
+#endif
                 glDrawArrays(material->lineType, 0, command.mesh->positions.size());
             }
             if (material->drawPoints) {

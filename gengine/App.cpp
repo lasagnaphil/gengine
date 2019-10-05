@@ -87,9 +87,13 @@ void App::start() {
     SDL_GL_LoadLibrary(NULL); // Default OpenGL is fine.
 
     const char* glsl_version = "#version 130";
-    // Use OpenGL Version 4.3
+#if __APPLE__
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+#else
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+#endif
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -154,7 +158,12 @@ void App::start() {
     ImGui::StyleColorsDark();
 
     ImGui_ImplSDL2_InitForOpenGL(window, mainContext);
+#ifdef __APPLE__
+    ImGui_ImplOpenGL3_Init("#version 410 core");
+#else
     ImGui_ImplOpenGL3_Init(glsl_version);
+#endif
+
 
     stbi_set_flip_vertically_on_load(true);
 
