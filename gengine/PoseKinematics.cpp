@@ -21,7 +21,7 @@ glm::vec3 quatToTwist(glm::quat q) {
 MatrixXf calcEulerJacobian(const PoseTree& poseTree, nonstd::span<glmx::transform> Ts,
         uint32_t mIdx, nonstd::span<uint32_t> relevantJoints) {
 
-    MatrixXf J(3, 3 * relevantJoints.size());
+    MatrixXf J(6, 3 * relevantJoints.size());
 
     int c = 0;
     for (uint32_t i : relevantJoints) {
@@ -29,11 +29,14 @@ MatrixXf calcEulerJacobian(const PoseTree& poseTree, nonstd::span<glmx::transfor
         glm::vec3 v = Ts[mIdx].v - axisT.v;
 
         glm::vec3 wx = axisT.q * glm::vec3{1, 0, 0};
-        J.col(3*c) = glmx::toEigen(glm::cross(wx, v));
+        J.block<3,1>(0, 3*c+0) = glmx::toEigen(glm::cross(wx, v));
+        J.block<3,1>(3, 3*c+0) = glmx::toEigen(wx);
         glm::vec3 wy = axisT.q * glm::vec3{0, 1, 0};
-        J.col(3*c + 1) = glmx::toEigen(glm::cross(wy, v));
+        J.block<3,1>(0, 3*c+1) = glmx::toEigen(glm::cross(wy, v));
+        J.block<3,1>(3, 3*c+1) = glmx::toEigen(wy);
         glm::vec3 wz = axisT.q * glm::vec3{0, 0, 1};
-        J.col(3*c + 2) = glmx::toEigen(glm::cross(wz, v));
+        J.block<3,1>(0, 3*c+2) = glmx::toEigen(glm::cross(wz, v));
+        J.block<3,1>(3, 3*c+2) = glmx::toEigen(wz);
 
         c++;
     }
@@ -128,12 +131,60 @@ std::vector<glmx::transform> calcFK(const PoseTree& poseTree, glm::vec3 rootPos,
     return transforms;
 }
 
+using Vector6f = Matrix<float, 6, -1>;
+
+namespace glmx {
+    glm::vec3 log(glm::quat q) {
+        q = glm::normalize(q);
+        float a = sqrtf(1 - q.w*q.w);
+        if (a <= glm::epsilon<float>()) {
+            return glm::vec3 {};
+        }
+        return 2.0f * atan2f(a, q.w) / a * glm::vec3(q.x, q.y, q.z);
+    }
+    glm::vec3 logdiff(glm::quat q1, glm::quat q2) {
+        return glmx::log(q2 * glm::conjugate(q1));
+    }
+}
+
+void
+solveIKSimple(const PoseTree &poseTree, Pose &pose, uint32_t mIdx,
+              nonstd::span <uint32_t> relevantJoints, glmx::transform mT, LeastSquareMethod lsqMethod) {
+    PoseEuler poseEuler = toEuler(pose, EulOrdXYZs);
+    MatrixXf J = calcEulerJacobian(poseTree, pose, mIdx, relevantJoints);
+    glmx::transform T = calcFK(poseTree, pose, mIdx);
+    VectorXf dp(6);
+    dp << glmx::toEigen(mT.v - T.v), glmx::toEigen(glmx::logdiff(mT.q, T.q));
+    VectorXf dq;
+    switch (lsqMethod) {
+        case LeastSquareMethod::SVD:
+            dq = J.bdcSvd(ComputeThinU | ComputeThinV).solve(dp);
+            break;
+        case LeastSquareMethod::QR:
+            dq = J.colPivHouseholderQr().solve(dp);
+            break;
+        case LeastSquareMethod::Normal:
+            dq = (J.transpose() * J).ldlt().solve(J.transpose() * dp);
+            break;
+    }
+    int c = 0;
+    for (uint32_t i : relevantJoints) {
+        assert(i < poseEuler.eulerAngles.size());
+        poseEuler.eulerAngles[i].x += dq[3*c];
+        poseEuler.eulerAngles[i].y += dq[3*c+1];
+        poseEuler.eulerAngles[i].z += dq[3*c+2];
+        c++;
+    }
+    pose = toQuat(poseEuler);
+}
 void
 solveIKSimple(const PoseTree &poseTree, Pose &pose, uint32_t mIdx,
               nonstd::span <uint32_t> relevantJoints, glm::vec3 mPos, LeastSquareMethod lsqMethod) {
     PoseEuler poseEuler = toEuler(pose, EulOrdXYZs);
-    MatrixXf J = calcEulerJacobian(poseTree, pose, mIdx, relevantJoints);
-    Vector3f dp = glmx::toEigen(mPos - calcFK(poseTree, pose, mIdx).v);
+    MatrixXf J = calcEulerJacobian(poseTree, pose, mIdx, relevantJoints)
+            .block(0, 0, 3, 3*relevantJoints.size());
+    glmx::transform T = calcFK(poseTree, pose, mIdx);
+    Vector3f dp = glmx::toEigen(mPos - T.v);
     VectorXf dq;
     switch (lsqMethod) {
         case LeastSquareMethod::SVD:
@@ -157,20 +208,30 @@ solveIKSimple(const PoseTree &poseTree, Pose &pose, uint32_t mIdx,
     pose = toQuat(poseEuler);
 }
 
-float totalCost(const IKProblem& ik, glm::vec3 endEffectorPos,
-        const VectorXf& pose, const VectorXf& origPose) {
-
-    return 0.5f * ik.targetImportance * glm::length2(endEffectorPos - ik.targetPos)
-           + 0.5f * ik.poseDiffImportance * (pose - origPose).squaredNorm();
+float quatDistance(glm::quat q1, glm::quat q2) {
+    float dot = q1.w * q2.w + q1.x * q2.x + q1.y * q2.y + q1.z * q2.z;
+    return glm::acos(2*dot*dot - 1);
 }
 
-VectorXf totalCostDerivative(const IKProblem& ik, glm::vec3 endEffectorPos, const MatrixXf& J,
+float totalCost(const IKProblem& ik, glmx::transform endEffectorT,
         const VectorXf& pose, const VectorXf& origPose) {
 
-    glm::vec3 df_raw = ik.targetImportance * (endEffectorPos - ik.targetPos);
-    Map<VectorXf> df(&df_raw[0], 3);
+    float cost = 0.5f * ik.alpha_targetPos * glm::length2(endEffectorT.v - ik.targetPos);
+    cost += 0.5f * ik.alpha_targetRot * quatDistance(endEffectorT.q, ik.targetRot);
+    cost += 0.5f * ik.alpha_poseDiff * (pose - origPose).squaredNorm();
+    return cost;
+}
 
-    VectorXf dC = ik.targetImportance * J.transpose() * df + ik.poseDiffImportance * (pose - origPose);
+VectorXf totalCostDerivative(const IKProblem& ik, glmx::transform endEffectorT,
+        const MatrixXf& J,
+        const VectorXf& pose, const VectorXf& origPose) {
+
+    glm::vec3 dpos = endEffectorT.v - ik.targetPos;
+    glm::vec3 drot = glmx::logdiff(endEffectorT.q, ik.targetRot);
+    VectorXf df(6);
+    df << ik.alpha_targetPos * glmx::toEigen(dpos), ik.alpha_targetRot * glmx::toEigen(drot);
+
+    VectorXf dC = J.transpose() * df + ik.alpha_poseDiff * (pose - origPose);
     return dC;
 }
 
@@ -214,7 +275,7 @@ void solveIK(const PoseTree& poseTree, Pose& pose, const IKProblem& ik) {
     float alpha0 = 100;
     float tau = 0.5;
 
-    const int numIters = 10000;
+    const int numIters = 1000;
     float cost, newCost;
     VectorXf newPoseEuler = poseEuler;
 
@@ -222,14 +283,14 @@ void solveIK(const PoseTree& poseTree, Pose& pose, const IKProblem& ik) {
     int iter;
     for (iter = 0; iter < numIters; iter++) {
         std::vector<glmx::transform> Ts = calcFK(poseTree, pose.v, poseEuler);
-        glm::vec3 endEffectorPos = Ts[ik.targetIdx].v;
-        cost = totalCost(ik, endEffectorPos, poseEuler, origPoseEuler);
+        glmx::transform endEffectorT = Ts[ik.targetIdx];
+        cost = totalCost(ik, endEffectorT, poseEuler, origPoseEuler);
 
         if (iter % 100 == 0) {
             printf("Iteration %d: cost = %f\n", iter, cost);
         }
         MatrixXf J = calcEulerJacobian(poseTree, Ts, ik.targetIdx, ik.relevantJoints);
-        VectorXf dC = totalCostDerivative(ik, endEffectorPos, J,
+        VectorXf dC = totalCostDerivative(ik, endEffectorT, J,
                 filterPoseVec(poseEuler, ik.relevantJoints), filterPoseVec(origPoseEuler, ik.relevantJoints));
 
         float alpha = alpha0;
@@ -241,8 +302,8 @@ void solveIK(const PoseTree& poseTree, Pose& pose, const IKProblem& ik) {
                 newPoseEuler[3*i+1] -= alpha * dC[3*k+1];
                 newPoseEuler[3*i+2] -= alpha * dC[3*k+2];
             }
-            glm::vec3 newEndEffectorPos = calcFK(poseTree, pose.v, newPoseEuler)[ik.targetIdx].v;
-            newCost = totalCost(ik, newEndEffectorPos, newPoseEuler, origPoseEuler);
+            glmx::transform newEndEffectorT = calcFK(poseTree, pose.v, newPoseEuler)[ik.targetIdx];
+            newCost = totalCost(ik, newEndEffectorT, newPoseEuler, origPoseEuler);
 
             float pred = 0.5f * dC.squaredNorm();
             if (cost - newCost >= alpha * pred) break;

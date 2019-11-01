@@ -24,12 +24,18 @@ void solveIKSimple(const PoseTree& poseTree, Pose& pose, uint32_t mIdx,
                    nonstd::span<uint32_t> relevantJoints, glm::vec3 mPos,
                    LeastSquareMethod lsqMethod = LeastSquareMethod::SVD);
 
+void solveIKSimple(const PoseTree& poseTree, Pose& pose, uint32_t mIdx,
+                   nonstd::span<uint32_t> relevantJoints, glmx::transform mT,
+                   LeastSquareMethod lsqMethod = LeastSquareMethod::SVD);
+
 struct IKProblem {
     glm::vec3 targetPos;
+    glm::quat targetRot;
     uint32_t targetIdx;
 
-    float targetImportance = 1.0f;
-    float poseDiffImportance = 0.0f;
+    float alpha_targetPos = 1.0f;
+    float alpha_targetRot = 1.0f;
+    float alpha_poseDiff = 0.0f;
 
     // joint limits are ignored when x <= 0.0f
     nonstd::span<uint32_t> relevantJoints;
@@ -41,26 +47,8 @@ struct IKProblem {
     };
     nonstd::span<JointLimit> jointLimits;
 
-    /*
-    float totalCost(glm::vec3 endEffectorPos, RawVectorXf poseData, RawVectorXf origPoseData) const;
-    RawVectorXf totalCostDerivative(glm::vec3 endEffectorPos, RawMatrixXf endEffectorJacobian,
-                                    RawVectorXf poseData, RawVectorXf origPoseData) const;
-                                    */
 };
 
 void solveIK(const PoseTree& poseTree, Pose& pose, const IKProblem& ik);
-
-/*
-void solveIKWithCostFunction(const PoseTree& poseTree, Pose& pose, uint32_t mIdx, nonstd::span<uint32_t> relevantJoints,
-        std::function<float(nonstd::span<float> jointValues)> costFunction) {
-    for (uint32_t idx : relevantJoints) {
-        pose.q[idx]
-    }
-    float cost = costFunction();
-    for (uint32_t idx : relevantJoints) {
-        pose.q[idx]
-    }
-}
- */
 
 #endif //GENGINE_INVERSEKINEMATICS_H

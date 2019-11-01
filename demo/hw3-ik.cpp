@@ -25,8 +25,9 @@ public:
         };
 
         Type type = Gradient;
-        float targetImportance = 1.0f;
-        float poseDiffImportance = 0.1f;
+        float alpha_targetPos = 1.0f;
+        float alpha_targetRot = 1.0f;
+        float alpha_poseDiff = 0.1f;
     };
 
     MyApp() : App(true) {}
@@ -105,11 +106,13 @@ public:
                     }
                     IKProblem ik;
                     ik.targetPos = ikTarget;
+                    ik.targetRot = currentPose.q[leftHandIdx];
                     ik.targetIdx = leftHandIdx;
                     ik.relevantJoints = relevantIndices;
                     ik.jointLimits = jointLimits;
-                    ik.targetImportance = ikSettings.targetImportance;
-                    ik.poseDiffImportance = ikSettings.poseDiffImportance;
+                    ik.alpha_targetPos = ikSettings.alpha_targetPos;
+                    ik.alpha_targetRot = ikSettings.alpha_targetRot;
+                    ik.alpha_poseDiff = ikSettings.alpha_poseDiff;
 
                     solveIK(poseTree, currentPose, ik);
                 }
@@ -150,8 +153,9 @@ public:
         const char* items[] = {"Jacobian", "Gradient"};
         ImGui::Combo("combo", (int*) &ikSettings.type, items, IM_ARRAYSIZE(items));
         if (ikSettings.type == IKSettings::Gradient) {
-            ImGui::InputFloat("Target importance", &ikSettings.targetImportance);
-            ImGui::InputFloat("Pose diff importance", &ikSettings.poseDiffImportance);
+            ImGui::InputFloat("Target importance (pos)", &ikSettings.alpha_targetPos);
+            ImGui::InputFloat("Target importance (rot)", &ikSettings.alpha_targetRot);
+            ImGui::InputFloat("Pose diff importance", &ikSettings.alpha_poseDiff);
         }
         ImGui::End();
 
