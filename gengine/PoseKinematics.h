@@ -16,10 +16,39 @@ glmx::transform calcFK(const PoseTree& poseTree, const Pose& pose, uint32_t mIdx
 
 std::vector<glmx::transform> calcFK(const PoseTree& poseTree, const Pose& pose);
 
-void solveIK(const PoseTree& poseTree, Pose& pose, uint32_t mIdx, nonstd::span<uint32_t> relevantJoints, glm::vec3 mPos);
+enum class LeastSquareMethod {
+    SVD, QR, Normal
+};
 
-void solveIK(const PoseTree& poseTree, Pose& pose, uint32_t mIdx, nonstd::span<uint32_t> relevantJoints,
-        std::function<float(const PoseEuler&)> costFunction);
+void solveIKSimple(const PoseTree& poseTree, Pose& pose, uint32_t mIdx,
+                   nonstd::span<uint32_t> relevantJoints, glm::vec3 mPos,
+                   LeastSquareMethod lsqMethod = LeastSquareMethod::SVD);
+
+struct IKProblem {
+    glm::vec3 targetPos;
+    uint32_t targetIdx;
+
+    float targetImportance = 1.0f;
+    float poseDiffImportance = 0.0f;
+
+    // joint limits are ignored when x <= 0.0f
+    nonstd::span<uint32_t> relevantJoints;
+
+    struct JointLimit {
+        float minX, maxX;
+        float minY, maxY;
+        float minZ, maxZ;
+    };
+    nonstd::span<JointLimit> jointLimits;
+
+    /*
+    float totalCost(glm::vec3 endEffectorPos, RawVectorXf poseData, RawVectorXf origPoseData) const;
+    RawVectorXf totalCostDerivative(glm::vec3 endEffectorPos, RawMatrixXf endEffectorJacobian,
+                                    RawVectorXf poseData, RawVectorXf origPoseData) const;
+                                    */
+};
+
+void solveIK(const PoseTree& poseTree, Pose& pose, const IKProblem& ik);
 
 /*
 void solveIKWithCostFunction(const PoseTree& poseTree, Pose& pose, uint32_t mIdx, nonstd::span<uint32_t> relevantJoints,

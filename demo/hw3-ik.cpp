@@ -19,6 +19,16 @@
 
 class MyApp : public App {
 public:
+    struct IKSettings {
+        enum Type {
+            Jacobian, Gradient
+        };
+
+        Type type = Gradient;
+        float targetImportance = 1.0f;
+        float poseDiffImportance = 0.1f;
+    };
+
     MyApp() : App(true) {}
 
     void loadResources() override {
@@ -75,15 +85,34 @@ public:
             Ray ray = camera->screenPointToRay(mPos);
             uint32_t leftHandIdx = poseTree.findIdx("LeftHandIndex1");
             uint32_t spine1Idx = poseTree.findIdx("Spine1");
-            uint32_t relevantIndices[] = {
+            std::vector<uint32_t> relevantIndices = {
                     leftHandIdx-1, leftHandIdx-2, leftHandIdx-3, leftHandIdx-4, leftHandIdx-5,
                     spine1Idx, spine1Idx-1, spine1Idx-2
             };
             if (ray.intersectWithPlane(ikTargetPlane, ikTarget)) {
-                // solveIK(poseTree, currentPose, leftHandIdx, relevantIndices, ikTarget);
-                solveIK(poseTree, currentPose, leftHandIdx, relevantIndices, [&](const PoseEuler& pose) {
-                    return glm::length2(calcFK(poseTree, toQuat(pose), leftHandIdx).v - ikTarget);
-                });
+                if (ikSettings.type == IKSettings::Jacobian) {
+                    solveIKSimple(poseTree, currentPose, leftHandIdx, relevantIndices, ikTarget);
+                }
+                else if (ikSettings.type == IKSettings::Gradient) {
+                    std::vector<IKProblem::JointLimit> jointLimits(relevantIndices.size());
+                    for (int c = 0; c < relevantIndices.size(); c++) {
+                        jointLimits[c].minX = -M_PI/2;
+                        jointLimits[c].maxX = M_PI/2;
+                        jointLimits[c].minY = -M_PI/2;
+                        jointLimits[c].maxY = M_PI/2;
+                        jointLimits[c].minZ = -M_PI/2;
+                        jointLimits[c].maxZ = M_PI/2;
+                    }
+                    IKProblem ik;
+                    ik.targetPos = ikTarget;
+                    ik.targetIdx = leftHandIdx;
+                    ik.relevantJoints = relevantIndices;
+                    ik.jointLimits = jointLimits;
+                    ik.targetImportance = ikSettings.targetImportance;
+                    ik.poseDiffImportance = ikSettings.poseDiffImportance;
+
+                    solveIK(poseTree, currentPose, ik);
+                }
                 handPos = calcFK(poseTree, currentPose, leftHandIdx).v;
             }
         }
@@ -105,12 +134,24 @@ public:
         ImGui::SetNextWindowPos(ImVec2(60, 150), ImGuiCond_FirstUseEver);
         ImGui::SetNextWindowSize(ImVec2(500, 900), ImGuiCond_FirstUseEver);
         ImGui::Begin("Human Control");
-
+        if (ImGui::Button("Reset")) {
+            currentPose = Pose(currentPose.v, std::vector<glm::quat>(currentPose.size()));
+        }
+        ImGui::InputFloat3("Root Position", (float*) &currentPose.v);
         for (uint32_t i = 0; i < poseTree.numJoints; i++) {
             auto& node = poseTree[i];
-            glm::vec4 v = glmx::quatToEuler(currentPose.q[i], EulOrdXYZs);
+            glm::vec3 v = glmx::quatToEuler(currentPose.q[i], EulOrdXYZs);
             ImGui::InputFloat3(node.name.c_str(), (float*)&v);
             currentPose.q[i] = glmx::eulerToQuat(v);
+        }
+        ImGui::End();
+
+        ImGui::Begin("IK Settings");
+        const char* items[] = {"Jacobian", "Gradient"};
+        ImGui::Combo("combo", (int*) &ikSettings.type, items, IM_ARRAYSIZE(items));
+        if (ikSettings.type == IKSettings::Gradient) {
+            ImGui::InputFloat("Target importance", &ikSettings.targetImportance);
+            ImGui::InputFloat("Pose diff importance", &ikSettings.poseDiffImportance);
         }
         ImGui::End();
 
@@ -132,6 +173,7 @@ private:
     glm::vec3 handPos;
     glm::vec3 ikTarget = {0.f, 0.f, 0.f};
     Ray ikTargetPlane = {{0.f, 1.f, 0.4f}, {0.f, 0.f, 1.f}};
+    IKSettings ikSettings;
 };
 
 int main(int argc, char** argv) {

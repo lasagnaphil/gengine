@@ -67,13 +67,12 @@
 
 namespace glmx {
 
-
-inline glm::quat eulerToQuat(glm::vec4 ea)
+inline glm::quat eulerToQuat(glm::vec3 ea, uint32_t ord=EulOrdXYZs)
 {
     glm::quat qu;
     float a[3], ti, tj, th, ci, cj, ch, si, sj, sh, cc, cs, sc, ss;
     int i,j,k,h,n,s,f;
-    EulGetOrd(ea.w,i,j,k,h,n,s,f);
+    EulGetOrd(ord,i,j,k,h,n,s,f);
     if (f==EulFrmR) {float t = ea.x; ea.x = ea.z; ea.z = t;}
     if (n==EulParOdd) ea.y = -ea.y;
     ti = ea.x*0.5f; tj = ea.y*0.5f; th = ea.z*0.5f;
@@ -97,12 +96,12 @@ inline glm::quat eulerToQuat(glm::vec4 ea)
 }
 
 /* Construct matrix from Euler angles (in radians). */
-inline glm::mat4 eulerToMat(glm::vec4 ea)
+inline glm::mat4 eulerToMat(glm::vec3 ea, uint32_t ord=EulOrdXYZs)
 {
     glm::mat4 M;
     float ti, tj, th, ci, cj, ch, si, sj, sh, cc, cs, sc, ss;
     int i,j,k,h,n,s,f;
-    EulGetOrd(ea.w,i,j,k,h,n,s,f);
+    EulGetOrd(ord,i,j,k,h,n,s,f);
     if (f==EulFrmR) {float t = ea.x; ea.x = ea.z; ea.z = t;}
     if (n==EulParOdd) {ea.x = -ea.x; ea.y = -ea.y; ea.z = -ea.z;}
     ti = ea.x;	  tj = ea.y;	th = ea.z;
@@ -123,9 +122,9 @@ inline glm::mat4 eulerToMat(glm::vec4 ea)
 }
 
 /* Convert matrix to Euler angles (in radians). */
-inline glm::vec4 matToEuler(glm::mat4 M, int order)
+inline glm::vec3 matToEuler(glm::mat4 M, int order)
 {
-    glm::vec4 ea;
+    glm::vec3 ea;
     int i,j,k,h,n,s,f;
     EulGetOrd(order,i,j,k,h,n,s,f);
     if (s==EulRepYes) {
@@ -153,11 +152,10 @@ inline glm::vec4 matToEuler(glm::mat4 M, int order)
     }
     if (n==EulParOdd) {ea.x = -ea.x; ea.y = - ea.y; ea.z = -ea.z;}
     if (f==EulFrmR) {float t = ea.x; ea.x = ea.z; ea.z = t;}
-    ea.w = (float)order;
     return ea;
 }
 
-inline glm::vec4 quatToEuler(glm::quat q, int order)
+inline glm::vec3 quatToEuler(glm::quat q, int order)
 {
     glm::mat4 M;
     float Nq = q.x*q.x+q.y*q.y+q.z*q.z+q.w*q.w;
