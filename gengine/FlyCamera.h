@@ -52,6 +52,7 @@ private:
 
     // UI state
     bool enableZoom = false;
+    bool enableMiddleScroll = false;
 };
 
 

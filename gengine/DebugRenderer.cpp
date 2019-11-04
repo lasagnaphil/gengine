@@ -162,24 +162,26 @@ void DebugRenderer::flushLineVerts(bool depthEnabled) {
 }
 
 inline std::tuple<glm::vec3, glm::vec3> getOrthogonalBasis(glm::vec3 v) {
-    float len = glm::length(v);
-    float invLen = 1 / len;
     glm::vec3 left, up;
-    if (glm::abs(v.z) > 0.7f) {
+    if (glm::abs(v.z) >= 0.7f) {
+        float lenSqr = v.y * v.y + v.z * v.z;
+        float invLen = 1 / sqrtf(lenSqr);
         up.x = 0.0f;
         up.y = v.z * invLen;
         up.z = -v.y * invLen;
-        left.x = len;
+        left.x = lenSqr * invLen;
         left.y = -v.x * up.z;
         left.z = v.x * up.y;
     }
     else {
+        float lenSqr = v.x * v.x + v.y * v.y;
+        float invLen = 1 / sqrtf(lenSqr);
         left.x = -v.y * invLen;
         left.y = v.x * invLen;
         left.z = 0.0f;
         up.x = -v.z * left.y;
         up.y = v.z * left.x;
-        up.z = len;
+        up.z = lenSqr * invLen;
     }
     return {left, up};
 }

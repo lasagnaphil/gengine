@@ -106,19 +106,20 @@ void FlyCamera::renderImGui() {
 }
 
 void FlyCamera::processInput(SDL_Event& ev) {
-    auto trans = transform.get();
-    if (ev.type == SDL_MOUSEWHEEL) {
-        if (enableZoom) {
-            fov += ev.wheel.y;
-        }
-        else {
-            float increment = 0.25f * ev.wheel.y;
-            if (distance + increment > 0.f) {
-                distance += increment;
+    if (enableMiddleScroll) {
+        auto trans = transform.get();
+        if (ev.type == SDL_MOUSEWHEEL) {
+            if (enableZoom) {
+                fov += ev.wheel.y;
+            } else {
+                float increment = 0.25f * ev.wheel.y;
+                if (distance + increment > 0.f) {
+                    distance += increment;
+                }
+                auto curPos = trans->getPosition();
+                auto nextPos = distance / glm::length(curPos) * curPos;
+                trans->setPosition(nextPos);
             }
-            auto curPos = trans->getPosition();
-            auto nextPos = distance / glm::length(curPos) * curPos;
-            trans->setPosition(nextPos);
         }
     }
 }
