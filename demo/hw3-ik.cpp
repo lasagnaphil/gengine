@@ -20,7 +20,6 @@
 class MyApp : public App {
 public:
     struct IKJacobianSettings {
-        float stepSize;
     };
     struct IKGradientSettings {
         float alpha_targetPos;
@@ -51,7 +50,6 @@ public:
         static IKSettings makeJacobian() {
             IKSettings settings;
             settings.type = Jacobian;
-            settings.jacobian.stepSize = 0.1f;
             return settings;
         }
     };
@@ -253,14 +251,10 @@ public:
         }
 
         const char* items[] = {"Jacobian", "Gradient"};
-        ImGui::Combo("combo", (int*) &ikSettings.type, items, IM_ARRAYSIZE(items));
+        ImGui::Combo("IK Method", (int*) &ikSettings.type, items, IM_ARRAYSIZE(items));
         if (ikSettings.type == IKSettings::Jacobian) {
-            ImGui::InputFloat("Step size", &ikSettings.jacobian.stepSize);
         }
         else if (ikSettings.type == IKSettings::Gradient) {
-            ImGui::InputFloat("Target importance (pos)", &ikSettings.gradient.alpha_targetPos);
-            ImGui::InputFloat("Target importance (rot)", &ikSettings.gradient.alpha_targetRot);
-            ImGui::InputFloat("Pose diff importance", &ikSettings.gradient.alpha_poseDiff);
         }
         if (ImGui::Button("Reset")) {
             currentPose = Pose(currentPose.v, std::vector<glm::quat>(currentPose.size()));
@@ -268,7 +262,7 @@ public:
 
         static int placeholder = 0;
         ImGui::SliderFloat3("Hip Position", (float*) &currentPose.v, -1.0f, 1.0f);
-        ImGui::Text("Free EE Rotation");
+        ImGui::Text(" Stiffness  Free EE                   Rotation");
         for (uint32_t i = 0; i < poseTree.numJoints; i++) {
             char buff[100];
             snprintf(buff, sizeof(buff), "##Joint %d Stiffness", i);
