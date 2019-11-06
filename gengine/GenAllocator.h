@@ -64,6 +64,13 @@ struct Ref {
         return generation != 0;
     }
 
+    bool operator==(const Ref<T>& other) const {
+        return index == other.index && generation == other.generation;
+    }
+    bool operator!=(const Ref<T>& other) const {
+        return !((*this) == other);
+    }
+
     T* operator->() const;
     T& operator*() const;
 
@@ -203,6 +210,17 @@ struct GenAllocator {
         }
 
         count--;
+    }
+
+    template <class Fun>
+    void forEach(Fun&& fun) {
+        for (uint32_t i = 0; i < capacity; ++i) {
+            if (nodes[i].generation != 0) {
+                T* data = reinterpret_cast<T*>(&nodes[i].bytes);
+                Ref<T> ref = {i, nodes[i].generation};
+                fun(*data, ref);
+            }
+        }
     }
 };
 

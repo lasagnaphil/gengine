@@ -32,8 +32,12 @@ std::optional<MotionClipData::ChannelType> stringToChannelType(const std::string
     }
 }
 
-bool MotionClipData::loadFromFile(const std::string &filename, MotionClipData &data, float scale) {
-    std::ifstream file(filename);
+MotionClipData MotionClipData::loadFromFile(std::string_view filename, float scale) {
+    MotionClipData data;
+    data.valid = true;
+
+    std::ifstream file(filename.begin());
+
     std::string line;
     std::string keyword;
 
@@ -266,7 +270,8 @@ bool MotionClipData::loadFromFile(const std::string &filename, MotionClipData &d
     }
 
     if (error) {
-        return false;
+        data.valid = false;
+        return data;
     }
 
     // Now we combine the joint data and end site data into one std::vector.
@@ -285,7 +290,7 @@ bool MotionClipData::loadFromFile(const std::string &filename, MotionClipData &d
         }
     }
 
-    return true;
+    return data;
 }
 
 void MotionClipData::print() const {

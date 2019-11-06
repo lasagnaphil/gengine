@@ -145,6 +145,7 @@ struct PoseTree {
 struct MotionClipData {
     PoseTree poseTree;
     std::vector<Pose> poseStates;
+    bool valid = false;
 
     // Motion data
     enum class ChannelType : uint8_t {
@@ -156,7 +157,7 @@ struct MotionClipData {
 
     float frameTime;
 
-    static bool loadFromFile(const std::string &filename, MotionClipData &data, float scale = 1.0f);
+    static MotionClipData loadFromFile(std::string_view filename, float scale = 1.0f);
 
     void print() const;
 
