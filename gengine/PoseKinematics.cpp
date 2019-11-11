@@ -4,6 +4,7 @@
 
 #include "PoseKinematics.h"
 #include "Pose.h"
+#include <glmx/quat.h>
 #include <glmx/eigen.h>
 
 #include "Eigen/Dense"
@@ -136,19 +137,6 @@ std::vector<glmx::transform> calcFK(const PoseTree& poseTree, glm::vec3 rootPos,
 
 using Vector6f = Matrix<float, 6, -1>;
 
-namespace glmx {
-    glm::vec3 log(glm::quat q) {
-        q = glm::normalize(q);
-        float a = sqrtf(1 - q.w*q.w);
-        if (a <= glm::epsilon<float>()) {
-            return glm::vec3 {};
-        }
-        return 2.0f * atan2f(a, q.w) / a * glm::vec3(q.x, q.y, q.z);
-    }
-    glm::vec3 logdiff(glm::quat q1, glm::quat q2) {
-        return glmx::log(q2 * glm::conjugate(q1));
-    }
-}
 
 void
 solveIKSimple(const PoseTree &poseTree, Pose &pose, uint32_t mIdx,

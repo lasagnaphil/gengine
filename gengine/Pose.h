@@ -5,6 +5,8 @@
 #ifndef PHYSICS_BENCHMARKS_POSE_H
 #define PHYSICS_BENCHMARKS_POSE_H
 
+#include "glmx/quat.h"
+
 #include <vector>
 #include <glm/vec3.hpp>
 
@@ -28,8 +30,6 @@ struct PoseDisp;
 /*
  * Represents a pose of an aritculated figure.
  * In mathematical terms, P = (v0, q1, q2, ..., qn).
- * Can be in global or local coordinates. Use toGlobal() and toLocal() to switch between them.
- * Note that mathematical functions (pose arithmetic) only works on local coordinates!
  */
 struct Pose {
     glm::vec3 v;
@@ -79,6 +79,18 @@ inline Pose toQuat(const PoseEuler& pe) {
         glm::vec3 e = pe.eulerAngles[i];
         p.q[i] = glmx::eulerToQuat(e);
     }
+    return p;
+}
+
+inline Pose slerp(const Pose& p1, const Pose& p2, float alpha) {
+    assert(p1.size() == p2.size());
+    Pose p = Pose::empty(p1.size());
+
+    p.v = (1 - alpha) * p1.v + alpha * p2.v;
+    for (int i = 0; i < p.size(); i++) {
+        p.q[i] = glm::slerp(p1.q[i], p2.q[i], alpha);
+    }
+
     return p;
 }
 
@@ -164,7 +176,7 @@ inline Pose exp(const PoseDisp& d) {
     p.v = d[0];
     for (int i = 0; i < d.size() - 1; i++) {
         glm::vec3 u = d[i + 1] / 2.0f;
-        p.q[i] = glm::angleAxis(glm::length(u), glm::normalize(u));
+        p.q[i] = glmx::exp(u);
     }
     return p;
 }
@@ -173,7 +185,7 @@ inline PoseDisp log(const Pose& p) {
     PoseDisp d = PoseDisp::empty(p.size());
     d[0] = p.v;
     for (int i = 0; i < p.size(); i++) {
-        d[i + 1] = glm::angle(p.q[i]) * glm::axis(p.q[i]);
+        d[i + 1] = glmx::log(p.q[i]);
     }
     return d;
 }

@@ -16,7 +16,7 @@
 
 class MyApp : public App {
 public:
-    MyApp() : App(true) {}
+    MyApp() : App(false) {}
 
     void loadResources() override {
         FlyCamera* camera = initCamera<FlyCamera>();
@@ -82,6 +82,8 @@ public:
         animFSM.addTrigger(jumpTrans, "jump");
         auto forwardJumpTrans = animFSM.addTransition("forward_jumping", walkState, forwardJumpState, 1.0f);
         animFSM.addTrigger(forwardJumpTrans, "forward_jump");
+
+        animFSM.setCurrentState(walkState);
     }
 
     void processInput(SDL_Event &event) override {
@@ -98,6 +100,8 @@ public:
             glm::vec2 mPos = inputMgr->getMousePos();
             Ray ray = camera->screenPointToRay(mPos);
         }
+        animFSM.update(dt);
+        currentPose = animFSM.getCurrentPose();
     }
 
     void render() override {

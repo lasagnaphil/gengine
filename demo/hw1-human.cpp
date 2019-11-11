@@ -14,17 +14,6 @@
 #include <glm/gtx/euler_angles.hpp>
 #include <tinyxml2.h>
 
-inline Pose slerp(const Pose& p1, const Pose& p2, float alpha) {
-    assert(p1.size() == p2.size());
-    Pose p = Pose::empty(p1.size());
-
-    p.v = (1 - alpha) * p1.v + alpha * p2.v;
-    for (int i = 0; i < p.size(); i++) {
-        p.q[i] = glm::slerp(p1.q[i], p2.q[i], alpha);
-    }
-
-    return p;
-}
 
 struct PoseAnimation {
     std::map<uint32_t, Pose> poseKeyframes;
