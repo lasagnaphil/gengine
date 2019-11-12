@@ -4,6 +4,7 @@
 
 #include "MotionClipData.h"
 
+#include <iomanip>
 #include <fstream>
 #include <sstream>
 #include <iostream>
@@ -32,11 +33,11 @@ std::optional<MotionClipData::ChannelType> stringToChannelType(const std::string
     }
 }
 
-MotionClipData MotionClipData::loadFromFile(std::string_view filename, float scale) {
+MotionClipData MotionClipData::loadFromFile(const std::string& filename, float scale) {
     MotionClipData data;
     data.valid = true;
 
-    std::ifstream file(filename.begin());
+    std::ifstream file(filename);
 
     std::string line;
     std::string keyword;
@@ -312,4 +313,57 @@ void MotionClipData::printRecursive(uint32_t jointID, int depth) const {
         for (int i = 0; i < depth; i++) { std::cout << "    "; }
         std::cout << "End Site Offset: " << joint.offset.x << " " << joint.offset.y << " " << joint.offset.z << std::endl;
     }
+}
+
+void MotionClipData::saveToFile(const std::string& filename) {
+    using std::endl;
+    std::ofstream ofs(filename);
+    ofs << std::fixed;
+    ofs.precision(6);
+
+    saveToFileRecursive(0, ofs, 0);
+    ofs << "MOTION" << endl;
+    ofs << "Frames: " << numFrames << endl;
+    ofs << "Frame Time: " << frameTime << endl;
+    for (int f = 0; f < numFrames; f++) {
+        Pose& pose = poseStates[f];
+        ofs << pose.v.x << " " << pose.v.y << " " << pose.v.z << " ";
+        for (int i = 0; i < pose.size(); i++) {
+            glm::vec3 e = glmx::quatToEuler(pose.q[i], EulOrdZYXs);
+            ofs << e.x << " " << e.y << " " << e.z << " ";
+        }
+        ofs << endl;
+    }
+}
+
+void MotionClipData::saveToFileRecursive(uint32_t jointIdx, std::ostream& ofs, int depth) {
+    using std::endl;
+    PoseTreeNode& node = poseTree[jointIdx];
+
+    std::string tabs;
+    for (int i = 0; i < depth; i++) {
+        tabs += "\t";
+    }
+    if (jointIdx == 0) {
+        ofs << tabs << "HIERARCHY" << endl;
+        ofs << tabs << "ROOT " << node.name << endl;
+        ofs << tabs << "{" << endl;
+        ofs << tabs << "\tOFFSET " << node.offset.x << " " << node.offset.y << " " << node.offset.z << endl;
+        ofs << tabs << "\tCHANNELS 6 Xposition Yposition Zposition Zrotation Yrotation Xrotation" << endl;
+    }
+    else if (!node.isEndSite) {
+        ofs << tabs << "JOINT " << node.name << endl;
+        ofs << tabs << "{" << endl;
+        ofs << tabs << "\tOFFSET " << node.offset.x << " " << node.offset.y << " " << node.offset.z << endl;
+        ofs << tabs << "\tCHANNELS 3 Zrotation Yrotation Xrotation" << endl;
+    }
+    else {
+        ofs << tabs << "End Site" << endl;
+        ofs << tabs << "{" << endl;
+        ofs << tabs << "\tOFFSET " << node.offset.x << " " << node.offset.y << " " << node.offset.z << endl;
+    }
+    for (uint32_t childIdx : node.childJoints) {
+        saveToFileRecursive(childIdx, ofs, depth + 1);
+    }
+    ofs << tabs << "}" << endl;
 }
