@@ -56,6 +56,10 @@ public:
         this->camera = camera;
     }
 
+    void setDefaultFBO(GLuint FBO) {
+        defaultFBO = FBO;
+    }
+
     void init() {
         depthShader = Shaders::depth;
         debugDepthShader = Shaders::depthDebug;
@@ -78,7 +82,7 @@ public:
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
         glDrawBuffer(GL_NONE);
         glReadBuffer(GL_NONE);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glBindFramebuffer(GL_FRAMEBUFFER, defaultFBO);
 
         phongShader->use();
         phongShader->setInt("diffuseTexture", 0);
@@ -117,7 +121,7 @@ public:
             renderPass(depthShader);
             glCullFace(GL_BACK);
         }
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glBindFramebuffer(GL_FRAMEBUFFER, defaultFBO);
 
         glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -228,6 +232,8 @@ private:
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         glBindVertexArray(0);
     }
+
+    GLuint defaultFBO = 0;
 
     GLuint depthMapFBO;
     GLuint depthMap;

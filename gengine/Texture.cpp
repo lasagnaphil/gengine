@@ -11,6 +11,30 @@ Ref<Texture> Texture::fromImage(Ref<Image> image) {
     return tex;
 }
 
+Ref<Texture> Texture::fromNew(uint32_t width, uint32_t height) {
+    Ref<Texture> tex = Resources::make<Texture>();
+    tex->width = width;
+    tex->height = height;
+    tex->wrapS = GL_REPEAT;
+    tex->wrapT = GL_REPEAT;
+    tex->filterMin = GL_LINEAR_MIPMAP_LINEAR;
+    tex->filterMax = GL_LINEAR;
+    tex->imageFormat = GL_RGB;
+    tex->internalFormat = GL_RGB;
+
+    glGenTextures(1, &tex->id);
+    glBindTexture(GL_TEXTURE_2D, tex->id);
+    glTexImage2D(GL_TEXTURE_2D,
+                 0, tex->internalFormat,
+                 width, height,
+                 0, tex->imageFormat, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    return tex;
+}
+
 void Texture::loadFromImage(Ref<Image> image) {
     imagePath = image->path;
 
@@ -53,7 +77,6 @@ void Texture::loadFromImage(Ref<Image> image) {
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-
 void Texture::bind() {
     glBindTexture(GL_TEXTURE_2D, id);
 }
@@ -61,3 +84,4 @@ void Texture::bind() {
 void Texture::dispose() {
     glDeleteTextures(1, &id);
 }
+

@@ -26,6 +26,7 @@ struct Texture {
 
     Texture() = default;
     static Ref<Texture> fromImage(Ref<Image> image);
+    static Ref<Texture> fromNew(uint32_t width, uint32_t height);
     void loadFromImage(Ref<Image> image);
     void dispose();
 
