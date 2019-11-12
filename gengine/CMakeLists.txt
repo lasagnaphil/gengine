@@ -55,6 +55,9 @@ option(BUILD_EXAMPLE OFF)
 option(BUILD_DOC OFF)
 add_subdirectory(deps/ezc3d)
 
+# pybind11
+add_subdirectory(deps/pybind11)
+
 # Add the source files to the library
 file(GLOB RENDER_SOURCES *.cpp)
 add_library(gengine STATIC ${RENDER_SOURCES})
@@ -65,7 +68,10 @@ add_library(gengine STATIC ${RENDER_SOURCES})
 # include/linking
 target_include_directories(gengine
         PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(gengine Threads::Threads SDL2::Main glad imgui stb glm eigen tinyxml2 span-lite ezc3d)
+target_link_libraries(gengine
+        Threads::Threads SDL2::Main glad imgui stb glm eigen tinyxml2 span-lite ezc3d pybind11::module pybind11::embed)
+set_target_properties(gengine PROPERTIES PREFIX "${PYTHON_MODULE_PREFIX}"
+        SUFFIX "${PYTHON_MODULE_EXTENSION}")
 
 # Compile shaders into header files
 add_executable(embed_shader shaders/embed_shader.cpp)
