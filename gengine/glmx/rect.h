@@ -11,6 +11,10 @@ namespace glmx {
     struct rect {
         glm::vec2 min; // upper left
         glm::vec2 max; // lower right
+
+        bool isInside(glm::vec2 p) const {
+            return min.x < p.x && p.x < max.x && min.y < p.y && p.y < max.y;
+        }
     };
 
     struct box {
