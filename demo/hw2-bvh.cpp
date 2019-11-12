@@ -72,7 +72,7 @@ public:
 
     void render() override {
         phongRenderer.queueRender({groundMesh, groundMat, rootTransform->getWorldTransform()});
-        renderMotionClip(phongRenderer, motionClipPlayer.getPoseState(), motionClipData.poseTree, poseRenderBody);
+        renderMotionClip(phongRenderer, imRenderer, motionClipPlayer.getPoseState(), motionClipData.poseTree, poseRenderBody);
         phongRenderer.render();
 
         motionClipPlayer.queueGizmosRender(gizmosRenderer, glm::mat4(1.0f));

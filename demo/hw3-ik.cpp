@@ -214,7 +214,7 @@ public:
 
     void render() override {
         phongRenderer.queueRender({groundMesh, groundMat, rootTransform->getWorldTransform()});
-        renderMotionClip(phongRenderer, currentPose, poseTree, poseRenderBody);
+        renderMotionClip(phongRenderer, imRenderer, currentPose, poseTree, poseRenderBody);
 
         phongRenderer.render();
 

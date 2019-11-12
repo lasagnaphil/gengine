@@ -53,9 +53,9 @@ struct PoseRenderBody {
     }
 };
 
-inline void renderMotionClip(PhongRenderer& renderer,
+inline void renderMotionClip(PhongRenderer& renderer, DebugRenderer& imRenderer,
         const Pose& poseState, const PoseTree& poseTree, const PoseRenderBody& body,
-        const glm::mat4& globalTrans = glm::mat4(1.0f)) {
+        const glm::mat4& globalTrans = glm::mat4(1.0f), bool debug = false) {
 
     // Recursively render all nodes
     std::stack<std::tuple<uint32_t, glm::mat4>> recursionStack;
@@ -80,13 +80,18 @@ inline void renderMotionClip(PhongRenderer& renderer,
                     initialTrans = glm::translate(glm::vec3{0.0f, -glm::length(node.offset)/2, 0.0f});
                 }
                 glm::mat4 initialBoneTransform = initialRot * initialTrans;
+                glm::mat4 T = curTransform * initialBoneTransform;
 
                 if (body.meshes[nodeIdx - 1]) {
                     renderer.queueRender(RenderCommand {
                             body.meshes[nodeIdx - 1],
                             body.materials[nodeIdx - 1],
-                            curTransform * initialBoneTransform
+                            T
                     });
+                }
+
+                if (debug) {
+                    imRenderer.drawAxisTriad(T, 0.02f, 0.2f, false);
                 }
             }
 
