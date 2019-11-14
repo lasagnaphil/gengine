@@ -315,13 +315,13 @@ void MotionClipData::printRecursive(uint32_t jointID, int depth) const {
     }
 }
 
-void MotionClipData::saveToFile(const std::string& filename) {
+void MotionClipData::saveToFile(const std::string& filename, int eulerOrd) {
     using std::endl;
     std::ofstream ofs(filename);
     ofs << std::fixed;
     ofs.precision(6);
 
-    saveToFileRecursive(0, ofs, 0);
+    saveToFileRecursive(0, ofs, 0, eulerOrd);
     ofs << "MOTION" << endl;
     ofs << "Frames: " << numFrames << endl;
     ofs << "Frame Time: " << frameTime << endl;
@@ -329,14 +329,14 @@ void MotionClipData::saveToFile(const std::string& filename) {
         Pose& pose = poseStates[f];
         ofs << pose.v.x << " " << pose.v.y << " " << pose.v.z << " ";
         for (int i = 0; i < pose.size(); i++) {
-            glm::vec3 e = glmx::quatToEuler(pose.q[i], EulOrdZYXs);
-            ofs << e.x << " " << e.y << " " << e.z << " ";
+            glm::vec3 e = glmx::quatToEuler(pose.q[i], eulerOrd);
+            ofs << glm::degrees(e.x) << " " << glm::degrees(e.y) << " " << glm::degrees(e.z) << " ";
         }
         ofs << endl;
     }
 }
 
-void MotionClipData::saveToFileRecursive(uint32_t jointIdx, std::ostream& ofs, int depth) {
+void MotionClipData::saveToFileRecursive(uint32_t jointIdx, std::ostream& ofs, int depth, int eulerOrd) {
     using std::endl;
     PoseTreeNode& node = poseTree[jointIdx];
 
@@ -349,13 +349,41 @@ void MotionClipData::saveToFileRecursive(uint32_t jointIdx, std::ostream& ofs, i
         ofs << tabs << "ROOT " << node.name << endl;
         ofs << tabs << "{" << endl;
         ofs << tabs << "\tOFFSET " << node.offset.x << " " << node.offset.y << " " << node.offset.z << endl;
-        ofs << tabs << "\tCHANNELS 6 Xposition Yposition Zposition Zrotation Yrotation Xrotation" << endl;
+        ofs << tabs << "\tCHANNELS 6 Xposition Yposition Zposition";
+        switch (eulerOrd) {
+            case EulOrdXYZs: ofs << " Xrotation Yrotation Zrotation" << endl; break;
+            case EulOrdXYXs: ofs << " Xrotation Yrotation Xrotation" << endl; break;
+            case EulOrdXZYs: ofs << " Xrotation Zrotation Yrotation" << endl; break;
+            case EulOrdXZXs: ofs << " Xrotation Zrotation Xrotation" << endl; break;
+            case EulOrdYZXs: ofs << " Yrotation Zrotation Xrotation" << endl; break;
+            case EulOrdYZYs: ofs << " Yrotation Zrotation Yrotation" << endl; break;
+            case EulOrdYXZs: ofs << " Yrotation Xrotation Zrotation" << endl; break;
+            case EulOrdYXYs: ofs << " Yrotation Xrotation Yrotation" << endl; break;
+            case EulOrdZXYs: ofs << " Zrotation Xrotation Yrotation" << endl; break;
+            case EulOrdZXZs: ofs << " Zrotation Xrotation Zrotation" << endl; break;
+            case EulOrdZYXs: ofs << " Zrotation Yrotation Xrotation" << endl; break;
+            case EulOrdZYZs: ofs << " Zrotation Yrotation Zrotation" << endl; break;
+        }
     }
     else if (!node.isEndSite) {
         ofs << tabs << "JOINT " << node.name << endl;
         ofs << tabs << "{" << endl;
         ofs << tabs << "\tOFFSET " << node.offset.x << " " << node.offset.y << " " << node.offset.z << endl;
-        ofs << tabs << "\tCHANNELS 3 Zrotation Yrotation Xrotation" << endl;
+        ofs << tabs << "\tCHANNELS 3";
+        switch (eulerOrd) {
+            case EulOrdXYZs: ofs << " Xrotation Yrotation Zrotation" << endl; break;
+            case EulOrdXYXs: ofs << " Xrotation Yrotation Xrotation" << endl; break;
+            case EulOrdXZYs: ofs << " Xrotation Zrotation Yrotation" << endl; break;
+            case EulOrdXZXs: ofs << " Xrotation Zrotation Xrotation" << endl; break;
+            case EulOrdYZXs: ofs << " Yrotation Zrotation Xrotation" << endl; break;
+            case EulOrdYZYs: ofs << " Yrotation Zrotation Yrotation" << endl; break;
+            case EulOrdYXZs: ofs << " Yrotation Xrotation Zrotation" << endl; break;
+            case EulOrdYXYs: ofs << " Yrotation Xrotation Yrotation" << endl; break;
+            case EulOrdZXYs: ofs << " Zrotation Xrotation Yrotation" << endl; break;
+            case EulOrdZXZs: ofs << " Zrotation Xrotation Zrotation" << endl; break;
+            case EulOrdZYXs: ofs << " Zrotation Yrotation Xrotation" << endl; break;
+            case EulOrdZYZs: ofs << " Zrotation Yrotation Zrotation" << endl; break;
+        }
     }
     else {
         ofs << tabs << "End Site" << endl;
@@ -363,7 +391,7 @@ void MotionClipData::saveToFileRecursive(uint32_t jointIdx, std::ostream& ofs, i
         ofs << tabs << "\tOFFSET " << node.offset.x << " " << node.offset.y << " " << node.offset.z << endl;
     }
     for (uint32_t childIdx : node.childJoints) {
-        saveToFileRecursive(childIdx, ofs, depth + 1);
+        saveToFileRecursive(childIdx, ofs, depth + 1, eulerOrd);
     }
     ofs << tabs << "}" << endl;
 }

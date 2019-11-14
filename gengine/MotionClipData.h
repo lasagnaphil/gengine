@@ -46,11 +46,11 @@ struct MotionClipData {
     glm::quat& getJointRot(uint32_t frameIdx, uint32_t jointIdx) { return poseStates[frameIdx].q[jointIdx]; }
     const glm::quat& getJointRot(uint32_t frameIdx, uint32_t jointIdx) const { return poseStates[frameIdx].q[jointIdx]; }
 
-    void saveToFile(const std::string& filename);
+    void saveToFile(const std::string& filename, int eulerOrd);
 
 private:
     void printRecursive(uint32_t jointID, int depth) const;
-    void saveToFileRecursive(uint32_t jointID, std::ostream& ofs, int depth);
+    void saveToFileRecursive(uint32_t jointID, std::ostream& ofs, int depth, int eulerOrd);
 };
 
 #endif //MOTION_EDITING_POSEDATA_H

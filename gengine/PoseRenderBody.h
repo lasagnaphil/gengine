@@ -6,7 +6,11 @@
 #define GENGINE_POSERENDERBODY_H
 
 #include "Pose.h"
+#include "Mesh.h"
+#include "Material.h"
 #include "MotionClipData.h"
+#include "PhongRenderer.h"
+#include "DebugRenderer.h"
 
 #include <glm/gtx/transform.hpp>
 #include <deps/glm/glm/gtx/string_cast.hpp>
