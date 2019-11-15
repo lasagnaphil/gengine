@@ -7,7 +7,7 @@
 #include "PhongRenderer.h"
 #include "DebugRenderer.h"
 #include "FlyCamera.h"
-#include "Pose.h"
+#include "glmx/pose.h"
 #include "PoseRenderBody.h"
 #include "PoseKinematics.h"
 #include "AnimStateMachine.h"
@@ -35,14 +35,7 @@ public:
 
         groundMesh = Mesh::makePlane(1000.0f, 100.0f);
 
-        // Load BVH file, only copy the tree structure of the human
-        MotionClipData tmpBvh = MotionClipData::loadFromFile("resources/cmu_07_02_1.bvh", 0.01f);
-        poseTree = tmpBvh.poseTree;
-
         // Create empty pose
-        currentPose = Pose::empty(poseTree.numJoints);
-        currentPose.v.y = 1.05f;
-
         // Material of human
         Ref<Material> bodyMat = Resources::make<Material>();
         bodyMat->ambient = {0.1f, 0.1f, 0.1f, 1.0f};
@@ -52,11 +45,15 @@ public:
         bodyMat->texDiffuse = {};
         bodyMat->texSpecular = {};
 
-        // Create body using capsules
+        auto walkBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_15_walk.bvh", 0.01f);
+
+        poseTree = walkBVH.poseTree;
+        currentPose = glmx::pose::empty(poseTree.numJoints);
+        currentPose.v.y = 1.05f;
+
         poseRenderBody = PoseRenderBody::createAsBoxes(poseTree, 0.05f, bodyMat);
 
-        auto walkBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_15_walk.bvh", 0.01f);
-        auto idleAnim = animFSM.addAnimation("walk", nonstd::span<Pose>(&walkBVH.poseStates[0], 1));
+        auto idleAnim = animFSM.addAnimation("walk", nonstd::span<glmx::pose>(&walkBVH.poseStates[0], 1));
         auto walkAnim = animFSM.addAnimation("walk", walkBVH.poseStates);
 
         auto jumpBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_03_high jump.bvh", 0.01f);
@@ -66,7 +63,9 @@ public:
         auto forwardJumpAnim = animFSM.addAnimation("forward_jump", forwardJumpBVH.poseStates);
 
         auto idleState = animFSM.addState("idle", idleAnim);
+        animFSM.get(idleState)->loop = true;
         auto walkState = animFSM.addState("walk", walkAnim);
+        animFSM.get(walkState)->loop = true;
         auto jumpState = animFSM.addState("jump", jumpAnim);
         auto forwardJumpState = animFSM.addState("forward_jump", forwardJumpAnim);
 
@@ -117,13 +116,18 @@ public:
         imRenderer.render();
 
         phongRenderer.renderImGui();
+        renderImGui();
+    }
+
+    void renderImGui() {
+        animFSM.renderImGui(poseTree);
     }
 
     void release() override {
     }
 
 private:
-    Pose currentPose;
+    glmx::pose currentPose;
 
     PoseTree poseTree;
     PoseRenderBody poseRenderBody;
