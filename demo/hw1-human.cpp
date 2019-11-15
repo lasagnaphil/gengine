@@ -7,7 +7,7 @@
 #include "PhongRenderer.h"
 #include "GizmosRenderer.h"
 #include "FlyCamera.h"
-#include "Pose.h"
+#include "glmx/pose.h"
 #include "PoseRenderBody.h"
 
 #include <map>
@@ -16,13 +16,13 @@
 
 
 struct PoseAnimation {
-    std::map<uint32_t, Pose> poseKeyframes;
+    std::map<uint32_t, pose> poseKeyframes;
 
-    void insertFrame(uint32_t frameIdx, const Pose& pose) {
+    void insertFrame(uint32_t frameIdx, const pose& pose) {
         poseKeyframes.insert({frameIdx, pose});
     }
 
-    Pose getPoseAtFrame(uint32_t frameIdx) {
+    pose getPoseAtFrame(uint32_t frameIdx) {
         if (poseKeyframes.count(frameIdx) == 1) {
             return poseKeyframes[frameIdx];
         }
@@ -31,13 +31,13 @@ struct PoseAnimation {
                 auto i1 = it->first;
                 auto i2 = std::next(it)->first;
                 if (frameIdx > i1 && frameIdx < i2) {
-                    Pose p1 = it->second;
-                    Pose p2 = std::next(it)->second;
+                    pose p1 = it->second;
+                    pose p2 = std::next(it)->second;
                     float t = (float)(frameIdx - i1) / (float)(i2 - i1);
                     return slerp(p1, p2, t);
                 }
             }
-            return Pose::empty(poseKeyframes.begin()->second.size());
+            return pose::empty(poseKeyframes.begin()->second.size());
         }
     }
 
@@ -79,10 +79,10 @@ public:
         }
 
         // Create empty pose
-        Pose basePose = Pose::empty(poseTree.numJoints);
+        glmx::pose basePose = glmx::pose::empty(poseTree.numJoints);
         basePose.v.y = 1.05f;
 
-        Pose p1 = basePose, p2 = basePose, p3 = basePose, p4 = basePose;
+        glmx::pose p1 = basePose, p2 = basePose, p3 = basePose, p4 = basePose;
 
         auto LHipJointIdx = poseTree.findIdx("LHipJoint");
         auto RHipJointIdx = poseTree.findIdx("RHipJoint");
@@ -112,16 +112,16 @@ public:
 
         p4 = p2;
 
-        Pose p15 = slerp(p1, p2, 0.5f);
+        glmx::pose p15 = glmx::slerp(p1, p2, 0.5f);
         p15.v.y += 0.3f;
 
-        Pose p25 = slerp(p2, p3, 0.5f);
+        glmx::pose p25 = glmx::slerp(p2, p3, 0.5f);
         p25.v.y += 0.3f;
 
-        Pose p35 = slerp(p3, p4, 0.5f);
+        glmx::pose p35 = glmx::slerp(p3, p4, 0.5f);
         p35.v.y += 0.3f;
 
-        Pose p45 = slerp(p4, p1, 0.5f);
+        glmx::pose p45 = glmx::slerp(p4, p1, 0.5f);
         p45.v.y += 0.3f;
 
         poseAnim.insertFrame(0*12, p1);
@@ -185,7 +185,7 @@ public:
         if (ImGui::Button("Play / Pause")) {
             isPlaying = !isPlaying;
         }
-        Pose pose = poseAnim.getPoseAtFrame(frameIdx);
+        glmx::pose pose = poseAnim.getPoseAtFrame(frameIdx);
         for (uint32_t i = 0; i < poseTree.numJoints; i++) {
             auto& node = poseTree[i];
             glm::vec3 v = glm::eulerAngles(currentPose.q[i]);
@@ -203,7 +203,7 @@ public:
 
 private:
     PoseAnimation poseAnim;
-    Pose currentPose;
+    pose currentPose;
 
     PoseTree poseTree;
     PoseRenderBody poseRenderBody;

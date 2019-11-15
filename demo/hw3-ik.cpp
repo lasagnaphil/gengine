@@ -7,7 +7,7 @@
 #include "PhongRenderer.h"
 #include "DebugRenderer.h"
 #include "FlyCamera.h"
-#include "Pose.h"
+#include "glmx/pose.h"
 #include "PoseRenderBody.h"
 #include "PoseKinematics.h"
 
@@ -75,11 +75,11 @@ public:
 
         // Load BVH file, only copy the tree structure of the human
         MotionClipData tmpBvh;
-        MotionClipData::loadFromFile("resources/cmu_07_02_1.bvh", tmpBvh, 0.01f);
+        tmpBvh = MotionClipData::loadFromFile("resources/cmu_07_02_1.bvh", 0.01f);
         poseTree = tmpBvh.poseTree;
 
         // Create empty pose
-        currentPose = Pose::empty(poseTree.numJoints);
+        currentPose = glmx::pose::empty(poseTree.numJoints);
         currentPose.v.y = 1.05f;
 
         // Material of human
@@ -102,7 +102,7 @@ public:
     }
 
     void loadHandIKExample(bool addStiffness) {
-        currentPose = Pose(currentPose.v, std::vector<glm::quat>(currentPose.size()));
+        currentPose = glmx::pose(currentPose.v, std::vector<glm::quat>(currentPose.size()));
         uint32_t leftHandIdx = poseTree.findIdx("LeftHandIndex1");
         uint32_t spine1Idx = poseTree.findIdx("Spine1");
         rootEnabled = false;
@@ -133,7 +133,7 @@ public:
     }
 
     void loadFeetIKExample(bool addStiffness) {
-        currentPose = Pose(currentPose.v, std::vector<glm::quat>(currentPose.size()));
+        currentPose = glmx::pose(currentPose.v, std::vector<glm::quat>(currentPose.size()));
         uint32_t leftToeBaseIdx = poseTree.findIdx("LeftToeBase");
         rootEnabled = false;
         std::fill_n(jointEnabled.begin(), currentPose.size(), false);
@@ -257,7 +257,7 @@ public:
         else if (ikSettings.type == IKSettings::Gradient) {
         }
         if (ImGui::Button("Reset")) {
-            currentPose = Pose(currentPose.v, std::vector<glm::quat>(currentPose.size()));
+            currentPose = glmx::pose(currentPose.v, std::vector<glm::quat>(currentPose.size()));
         }
 
         static int placeholder = 0;
@@ -297,7 +297,7 @@ public:
     }
 
 private:
-    Pose currentPose;
+    glmx::pose currentPose;
 
     PoseTree poseTree;
     PoseRenderBody poseRenderBody;

@@ -326,7 +326,7 @@ void MotionClipData::saveToFile(const std::string& filename, int eulerOrd) {
     ofs << "Frames: " << numFrames << endl;
     ofs << "Frame Time: " << frameTime << endl;
     for (int f = 0; f < numFrames; f++) {
-        Pose& pose = poseStates[f];
+        glmx::pose& pose = poseStates[f];
         ofs << pose.v.x << " " << pose.v.y << " " << pose.v.z << " ";
         for (int i = 0; i < pose.size(); i++) {
             glm::vec3 e = glmx::quatToEuler(pose.q[i], eulerOrd);

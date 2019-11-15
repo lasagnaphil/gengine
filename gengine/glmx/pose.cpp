@@ -2,12 +2,12 @@
 // Created by lasagnaphil on 19. 6. 19.
 //
 
-#include "Pose.h"
+#include "pose.h"
 #include "MotionClipData.h"
 #include "Utils.h"
 #include <imgui.h>
 
-void renderPoseImGui(const Pose &pose, const PoseTree& poseTree) {
+void renderPoseImGui(const glmx::pose& pose, const PoseTree& poseTree) {
     std::stack<uint32_t> recursionStack;
     recursionStack.push(0);
 

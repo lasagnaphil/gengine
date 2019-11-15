@@ -13,7 +13,7 @@ namespace glmx {
         glm::vec3 v;
         glm::quat q;
 
-        transform() = default;
+        transform() : v(0.0f), q(glm::identity<glm::quat>()) {}
         transform(glm::vec3 v) : v(v), q(glm::identity<glm::quat>()) {}
         transform(glm::quat q) : v(glm::vec3()), q(q) {}
         transform(glm::vec3 v, glm::quat q) : v(v), q(q) {}

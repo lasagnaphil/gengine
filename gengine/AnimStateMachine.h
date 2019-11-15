@@ -5,20 +5,22 @@
 #ifndef GENGINE_ANIMSTATEMACHINE_H
 #define GENGINE_ANIMSTATEMACHINE_H
 
-#include "Pose.h"
+#include "glmx/pose.h"
 #include "GenAllocator.h"
+#include "PoseTree.h"
 
 #include <span.hpp>
 
 struct Animation {
     std::string name;
-    std::vector<Pose> poses;
+    std::vector<glmx::pose> poses;
     int fps;
 };
 
 struct AnimState {
     std::string name;
     Ref<Animation> animation = {};
+    bool loop = false;
 };
 
 enum class AnimParamType {
@@ -47,7 +49,6 @@ struct AnimTransition {
     Ref<AnimState> stateAfter = {};
     AnimParamCondition condition;
     float transitionTime;
-
 };
 
 struct AnimStateMachine {
@@ -60,29 +61,38 @@ private:
     Ref<AnimState> currentState = {};
     Ref<AnimTransition> currentTransition = {};
 
-    Pose currentPose;
+    bool currentStateEnded = false;
+
+    glmx::pose currentPose;
+    glmx::transform offset;
+
     float stateTime = 0.0f;
     float transitionTime = 0.0f;
 
 public:
+
+    AnimStateMachine() {
+        offset.v = glm::vec3(0.f);
+        offset.q = glm::identity<glm::quat>();
+    }
+
     template <class T>
     T* get(Ref<T> ref);
 
-    Ref<Animation> addAnimation(std::string_view name, nonstd::span<Pose> poses, int fps=30);
+    Ref<Animation> addAnimation(const std::string& name, nonstd::span<glmx::pose> poses, int fps=30);
+    Ref<AnimState> addState(const std::string& name, Ref<Animation> anim);
 
-    Ref<AnimState> addState(std::string_view name, Ref<Animation> anim);
-
-    Ref<AnimTransition> addTransition(std::string_view name,
+    Ref<AnimTransition> addTransition(const std::string& name,
             Ref<AnimState> stateBefore, Ref<AnimState> stateAfter,
             float transitionTime = 0.0f);
 
-    void addCondition(Ref<AnimTransition> transition, std::string_view name, bool value);
+    void addCondition(Ref<AnimTransition> transition, const std::string& name, bool value);
 
-    void addTrigger(Ref<AnimTransition> transition, std::string_view name);
+    void addTrigger(Ref<AnimTransition> transition, const std::string& name);
 
-    Ref<AnimParam> addParam(std::string_view name, bool value);
+    Ref<AnimParam> addParam(const std::string& name, bool value);
 
-    Ref<AnimParam> addParam(std::string_view name);
+    Ref<AnimParam> addParam(const std::string& name);
 
     Ref<AnimState> getCurrentState() {
         return currentState;
@@ -96,15 +106,17 @@ public:
         currentState = state;
     }
 
-    void setParam(std::string_view name, bool value);
+    void setParam(const std::string& name, bool value);
 
     void setTrigger();
 
-    [[nodiscard]] const Pose& getCurrentPose() const {
+    const glmx::pose& getCurrentPose() const {
         return currentPose;
     }
 
     void update(float dt);
+
+    void renderImGui(const PoseTree& poseTree);
 };
 
 #endif //GENGINE_ANIMSTATEMACHINE_H

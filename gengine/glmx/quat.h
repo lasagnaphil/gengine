@@ -24,6 +24,9 @@ namespace glmx {
 
     inline glm::quat exp(glm::vec3 v) {
         float s = glm::length(v);
+        if (s <= glm::epsilon<float>()) {
+            return glm::identity<glm::quat>();
+        }
         glm::vec3 u = v / s;
         return glm::quat(s, u);
     }

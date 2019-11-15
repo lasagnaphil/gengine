@@ -7,7 +7,7 @@
 #include "PhongRenderer.h"
 #include "GizmosRenderer.h"
 #include "FlyCamera.h"
-#include "Pose.h"
+#include "glmx/pose.h"
 #include "PoseRenderBody.h"
 #include "MotionClipData.h"
 #include "MotionClipPlayer.h"
@@ -38,8 +38,11 @@ public:
         groundMesh = Mesh::makePlane(1000.0f, 100.0f);
 
         // Load BVH file, only copy the tree structure of the human
-        if (!MotionClipData::loadFromFile("resources/cmu_07_02_1.bvh", motionClipData, 0.01f)) {
+        motionClipData = MotionClipData::loadFromFile("resources/cmu_07_02_1.bvh", 0.01f);
+        if (!motionClipData.valid)
+        {
             std::cerr << "BVH Not Found!" << std::endl;
+            exit(1);
         }
         motionClipPlayer = MotionClipPlayer(&motionClipData);
         motionClipPlayer.init();

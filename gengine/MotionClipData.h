@@ -6,7 +6,7 @@
 #define MOTION_EDITING_POSEDATA_H
 
 #include "GenAllocator.h"
-#include "Pose.h"
+#include "glmx/pose.h"
 #include "PoseTree.h"
 
 #include <string>
@@ -20,7 +20,7 @@
 
 struct MotionClipData {
     PoseTree poseTree;
-    std::vector<Pose> poseStates;
+    std::vector<glmx::pose> poseStates;
     bool valid = false;
 
     // Motion data
@@ -37,8 +37,8 @@ struct MotionClipData {
 
     void print() const;
 
-    Pose& getFrameState(uint32_t frameIdx) { return poseStates[frameIdx]; }
-    const Pose& getFrameState(uint32_t frameIdx) const { return poseStates[frameIdx]; }
+    glmx::pose& getFrameState(uint32_t frameIdx) { return poseStates[frameIdx]; }
+    const glmx::pose& getFrameState(uint32_t frameIdx) const { return poseStates[frameIdx]; }
 
     glm::vec3& getRootPos(uint32_t frameIdx) { return poseStates[frameIdx].v; }
     const glm::vec3& getRootPos(uint32_t frameIdx) const { return poseStates[frameIdx].v; }

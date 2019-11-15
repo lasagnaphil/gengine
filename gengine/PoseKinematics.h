@@ -9,24 +9,24 @@
 #include <glmx/eigen.h>
 #include <glmx/euler.h>
 
-#include "Pose.h"
+#include "glmx/pose.h"
 #include "MotionClipData.h"
 
-glmx::transform calcFK(const PoseTree& poseTree, const Pose& pose, uint32_t mIdx);
+glmx::transform calcFK(const PoseTree& poseTree, const glmx::pose& pose, uint32_t mIdx);
 
-std::vector<glmx::transform> calcFK(const PoseTree& poseTree, const Pose& pose);
+std::vector<glmx::transform> calcFK(const PoseTree& poseTree, const glmx::pose& pose);
 
 enum class LeastSquareMethod {
     SVD, QR, Normal
 };
 
-void solveIKSimple(const PoseTree& poseTree, Pose& pose, uint32_t mIdx,
+void solveIKSimple(const PoseTree& poseTree, glmx::pose& pose, uint32_t mIdx,
                    nonstd::span<uint32_t> relevantJoints,
                    nonstd::span<float> jointStiffness,
                    glm::vec3 mPos,
                    LeastSquareMethod lsqMethod = LeastSquareMethod::SVD);
 
-void solveIKSimple(const PoseTree& poseTree, Pose& pose, uint32_t mIdx,
+void solveIKSimple(const PoseTree& poseTree, glmx::pose& pose, uint32_t mIdx,
                    nonstd::span<uint32_t> relevantJoints,
                    nonstd::span<float> jointStiffness,
                    glmx::transform mT,
@@ -54,6 +54,6 @@ struct IKProblem {
 
 };
 
-void solveIK(const PoseTree& poseTree, Pose& pose, const IKProblem& ik);
+void solveIK(const PoseTree& poseTree, glmx::pose& pose, const IKProblem& ik);
 
 #endif //GENGINE_INVERSEKINEMATICS_H

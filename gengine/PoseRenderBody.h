@@ -5,7 +5,7 @@
 #ifndef GENGINE_POSERENDERBODY_H
 #define GENGINE_POSERENDERBODY_H
 
-#include "Pose.h"
+#include "glmx/pose.h"
 #include "Mesh.h"
 #include "Material.h"
 #include "MotionClipData.h"
@@ -58,8 +58,8 @@ struct PoseRenderBody {
 };
 
 inline void renderMotionClip(PhongRenderer& renderer, DebugRenderer& imRenderer,
-        const Pose& poseState, const PoseTree& poseTree, const PoseRenderBody& body,
-        const glm::mat4& globalTrans = glm::mat4(1.0f), bool debug = false) {
+                             const glmx::pose& poseState, const PoseTree& poseTree, const PoseRenderBody& body,
+                             const glm::mat4& globalTrans = glm::mat4(1.0f), bool debug = false) {
 
     // Recursively render all nodes
     std::stack<std::tuple<uint32_t, glm::mat4>> recursionStack;

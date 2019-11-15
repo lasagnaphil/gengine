@@ -3,7 +3,7 @@
 //
 
 #include "PoseKinematics.h"
-#include "Pose.h"
+#include "glmx/pose.h"
 #include <glmx/quat.h>
 #include <glmx/eigen.h>
 
@@ -47,7 +47,7 @@ MatrixXf calcEulerJacobian(const PoseTree& poseTree, nonstd::span<glmx::transfor
 }
 
 MatrixXf calcEulerJacobian(
-        const PoseTree& poseTree, Pose& pose,
+        const PoseTree& poseTree, glmx::pose& pose,
         uint32_t mIdx, nonstd::span<uint32_t> relevantJoints,
         nonstd::span<float> jointStiffness) {
 
@@ -55,7 +55,7 @@ MatrixXf calcEulerJacobian(
     return calcEulerJacobian(poseTree, Ts, mIdx, relevantJoints, jointStiffness);
 }
 
-glmx::transform calcFK(const PoseTree &poseTree, const Pose &pose, uint32_t mIdx) {
+glmx::transform calcFK(const PoseTree &poseTree, const glmx::pose &pose, uint32_t mIdx) {
     uint32_t i = mIdx;
     if (poseTree[i].isEndSite) {
         i = poseTree[i].parent;
@@ -82,7 +82,7 @@ glmx::transform calcFK(const PoseTree &poseTree, const Pose &pose, uint32_t mIdx
     return t;
 }
 
-std::vector<glmx::transform> calcFK(const PoseTree& poseTree, const Pose& pose) {
+std::vector<glmx::transform> calcFK(const PoseTree& poseTree, const glmx::pose& pose) {
     std::vector<glmx::transform> transforms(poseTree.numNodes);
     std::stack<std::tuple<uint32_t, uint32_t>> recursionStack;
 
@@ -139,11 +139,11 @@ using Vector6f = Matrix<float, 6, -1>;
 
 
 void
-solveIKSimple(const PoseTree &poseTree, Pose &pose, uint32_t mIdx,
+solveIKSimple(const PoseTree &poseTree, glmx::pose &pose, uint32_t mIdx,
               nonstd::span <uint32_t> relevantJoints,
               nonstd::span<float> jointStiffness,
               glmx::transform mT, LeastSquareMethod lsqMethod) {
-    PoseEuler poseEuler = toEuler(pose, EulOrdXYZs);
+    glmx::pose_euler poseEuler = toEuler(pose, EulOrdXYZs);
     MatrixXf J = calcEulerJacobian(poseTree, pose, mIdx, relevantJoints, jointStiffness);
     glmx::transform T = calcFK(poseTree, pose, mIdx);
     VectorXf dp(6);
@@ -172,12 +172,12 @@ solveIKSimple(const PoseTree &poseTree, Pose &pose, uint32_t mIdx,
     pose = toQuat(poseEuler);
 }
 void
-solveIKSimple(const PoseTree &poseTree, Pose &pose, uint32_t mIdx,
+solveIKSimple(const PoseTree &poseTree, glmx::pose &pose, uint32_t mIdx,
               nonstd::span <uint32_t> relevantJoints,
               nonstd::span<float> jointStiffness,
               glm::vec3 mPos, LeastSquareMethod lsqMethod) {
 
-    PoseEuler poseEuler = toEuler(pose, EulOrdXYZs);
+    glmx::pose_euler poseEuler = toEuler(pose, EulOrdXYZs);
     MatrixXf J = calcEulerJacobian(poseTree, pose, mIdx, relevantJoints, jointStiffness)
             .block(0, 0, 3, 3*relevantJoints.size());
     glmx::transform T = calcFK(poseTree, pose, mIdx);
@@ -246,7 +246,7 @@ VectorXf filterPoseVec(const VectorXf& poseVec, nonstd::span<uint32_t> relevantJ
 }
 
 
-VectorXf toEigen(const Pose& pose) {
+VectorXf toEigen(const glmx::pose& pose) {
     VectorXf poseVec(pose.size() * 3);
     int i;
     for (i = 0; i < pose.size(); i++) {
@@ -258,16 +258,16 @@ VectorXf toEigen(const Pose& pose) {
     return poseVec;
 }
 
-Pose toPose(glm::vec3 rootPos, const VectorXf& poseEuler) {
+glmx::pose toPose(glm::vec3 rootPos, const VectorXf& poseEuler) {
     int n = poseEuler.size()/3;
-    Pose pose(rootPos, std::vector<glm::quat>(n));
+    glmx::pose pose(rootPos, std::vector<glm::quat>(n));
     for (int i = 0; i < n; i++) {
         pose.q[i] = glmx::eulerToQuat({poseEuler[3*i], poseEuler[3*i+1], poseEuler[3*i+2]}, EulOrdXYZs);
     }
     return pose;
 }
 
-void solveIK(const PoseTree& poseTree, Pose& pose, const IKProblem& ik) {
+void solveIK(const PoseTree& poseTree, glmx::pose& pose, const IKProblem& ik) {
     VectorXf poseEuler = toEigen(pose);
     VectorXf origPoseEuler = poseEuler;
 

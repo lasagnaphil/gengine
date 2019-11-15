@@ -59,8 +59,9 @@ add_subdirectory(deps/ezc3d)
 add_subdirectory(deps/pybind11)
 
 # Add the source files to the library
-file(GLOB RENDER_SOURCES *.cpp)
-add_library(gengine STATIC ${RENDER_SOURCES})
+file(GLOB GENGINE_SOURCES *.cpp)
+file(GLOB GENGINE_GLMX_SOURCES glmx/*.cpp)
+add_library(gengine STATIC ${GENGINE_SOURCES} ${GENGINE_GLMX_SOURCES})
 
 # Use this compile definition to use std::shared_ptr instead of generational storage
 # target_compile_definitions(gengine PUBLIC USE_SHARED_PTR)
