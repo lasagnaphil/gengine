@@ -15,6 +15,10 @@ struct Animation {
     std::string name;
     std::vector<glmx::pose> poses;
     int fps;
+
+    float length() {
+        return (poses.size() - 1) * (1.0f / (float)fps);
+    }
 };
 
 struct AnimState {
@@ -24,12 +28,12 @@ struct AnimState {
 };
 
 enum class AnimParamType {
-    Bool, Trigger
+    None, Bool, Trigger
 };
 
 struct AnimParam {
     std::string name;
-    AnimParamType type = AnimParamType::Bool;
+    AnimParamType type = AnimParamType::None;
     union {
         bool value;
     };
@@ -56,7 +60,7 @@ private:
     GenAllocator<Animation> anims;
     GenAllocator<AnimState> states;
     GenAllocator<AnimTransition> transitions;
-    GenAllocator<AnimParam> params;
+    std::unordered_map<std::string, AnimParam> params;
 
     Ref<AnimState> currentState = {};
     Ref<AnimTransition> currentTransition = {};
@@ -90,9 +94,9 @@ public:
 
     void addTrigger(Ref<AnimTransition> transition, const std::string& name);
 
-    Ref<AnimParam> addParam(const std::string& name, bool value);
+    AnimParam& addParam(const std::string& name, bool value);
 
-    Ref<AnimParam> addParam(const std::string& name);
+    AnimParam& addParam(const std::string& name);
 
     Ref<AnimState> getCurrentState() {
         return currentState;
@@ -101,6 +105,7 @@ public:
     AnimState* getCurrentStatePtr() {
         return states.get(currentState);
     }
+
 
     void setCurrentState(Ref<AnimState> state) {
         currentState = state;
@@ -113,6 +118,8 @@ public:
     const glmx::pose& getCurrentPose() const {
         return currentPose;
     }
+
+    Ref<AnimTransition> selectNextTransition();
 
     void update(float dt);
 

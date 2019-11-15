@@ -222,6 +222,18 @@ struct GenAllocator {
             }
         }
     }
+
+    template <class Fun>
+    void forEachUntil(Fun&& fun) {
+        for (uint32_t i = 0; i < capacity; ++i) {
+            if (nodes[i].generation != 0) {
+                T* data = reinterpret_cast<T*>(&nodes[i].bytes);
+                Ref<T> ref = {i, nodes[i].generation};
+                bool end = fun(*data, ref);
+                if (end) return;
+            }
+        }
+    }
 };
 
 struct Resources {

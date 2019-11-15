@@ -73,16 +73,16 @@ public:
         animFSM.addParam("jump");
         animFSM.addParam("forward_jump");
 
-        auto startWalkingTrans = animFSM.addTransition("start_walking", idleState, walkState, 1.0f);
+        auto startWalkingTrans = animFSM.addTransition("start_walking", idleState, walkState, 0.2f);
         animFSM.addCondition(startWalkingTrans, "is_walking", true);
-        auto stopWalkingTrans = animFSM.addTransition("stop_walking", walkState, idleState, 1.0f);
+        auto stopWalkingTrans = animFSM.addTransition("stop_walking", walkState, idleState, 0.2f);
         animFSM.addCondition(stopWalkingTrans, "is_walking", false);
         auto jumpTrans = animFSM.addTransition("jumping", idleState, jumpState, 1.0f);
-        animFSM.addTrigger(jumpTrans, "jump");
+        // animFSM.addTrigger(jumpTrans, "jump");
         auto forwardJumpTrans = animFSM.addTransition("forward_jumping", walkState, forwardJumpState, 1.0f);
-        animFSM.addTrigger(forwardJumpTrans, "forward_jump");
+        // animFSM.addTrigger(forwardJumpTrans, "forward_jump");
 
-        animFSM.setCurrentState(walkState);
+        animFSM.setCurrentState(idleState);
     }
 
     void processInput(SDL_Event &event) override {
@@ -92,12 +92,15 @@ public:
         static float time = 0.0f;
         time += dt;
         auto inputMgr = InputManager::get();
-        if (inputMgr->isKeyEntered(SDL_SCANCODE_1)) {
-            phongRenderer.viewDepthBufferDebug = !phongRenderer.viewDepthBufferDebug;
-        }
         if (inputMgr->isMousePressed(SDL_BUTTON_LEFT)) {
             glm::vec2 mPos = inputMgr->getMousePos();
             Ray ray = camera->screenPointToRay(mPos);
+        }
+        if (inputMgr->isKeyPressed(SDL_SCANCODE_SPACE)) {
+            animFSM.setParam("is_walking", true);
+        }
+        else {
+            animFSM.setParam("is_walking", false);
         }
         animFSM.update(dt);
         currentPose = animFSM.getCurrentPose();
