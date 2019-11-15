@@ -7,7 +7,7 @@
 #include <iostream>
 #include <InputManager.h>
 #include "App.h"
-#include "PhongRenderer.h"
+#include "PBRenderer.h"
 #include "GizmosRenderer.h"
 #include "FlyCamera.h"
 

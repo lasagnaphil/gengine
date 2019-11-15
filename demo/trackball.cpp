@@ -22,7 +22,7 @@ public:
         Ref<Texture> planeTexture = Texture::fromImage(checkerImage);
         checkerImage.release();
 
-        groundMat = Resources::make<Material>();
+        groundMat = Resources::make<PhongMaterial>();
         groundMat->ambient = {0.1f, 0.1f, 0.1f, 1.0f};
         groundMat->specular = {0.7f, 0.7f, 0.7f, 1.0f};
         groundMat->shininess = 32.0f;
@@ -39,7 +39,7 @@ public:
         Ref<Texture> cubeSpecularTexture = Texture::fromImage(cubeSpecularImage);
         cubeSpecularImage.release();
 
-        cubeMat = Resources::make<Material>();
+        cubeMat = Resources::make<PhongMaterial>();
         cubeMat->ambient = {0.0f, 0.0f, 0.0f, 1.0f};
         cubeMat->shininess = 32.0f;
         cubeMat->texDiffuse = cubeTexture;
@@ -75,8 +75,8 @@ public:
     }
 
 private:
-    Ref<Material> groundMat;
-    Ref<Material> cubeMat;
+    Ref<PhongMaterial> groundMat;
+    Ref<PhongMaterial> cubeMat;
     Ref<Mesh> groundMesh;
     Ref<Mesh> cubeMesh;
 

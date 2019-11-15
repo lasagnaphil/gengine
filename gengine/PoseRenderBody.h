@@ -31,9 +31,9 @@ inline glm::mat4 rotationBetweenVecs(glm::vec3 a, glm::vec3 b) {
 
 struct PoseRenderBody {
     std::vector<Ref<Mesh>> meshes;
-    std::vector<Ref<Material>> materials;
+    std::vector<Ref<PhongMaterial>> materials;
 
-    static PoseRenderBody createAsBoxes(const PoseTree& poseTree, float width, Ref<Material> material) {
+    static PoseRenderBody createAsBoxes(const PoseTree& poseTree, float width, Ref<PhongMaterial> material) {
         PoseRenderBody body;
         body.meshes.resize(poseTree.numNodes - 1);
         body.materials.resize(poseTree.numNodes - 1);

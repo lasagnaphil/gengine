@@ -7,7 +7,8 @@
 #include "Shader.h"
 #include "Texture.h"
 #include "Image.h"
-#include "Material.h"
+#include "PhongRenderer.h"
+#include "PBRenderer.h"
 #include "Mesh.h"
 #include "LineMesh.h"
 
@@ -18,10 +19,11 @@
     GLOBAL_TYPE(Shader, 2, 8) \
     GLOBAL_TYPE(Texture, 3, 8) \
     GLOBAL_TYPE(Image, 4, 8) \
-    GLOBAL_TYPE(Material, 5, 8) \
-    GLOBAL_TYPE(Mesh, 6, 8) \
-    GLOBAL_TYPE(LineMaterial, 7, 8) \
-    GLOBAL_TYPE(LineMesh, 8, 8)
+    GLOBAL_TYPE(Mesh, 5, 8) \
+    GLOBAL_TYPE(LineMesh, 6, 8) \
+    GLOBAL_TYPE(PhongMaterial, 7, 8) \
+    GLOBAL_TYPE(LineMaterial, 8, 8) \
+    GLOBAL_TYPE(PBRMaterial, 9, 8)
 
 #define GLOBAL_TYPE(__Type, __id, __capacity) \
 template <> uint16_t TypeRegistry::getID<__Type>() { return __id; } \

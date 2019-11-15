@@ -15,6 +15,7 @@
 #include "GenAllocator.h"
 #include "Shader.h"
 #include "PhongRenderer.h"
+#include "PBRenderer.h"
 #include "GizmosRenderer.h"
 #include "Camera.h"
 
@@ -35,6 +36,7 @@ public:
 
 protected:
     PhongRenderer phongRenderer;
+    PBRenderer pbRenderer;
     GizmosRenderer gizmosRenderer;
     Ref<Transform> rootTransform;
     std::unique_ptr<Camera> camera = nullptr;

@@ -68,7 +68,7 @@ public:
         Ref<Texture> planeTexture = Texture::fromImage(checkerImage);
         checkerImage.reset();
 
-        groundMat = Resources::make<Material>();
+        groundMat = Resources::make<PhongMaterial>();
         groundMat->ambient = {0.1f, 0.1f, 0.1f, 1.0f};
         groundMat->specular = {0.7f, 0.7f, 0.7f, 1.0f};
         groundMat->shininess = 32.0f;
@@ -143,7 +143,7 @@ public:
     }
 
 private:
-    Ref<Material> groundMat;
+    Ref<PhongMaterial> groundMat;
     Ref<Mesh> groundMesh;
 
     MotionClipData motionClipData;
