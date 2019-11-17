@@ -7,15 +7,19 @@
 #include <iostream>
 
 #include "Image.h"
+#include "GenAllocator.h"
 
-Image::Image(const char *filename, int desiredChannels) : desiredChannels(desiredChannels) {
-    path = std::string(filename);
+Ref<Image> Image::fromFile(const std::string& filename, int desiredChannels){
+    Ref<Image> image = Resources::make<Image>();
 
-    data = stbi_load(path.c_str(), &width, &height, &nrChannels, desiredChannels);
-    if (!data) {
-        std::cerr << "Failed to load image " << path.c_str() << "!\n";
+    image->data = stbi_load(filename.c_str(), &image->width, &image->height, &image->nrChannels, desiredChannels);
+    if (!image->data) {
+        std::cerr << "Failed to load image " << filename << "!\n";
         exit(EXIT_FAILURE);
     }
+    image->desiredChannels = desiredChannels;
+
+    return image;
 }
 
 void Image::dispose() {

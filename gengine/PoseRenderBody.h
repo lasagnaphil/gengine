@@ -7,7 +7,6 @@
 
 #include "glmx/pose.h"
 #include "Mesh.h"
-#include "Material.h"
 #include "MotionClipData.h"
 #include "PhongRenderer.h"
 #include "DebugRenderer.h"
@@ -35,9 +34,9 @@ inline glm::mat4 rotationBetweenVecs(glm::vec3 a, glm::vec3 b) {
 
 struct PoseRenderBody {
     std::vector<Ref<Mesh>> meshes;
-    std::vector<Ref<Material>> materials;
+    std::vector<Ref<PhongMaterial>> materials;
 
-    static PoseRenderBody createAsBoxes(const PoseTree& poseTree, float width, Ref<Material> material) {
+    static PoseRenderBody createAsBoxes(const PoseTree& poseTree, float width, Ref<PhongMaterial> material) {
         PoseRenderBody body;
         body.meshes.resize(poseTree.numNodes - 1);
         body.materials.resize(poseTree.numNodes - 1);
@@ -87,7 +86,7 @@ inline void renderMotionClip(PhongRenderer& renderer, DebugRenderer& imRenderer,
                 glm::mat4 T = curTransform * initialBoneTransform;
 
                 if (body.meshes[nodeIdx - 1]) {
-                    renderer.queueRender(RenderCommand {
+                    renderer.queueRender(PhongRenderCommand {
                             body.meshes[nodeIdx - 1],
                             body.materials[nodeIdx - 1],
                             T

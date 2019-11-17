@@ -16,13 +16,13 @@
 
 
 struct PoseAnimation {
-    std::map<uint32_t, pose> poseKeyframes;
+    std::map<uint32_t, glmx::pose> poseKeyframes;
 
-    void insertFrame(uint32_t frameIdx, const pose& pose) {
+    void insertFrame(uint32_t frameIdx, const glmx::pose& pose) {
         poseKeyframes.insert({frameIdx, pose});
     }
 
-    pose getPoseAtFrame(uint32_t frameIdx) {
+    glmx::pose getPoseAtFrame(uint32_t frameIdx) {
         if (poseKeyframes.count(frameIdx) == 1) {
             return poseKeyframes[frameIdx];
         }
@@ -31,13 +31,13 @@ struct PoseAnimation {
                 auto i1 = it->first;
                 auto i2 = std::next(it)->first;
                 if (frameIdx > i1 && frameIdx < i2) {
-                    pose p1 = it->second;
-                    pose p2 = std::next(it)->second;
+                    glmx::pose p1 = it->second;
+                    glmx::pose p2 = std::next(it)->second;
                     float t = (float)(frameIdx - i1) / (float)(i2 - i1);
                     return slerp(p1, p2, t);
                 }
             }
-            return pose::empty(poseKeyframes.begin()->second.size());
+            return glmx::pose::empty(poseKeyframes.begin()->second.size());
         }
     }
 
@@ -56,11 +56,11 @@ public:
         FlyCamera* camera = initCamera<FlyCamera>();
         camera->transform->setPosition({0.0f, 1.0f, 2.0f});
 
-        Ref<Image> checkerImage = Resources::make<Image>("resources/textures/checker.png");
+        Ref<Image> checkerImage = Image::fromFile("resources/textures/checker.png");
         Ref<Texture> planeTexture = Texture::fromImage(checkerImage);
         checkerImage.release();
 
-        groundMat = Resources::make<Material>();
+        groundMat = Resources::make<PhongMaterial>();
         groundMat->ambient = {0.1f, 0.1f, 0.1f, 1.0f};
         groundMat->specular = {0.7f, 0.7f, 0.7f, 1.0f};
         groundMat->shininess = 32.0f;
@@ -70,13 +70,8 @@ public:
         groundMesh = Mesh::makePlane(1000.0f, 100.0f);
 
         // Load BVH file, only copy the tree structure of the human
-        MotionClipData tmpBvh;
-        MotionClipData::loadFromFile("resources/cmu_07_02_1.bvh", tmpBvh);
+        MotionClipData tmpBvh = MotionClipData::loadFromFile("resources/cmu_07_02_1.bvh", 0.01f);
         poseTree = tmpBvh.poseTree;
-
-        for (auto& node : poseTree.allNodes) {
-            node.offset *= 0.01f;
-        }
 
         // Create empty pose
         glmx::pose basePose = glmx::pose::empty(poseTree.numJoints);
@@ -137,7 +132,7 @@ public:
         currentPose = poseAnim.getPoseAtFrame(0);
 
         // Material of human
-        Ref<Material> bodyMat = Resources::make<Material>();
+        Ref<PhongMaterial> bodyMat = Resources::make<PhongMaterial>();
         bodyMat->ambient = {0.1f, 0.1f, 0.1f, 1.0f};
         bodyMat->specular = {0.7f, 0.7f, 0.7f, 1.0f};
         bodyMat->diffuse = {1.0f, 0.0f, 0.0f, 1.0f};
@@ -203,7 +198,7 @@ public:
 
 private:
     PoseAnimation poseAnim;
-    pose currentPose;
+    glmx::pose currentPose;
 
     PoseTree poseTree;
     PoseRenderBody poseRenderBody;
@@ -211,7 +206,7 @@ private:
     int frameIdx = 0;
     bool isPlaying = true;
 
-    Ref<Material> groundMat;
+    Ref<PhongMaterial> groundMat;
     Ref<Mesh> groundMesh;
 };
 

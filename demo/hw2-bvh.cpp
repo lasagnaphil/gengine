@@ -24,11 +24,11 @@ public:
         FlyCamera* camera = initCamera<FlyCamera>();
         camera->transform->setPosition({0.0f, 1.0f, 2.0f});
 
-        Ref<Image> checkerImage = Resources::make<Image>("resources/textures/checker.png");
+        Ref<Image> checkerImage = Image::fromFile("resources/textures/checker.png");
         Ref<Texture> planeTexture = Texture::fromImage(checkerImage);
         checkerImage.release();
 
-        groundMat = Resources::make<Material>();
+        groundMat = Resources::make<PhongMaterial>();
         groundMat->ambient = {0.1f, 0.1f, 0.1f, 1.0f};
         groundMat->specular = {0.7f, 0.7f, 0.7f, 1.0f};
         groundMat->shininess = 32.0f;
@@ -48,7 +48,7 @@ public:
         motionClipPlayer.init();
 
         // Material of human
-        Ref<Material> bodyMat = Resources::make<Material>();
+        Ref<PhongMaterial> bodyMat = Resources::make<PhongMaterial>();
         bodyMat->ambient = {0.1f, 0.1f, 0.1f, 1.0f};
         bodyMat->specular = {0.7f, 0.7f, 0.7f, 1.0f};
         bodyMat->diffuse = {1.0f, 0.0f, 0.0f, 1.0f};
@@ -96,7 +96,7 @@ private:
     int frameIdx = 0;
     bool isPlaying = true;
 
-    Ref<Material> groundMat;
+    Ref<PhongMaterial> groundMat;
     Ref<Mesh> groundMesh;
 };
 

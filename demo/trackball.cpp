@@ -18,11 +18,11 @@ public:
     void loadResources() override {
         TrackballCamera* camera = initCamera<TrackballCamera>();
 
-        Ref<Image> checkerImage = Resources::make<Image>("resources/textures/checker.png");
+        Ref<Image> checkerImage = Image::fromFile("resources/textures/checker.png");
         Ref<Texture> planeTexture = Texture::fromImage(checkerImage);
         checkerImage.release();
 
-        groundMat = Resources::make<Material>();
+        groundMat = Resources::make<PhongMaterial>();
         groundMat->ambient = {0.1f, 0.1f, 0.1f, 1.0f};
         groundMat->specular = {0.7f, 0.7f, 0.7f, 1.0f};
         groundMat->shininess = 32.0f;
@@ -31,15 +31,15 @@ public:
 
         groundMesh = Mesh::makePlane(1000.0f, 100.0f);
 
-        Ref<Image> cubeImage = Resources::make<Image>("resources/textures/container2.png");
+        Ref<Image> cubeImage = Image::fromFile("resources/textures/container2.png");
         Ref<Texture> cubeTexture = Texture::fromImage(cubeImage);
         cubeImage.release();
 
-        Ref<Image> cubeSpecularImage = Resources::make<Image>("resources/textures/container2_specular.png");
+        Ref<Image> cubeSpecularImage = Image::fromFile("resources/textures/container2_specular.png");
         Ref<Texture> cubeSpecularTexture = Texture::fromImage(cubeSpecularImage);
         cubeSpecularImage.release();
 
-        cubeMat = Resources::make<Material>();
+        cubeMat = Resources::make<PhongMaterial>();
         cubeMat->ambient = {0.0f, 0.0f, 0.0f, 1.0f};
         cubeMat->shininess = 32.0f;
         cubeMat->texDiffuse = cubeTexture;
@@ -75,8 +75,8 @@ public:
     }
 
 private:
-    Ref<Material> groundMat;
-    Ref<Material> cubeMat;
+    Ref<PhongMaterial> groundMat;
+    Ref<PhongMaterial> cubeMat;
     Ref<Mesh> groundMesh;
     Ref<Mesh> cubeMesh;
 

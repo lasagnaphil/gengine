@@ -5,8 +5,9 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "Shader.h"
 #include "GLUtils.h"
-#include "Material.h"
 #include "FlyCamera.h"
+#include "PhongRenderer.h"
+#include "PBRenderer.h"
 
 #include "shaders/line2d.vert.h"
 #include "shaders/line2d.frag.h"
@@ -14,12 +15,14 @@
 #include "shaders/line3d.frag.h"
 #include "shaders/point.vert.h"
 #include "shaders/point.frag.h"
+#include "shaders/phong.vert.h"
 #include "shaders/phong_shadows.vert.h"
 #include "shaders/phong_shadows.frag.h"
 #include "shaders/depth.vert.h"
 #include "shaders/depth.frag.h"
 #include "shaders/depth_debug.vert.h"
 #include "shaders/depth_debug.frag.h"
+#include "shaders/pbr.frag.h"
 
 GLuint compileShader(GLenum type, const GLchar *source) {
     GLuint shader = glCreateShader(type);
@@ -158,7 +161,7 @@ void Shader::setVec4(GLint uniID, const glm::vec4& value) const {
     glUniform4fv(uniID, 1, glm::value_ptr(value));
 }
 
-void Shader::setMaterial(const Material &material) const {
+void Shader::setPhongMaterial(const PhongMaterial &material) const {
     setVec4("material.ambient", material.ambient);
     setFloat("material.shininess", material.shininess);
     setBool("material.useTexDiffuse", (bool)material.texDiffuse);
@@ -181,6 +184,45 @@ void Shader::setMaterial(const Material &material) const {
     setInt("material.texSpecular", 1);
 }
 
+void Shader::setPBRMaterial(const PBRMaterial &material) const {
+    setBool("material.useTexAlbedo", (bool)material.texAlbedo);
+    setBool("material.useTexMetallic", (bool)material.texMetallic);
+    setBool("material.useTexRoughness", (bool)material.texRoughness);
+    setBool("material.useTexAO", (bool)material.texAO);
+
+    if (material.texAlbedo) {
+        glActiveTexture(GL_TEXTURE0);
+        material.texAlbedo->bind();
+    }
+    else {
+        setVec3("mat.albedo", material.albedo);
+    }
+
+    if (material.texMetallic) {
+        glActiveTexture(GL_TEXTURE1);
+        material.texMetallic->bind();
+    }
+    else {
+        setFloat("mat.metallic", material.metallic);
+    }
+
+    if (material.texRoughness) {
+        glActiveTexture(GL_TEXTURE2);
+        material.texRoughness->bind();
+    }
+    else {
+        setFloat("mat.roughness", material.roughness);
+    }
+
+    if (material.texAO) {
+        glActiveTexture(GL_TEXTURE3);
+        material.texAO->bind();
+    }
+    else {
+        setFloat("mat.ao", material.ao);
+    }
+}
+
 void Shader::setCamera(const Camera* camera) const {
     setMat4("proj", camera->getPerspectiveMatrix());
     setMat4("view", camera->getViewMatrix());
@@ -198,6 +240,7 @@ Ref<Shader> Shaders::point = {};
 Ref<Shader> Shaders::phong = {};
 Ref<Shader> Shaders::depth = {};
 Ref<Shader> Shaders::depthDebug = {};
+Ref<Shader> Shaders::pbr = {};
 
 void Shaders::init() {
     Shaders::line2D = Resources::make<Shader>("line2d");
@@ -217,4 +260,7 @@ void Shaders::init() {
 
     Shaders::depthDebug = Resources::make<Shader>("depth_debug");
     Shaders::depthDebug->compileFromString(depth_debug_vert_shader, depth_debug_frag_shader);
+
+    Shaders::pbr = Resources::make<Shader>("pbr");
+    Shaders::pbr->compileFromString(phong_vert_shader, pbr_frag_shader);
 }

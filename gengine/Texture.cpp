@@ -36,8 +36,6 @@ Ref<Texture> Texture::fromNew(uint32_t width, uint32_t height) {
 }
 
 void Texture::loadFromImage(Ref<Image> image) {
-    imagePath = image->path;
-
     width = image->width;
     height = image->height;
     wrapS = GL_REPEAT;

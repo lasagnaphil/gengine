@@ -8,14 +8,14 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 proj;
 
-out vec3 fragPos;
+out vec3 worldPos;
 out vec3 normal;
 out vec2 texCoord;
 
 void main()
 {
     gl_Position = proj * view * model * vec4(inPos, 1.0);
-    fragPos = vec3(model * vec4(inPos, 1.0));
+    worldPos = vec3(model * vec4(inPos, 1.0));
     normal = mat3(transpose(inverse(model))) * inNormal;
     texCoord = inTexCoord;
 }

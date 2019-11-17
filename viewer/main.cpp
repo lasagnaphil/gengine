@@ -64,11 +64,11 @@ public:
         cameraTransform->move({10.0f, 20.0f, -10.0f});
         cameraTransform->rotate(M_PI/4, {0.0f, 0.0f, 1.0f});
 
-        Ref<Image> checkerImage = Resources::make<Image>("resources/textures/checker.png");
+        Ref<Image> checkerImage = Image::fromFile("resources/textures/checker.png");
         Ref<Texture> planeTexture = Texture::fromImage(checkerImage);
         checkerImage.reset();
 
-        groundMat = Resources::make<Material>();
+        groundMat = Resources::make<PhongMaterial>();
         groundMat->ambient = {0.1f, 0.1f, 0.1f, 1.0f};
         groundMat->specular = {0.7f, 0.7f, 0.7f, 1.0f};
         groundMat->shininess = 32.0f;
@@ -143,7 +143,7 @@ public:
     }
 
 private:
-    Ref<Material> groundMat;
+    Ref<PhongMaterial> groundMat;
     Ref<Mesh> groundMesh;
 
     MotionClipData motionClipData;

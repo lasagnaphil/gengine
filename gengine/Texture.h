@@ -22,8 +22,6 @@ struct Texture {
     GLuint filterMin;
     GLuint filterMax;
 
-    std::string imagePath;
-
     Texture() = default;
     static Ref<Texture> fromImage(Ref<Image> image);
     static Ref<Texture> fromNew(uint32_t width, uint32_t height);

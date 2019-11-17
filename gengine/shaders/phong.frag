@@ -68,13 +68,14 @@ uniform vec3 viewPos;
 
 uniform Material material;
 
-uniform DirLight dirLight;
-
 #define NR_POINT_LIGHTS 16
-uniform PointLight pointLights[NR_POINT_LIGHTS];
-
 #define NR_SPOT_LIGHTS 8
-uniform SpotLight spotLights[NR_SPOT_LIGHTS];
+
+layout (std140) uniform LightBlock {
+    uniform DirLight dirLight;
+    uniform PointLight pointLights[NR_POINT_LIGHTS];
+    uniform SpotLight spotLights[NR_SPOT_LIGHTS];
+};
 
 uniform int numPointLights;
 uniform int numSpotLights;
@@ -84,8 +85,6 @@ vec4 calcDirLight(DirLight light, vec3 normal, vec3 viewDir, vec4 matDiffuse, ve
 
     float diff = max(dot(normal, lightDir), 0.0);
 
-    // vec3 reflectDir = reflect(-lightDir, normal);
-    // float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
     vec3 halfwayDir = normalize(lightDir + viewDir);
     float spec = pow(max(dot(viewDir, halfwayDir), 0.0), material.shininess);
 
@@ -101,8 +100,6 @@ vec4 calcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, v
 
     float diff = max(dot(normal, lightDir), 0.0);
 
-    // vec3 reflectDir = reflect(-lightDir, normal);
-    // float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
     vec3 halfwayDir = normalize(lightDir + viewDir);
     float spec = pow(max(dot(viewDir, halfwayDir), 0.0), material.shininess);
 
@@ -125,8 +122,6 @@ vec4 calcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec
 
     float diff = max(dot(normal, lightDir), 0.0);
 
-    // vec3 reflectDir = reflect(-lightDir, normal);
-    // float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
     vec3 halfwayDir = normalize(lightDir + viewDir);
     float spec = pow(max(dot(viewDir, halfwayDir), 0.0), material.shininess);
 

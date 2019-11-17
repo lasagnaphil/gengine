@@ -169,11 +169,19 @@ void App::start() {
 
     internalLoadResources();
 
-    phongRenderer.setCamera(camera.get());
+    if (renderSettings == AppRenderSettings::Phong)
+        phongRenderer.setCamera(camera.get());
+    else if (renderSettings == AppRenderSettings::PBR)
+        pbRenderer.setCamera(camera.get());
+
     gizmosRenderer.setCamera(camera.get());
     imRenderer.setCamera(camera.get());
 
-    phongRenderer.init();
+    if (renderSettings == AppRenderSettings::Phong)
+        phongRenderer.init();
+    else if (renderSettings == AppRenderSettings::PBR)
+        pbRenderer.init();
+
     gizmosRenderer.init();
     imRenderer.init();
 

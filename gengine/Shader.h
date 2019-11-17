@@ -16,7 +16,8 @@
 
 #include "GenAllocator.h"
 
-struct Material;
+struct PhongMaterial;
+struct PBRMaterial;
 struct Camera;
 
 class Shader {
@@ -40,16 +41,14 @@ public:
     void setVec3(GLint uniID, const glm::vec3& value) const;
     void setVec4(const char* name, const glm::vec4& value) const;
     void setVec4(GLint uniID, const glm::vec4& value) const;
-    void setMaterial(const Material& material) const;
+    void setPhongMaterial(const PhongMaterial& material) const;
+    void setPBRMaterial(const PBRMaterial& material) const;
     void setCamera(const Camera* camera) const;
 
     GLint getUniformLocation(const char* name);
 
     GLuint program;
     std::string name;
-    std::string vertexPath;
-    std::string fragmentPath;
-    std::string geometryPath;
 };
 
 class Shaders {
@@ -60,6 +59,7 @@ public:
     static Ref<Shader> phong;
     static Ref<Shader> depth;
     static Ref<Shader> depthDebug;
+    static Ref<Shader> pbr;
 
     static void init();
 };

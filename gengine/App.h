@@ -15,14 +15,19 @@
 #include "GenAllocator.h"
 #include "Shader.h"
 #include "PhongRenderer.h"
+#include "PBRenderer.h"
 #include "GizmosRenderer.h"
 #include "Camera.h"
 #include "DebugRenderer.h"
 
+enum class AppRenderSettings {
+    Phong, PBR
+};
+
 class App {
 public:
-    App(bool useDisplayFPS = false) :
-        useDisplayFPS(useDisplayFPS) {}
+    App(bool useDisplayFPS = false, AppRenderSettings settings = AppRenderSettings::Phong) :
+        useDisplayFPS(useDisplayFPS), renderSettings(settings) {}
 
     virtual ~App();
     void start();
@@ -36,8 +41,11 @@ public:
 
 protected:
     PhongRenderer phongRenderer;
+    PBRenderer pbRenderer;
     GizmosRenderer gizmosRenderer;
     DebugRenderer imRenderer;
+
+    AppRenderSettings renderSettings;
 
     Ref<Transform> rootTransform;
     std::unique_ptr<Camera> camera = nullptr;

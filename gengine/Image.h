@@ -6,16 +6,15 @@
 #define MOTION_EDITING_IMAGE_H
 
 #include <string>
-#include "IDisposable.h"
+#include "GenAllocator.h"
 
 struct Image {
     unsigned char* data = nullptr;
     int width, height, nrChannels, desiredChannels;
 
-    std::string path;
-
     Image() = default;
-    Image(const char* filename, int desiredChannels = 0);
+
+    static Ref<Image> fromFile(const std::string& filename, int desiredChannels = 0);
 
     void dispose();
 };
