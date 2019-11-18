@@ -1,20 +1,10 @@
-#version 330 core
+#version 420
 
 struct PBRMaterial {
-    vec3 albedo;
-    float metallic;
-    float roughness;
-    float ao;
-
     sampler2D texAlbedo;
     sampler2D texMetallic;
     sampler2D texRoughness;
     sampler2D texAO;
-
-    bool useTexAlbedo;
-    bool useTexMetallic;
-    bool useTexRoughness;
-    bool useTexAO;
 };
 
 struct PBRMatParams {
@@ -25,15 +15,13 @@ struct PBRMatParams {
 };
 
 struct PBRDirLight {
-    bool enabled;
-
     vec3 direction;
     vec3 color;
+
+    bool enabled;
 };
 
 struct PBRPointLight {
-    bool enabled;
-
     vec3 position;
 
     float constant;
@@ -41,21 +29,24 @@ struct PBRPointLight {
     float quadratic;
 
     vec3 color;
+
+    bool enabled;
 };
 
 struct PBRSpotLight {
-    bool enabled;
-
     vec3 position;
     vec3 direction;
-    float cutOff;
-    float outerCutOff;
 
     float constant;
     float linear;
     float quadratic;
 
     vec3 color;
+
+    float cutOff;
+    float outerCutOff;
+
+    bool enabled;
 };
 
 out vec4 fragColor;
@@ -70,16 +61,26 @@ uniform PBRMaterial mat;
 
 const float PI = 3.14159265359;
 
-uniform PBRDirLight dirLight;
-
 #define NR_POINT_LIGHTS 16
-uniform PBRPointLight pointLights[NR_POINT_LIGHTS];
-
 #define NR_SPOT_LIGHTS 8
+
+uniform PBRDirLight dirLight;
+uniform PBRPointLight pointLights[NR_POINT_LIGHTS];
 uniform PBRSpotLight spotLights[NR_SPOT_LIGHTS];
 
-uniform int numPointLights;
-uniform int numSpotLights;
+/*
+layout (std140, binding=0) uniform DirLightBlock {
+    PBRDirLight dirLight;
+};
+
+layout (std140, binding=1) uniform PointLightBlock {
+    PBRPointLight pointLights[NR_POINT_LIGHTS];
+};
+
+layout (std140, binding=2) uniform SpotLightBlock {
+    PBRSpotLight spotLights[NR_SPOT_LIGHTS];
+};
+*/
 
 vec3 fresnelSchlinck(float cosTheta, vec3 F0) {
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
@@ -173,10 +174,10 @@ void main() {
     vec3 V = normalize(viewPos - worldPos);
 
     PBRMatParams params;
-    params.albedo = mat.useTexAlbedo? texture(mat.texAlbedo, texCoord).rgb : mat.albedo;
-    params.metallic = mat.useTexMetallic? texture(mat.texMetallic, texCoord).r : mat.metallic;
-    params.roughness = mat.useTexRoughness? texture(mat.texRoughness, texCoord).r : mat.roughness;
-    params.ao = mat.useTexAO? texture(mat.texAO, texCoord).r : mat.ao;
+    params.albedo = texture(mat.texAlbedo, texCoord).rgb;
+    params.metallic = texture(mat.texMetallic, texCoord).r;
+    params.roughness = texture(mat.texRoughness, texCoord).r;
+    params.ao = texture(mat.texAO, texCoord).r;
 
     vec3 F0 = vec3(0.04);
     F0 = mix(F0, params.albedo, params.metallic);
@@ -186,13 +187,13 @@ void main() {
         Lo = calcDirLight(dirLight, N, V, F0, params);
     }
 
-    for (int i = 0; i < numPointLights; ++i) {
+    for (int i = 0; i < NR_POINT_LIGHTS; ++i) {
         if (pointLights[i].enabled) {
             Lo += calcPointLight(pointLights[i], N, V, F0, params);
         }
     }
 
-    for (int i = 0; i < numSpotLights; ++i) {
+    for (int i = 0; i < NR_SPOT_LIGHTS; ++i) {
         if (spotLights[i].enabled) {
             Lo += calcSpotLight(spotLights[i], N, V, F0, params);
         }

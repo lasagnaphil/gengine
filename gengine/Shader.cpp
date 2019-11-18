@@ -185,42 +185,22 @@ void Shader::setPhongMaterial(const PhongMaterial &material) const {
 }
 
 void Shader::setPBRMaterial(const PBRMaterial &material) const {
-    setBool("material.useTexAlbedo", (bool)material.texAlbedo);
-    setBool("material.useTexMetallic", (bool)material.texMetallic);
-    setBool("material.useTexRoughness", (bool)material.texRoughness);
-    setBool("material.useTexAO", (bool)material.texAO);
+    glActiveTexture(GL_TEXTURE0);
+    material.texAlbedo->bind();
 
-    if (material.texAlbedo) {
-        glActiveTexture(GL_TEXTURE0);
-        material.texAlbedo->bind();
-    }
-    else {
-        setVec3("mat.albedo", material.albedo);
-    }
+    glActiveTexture(GL_TEXTURE1);
+    material.texMetallic->bind();
 
-    if (material.texMetallic) {
-        glActiveTexture(GL_TEXTURE1);
-        material.texMetallic->bind();
-    }
-    else {
-        setFloat("mat.metallic", material.metallic);
-    }
+    glActiveTexture(GL_TEXTURE2);
+    material.texRoughness->bind();
 
-    if (material.texRoughness) {
-        glActiveTexture(GL_TEXTURE2);
-        material.texRoughness->bind();
-    }
-    else {
-        setFloat("mat.roughness", material.roughness);
-    }
+    glActiveTexture(GL_TEXTURE3);
+    material.texAO->bind();
 
-    if (material.texAO) {
-        glActiveTexture(GL_TEXTURE3);
-        material.texAO->bind();
-    }
-    else {
-        setFloat("mat.ao", material.ao);
-    }
+    setInt("mat.texAlbedo", 0);
+    setInt("mat.texMetallic", 1);
+    setInt("mat.texRoughness", 2);
+    setInt("mat.texAO", 3);
 }
 
 void Shader::setCamera(const Camera* camera) const {

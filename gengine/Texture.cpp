@@ -2,8 +2,10 @@
 // Created by lasagnaphil on 19. 3. 14.
 //
 
-#include <iostream>
 #include "Texture.h"
+
+#include <iostream>
+#include <cmath>
 
 Ref<Texture> Texture::fromImage(Ref<Image> image) {
     Ref<Texture> tex = Resources::make<Texture>();
@@ -28,6 +30,35 @@ Ref<Texture> Texture::fromNew(uint32_t width, uint32_t height) {
                  0, tex->internalFormat,
                  width, height,
                  0, tex->imageFormat, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    return tex;
+}
+
+Ref<Texture> Texture::fromSingleColor(glm::vec3 color) {
+    Ref<Texture> tex = Resources::make<Texture>();
+    tex->width = 1;
+    tex->height = 1;
+    tex->wrapS = GL_REPEAT;
+    tex->wrapT = GL_REPEAT;
+    tex->filterMin = GL_LINEAR_MIPMAP_LINEAR;
+    tex->filterMax = GL_LINEAR;
+    tex->imageFormat = GL_RGB;
+    tex->internalFormat = GL_RGB;
+
+    char data[3];
+    data[0] = std::max(0, std::min(255, (int)floorf(color.r * 256.0f)));
+    data[1] = std::max(0, std::min(255, (int)floorf(color.g * 256.0f)));
+    data[2] = std::max(0, std::min(255, (int)floorf(color.b * 256.0f)));
+
+    glGenTextures(1, &tex->id);
+    glBindTexture(GL_TEXTURE_2D, tex->id);
+    glTexImage2D(GL_TEXTURE_2D,
+                 0, tex->internalFormat,
+                 tex->width, tex->height,
+                 0, tex->imageFormat, GL_UNSIGNED_BYTE, data);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glBindTexture(GL_TEXTURE_2D, 0);

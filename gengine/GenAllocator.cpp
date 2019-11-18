@@ -18,7 +18,7 @@
     GLOBAL_TYPE(Transform, 1, 256) \
     GLOBAL_TYPE(Shader, 2, 16) \
     GLOBAL_TYPE(Texture, 3, 32) \
-    GLOBAL_TYPE(Image, 4, 16) \
+    GLOBAL_TYPE(Image, 4, 32) \
     GLOBAL_TYPE(Mesh, 5, 8) \
     GLOBAL_TYPE(LineMesh, 6, 8) \
     GLOBAL_TYPE(PhongMaterial, 7, 8) \

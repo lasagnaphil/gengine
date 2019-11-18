@@ -22,23 +22,48 @@ PBRMaterial::quick(const std::string &albedo, const std::string &metallic, const
     mat->texRoughness = Texture::fromImage(roughnessImage);
     mat->texAO = Texture::fromImage(aoImage);
 
+    /*
     albedoImage->dispose();
     metallicImage->dispose();
     roughnessImage->dispose();
     aoImage->dispose();
+     */
 
     return mat;
 }
 PBRenderer::PBRenderer(Camera *camera) :
         camera(camera) {
 
-    dirLight.enabled = true;
-    dirLight.direction = glm::normalize(glm::vec3 {2.0f, -3.0f, 2.0f});
-    dirLight.color = glm::vec3(1.0f);
 }
 
 void PBRenderer::init() {
     pbrShader = Shaders::pbr;
+
+    pbrShader->use();
+    /*
+    glUniformBlockBinding(pbrShader->program, 0, 0);
+    glUniformBlockBinding(pbrShader->program, 1, 1);
+    glUniformBlockBinding(pbrShader->program, 2, 2);
+
+    glGenBuffers(1, &dirLightUBO);
+    glGenBuffers(1, &pointLightUBO);
+    glGenBuffers(1, &spotLightUBO);
+
+    glBindBuffer(GL_UNIFORM_BUFFER, dirLightUBO);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(PBRDirLight), nullptr, GL_DYNAMIC_DRAW);
+
+    glBindBuffer(GL_UNIFORM_BUFFER, pointLightUBO);
+    glBufferData(GL_UNIFORM_BUFFER, NUM_PBR_POINT_LIGHTS * sizeof(PBRPointLight), nullptr, GL_DYNAMIC_DRAW);
+
+    glBindBuffer(GL_UNIFORM_BUFFER, spotLightUBO);
+    glBufferData(GL_UNIFORM_BUFFER, NUM_PBR_SPOT_LIGHTS * sizeof(PBRSpotLight), nullptr, GL_DYNAMIC_DRAW);
+
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, dirLightUBO);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 1, pointLightUBO);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 2, spotLightUBO);
+     */
 }
 
 void PBRenderer::render() {
@@ -51,60 +76,49 @@ void PBRenderer::render() {
     if (camera) {
         pbrShader->setCamera(camera);
     }
+    else {
+        std::cerr << "Error in PBRenderer: camera not set" << std::endl;
+    }
+
+    /*
+    glBindBuffer(GL_UNIFORM_BUFFER, dirLightUBO);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(PBRDirLight), &dirLight);
+
+    glBindBuffer(GL_UNIFORM_BUFFER, pointLightUBO);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, NUM_PBR_POINT_LIGHTS * sizeof(PBRPointLight), &pointLights);
+
+    glBindBuffer(GL_UNIFORM_BUFFER, spotLightUBO);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, NUM_PBR_SPOT_LIGHTS * sizeof(PBRSpotLight), &spotLights);
+     */
 
     pbrShader->setBool("dirLight.enabled", dirLight.enabled);
     if (dirLight.enabled) {
         pbrShader->setVec3("dirLight.direction", dirLight.direction);
         pbrShader->setVec3("dirLight.color", dirLight.color);
     }
-    struct PBRPointLight {
-        bool enabled;
-
-        vec3 position;
-
-        float constant;
-        float linear;
-        float quadratic;
-
-        vec3 color;
-    };
-
-    struct PBRSpotLight {
-        bool enabled;
-
-        vec3 position;
-        vec3 direction;
-        float cutOff;
-        float outerCutOff;
-
-        float constant;
-        float linear;
-        float quadratic;
-
-        vec3 color;
-    };
-
 
     for (int i = 0; i < NUM_PBR_POINT_LIGHTS; i++) {
-        pbrShader->setBool("pointLights[i].enabled", pointLights[i].enabled);
+        std::string lname = std::string("pointLights[") + std::to_string(i) + "]";
+        pbrShader->setBool((lname + ".enabled").c_str(), pointLights[i].enabled);
         if (pointLights[i].enabled) {
-            pbrShader->setVec3("pointLights[i].position", pointLights[i].position);
-            pbrShader->setFloat("pointLights[i].constant", pointLights[i].constant);
-            pbrShader->setFloat("pointLights[i].linear", pointLights[i].linear);
-            pbrShader->setFloat("pointLights[i].quadratic", pointLights[i].quadratic);
-            pbrShader->setVec3("pointLights[i].color", pointLights[i].color);
+            pbrShader->setVec3((lname + ".position").c_str(), pointLights[i].position);
+            pbrShader->setVec3((lname + ".color").c_str(), pointLights[i].color);
         }
     }
 
     for (int i = 0; i < NUM_PBR_SPOT_LIGHTS; i++) {
-        pbrShader->setBool("spotLights[i].enabled", spotLights[i].enabled);
+        std::string lname = std::string("spotLights[") + std::to_string(i) + "]";
+        pbrShader->setBool((lname + ".enabled").c_str(), spotLights[i].enabled);
         if (spotLights[i].enabled) {
-            pbrShader->setVec3("spotLights[i].position", spotLights[i].position);
-            pbrShader->setVec3("spotLights[i].direction", spotLights[i].direction)
+            pbrShader->setVec3((lname + ".position").c_str(), spotLights[i].position);
+            pbrShader->setVec3((lname + ".direction").c_str(), spotLights[i].direction);
+            pbrShader->setVec3((lname + ".color").c_str(), spotLights[i].color);
         }
     }
 
     renderPass(pbrShader);
+
+    renderCommands.clear();
 }
 
 void PBRenderer::renderImGui() {
@@ -114,7 +128,7 @@ void PBRenderer::renderImGui() {
     ImGui::Begin("PhongRenderer Settings");
 
     if (ImGui::TreeNode("Directional Light Settings")) {
-        ImGui::Checkbox("Enabled", &dirLight.enabled);
+        ImGui::Checkbox("Enabled", (bool*) &dirLight.enabled);
 
         ImGui::SliderFloat3("Direction", (float *) &dirLight.direction, -5.0f, 5.0f);
         ImGui::SliderFloat3("Color", (float *) &dirLight.color, 0.0f, 1.0f);
