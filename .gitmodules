@@ -4,9 +4,3 @@
 [submodule "gengine/deps/imgui"]
 	path = gengine/deps/imgui
 	url = https://github.com/ocornut/imgui
-[submodule "gengine/deps/ezc3d"]
-	path = gengine/deps/ezc3d
-	url = https://github.com/lasagnaphil/ezc3d
-[submodule "gengine/deps/pybind11"]
-	path = gengine/deps/pybind11
-	url = https://github.com/pybind/pybind11.git

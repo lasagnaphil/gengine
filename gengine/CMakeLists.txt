@@ -44,20 +44,6 @@ set(SPAN_LITE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/span-lite)
 add_library(span-lite INTERFACE)
 target_include_directories(span-lite INTERFACE ${SPAN_LITE_DIR})
 
-# optional
-# set(OPTIONAL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/optional)
-# add_library(optional INTERFACE)
-# target_include_directories(optional INTERFACE ${OPTIONAL_DIR})
-
-# ez3cd
-option(BUILD_TESTS OFF)
-option(BUILD_EXAMPLE OFF)
-option(BUILD_DOC OFF)
-add_subdirectory(deps/ezc3d)
-
-# pybind11
-add_subdirectory(deps/pybind11)
-
 # Add the source files to the library
 file(GLOB GENGINE_SOURCES *.cpp)
 file(GLOB GENGINE_GLMX_SOURCES glmx/*.cpp)
@@ -70,7 +56,7 @@ add_library(gengine STATIC ${GENGINE_SOURCES} ${GENGINE_GLMX_SOURCES})
 target_include_directories(gengine
         PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(gengine
-        Threads::Threads SDL2::Main glad imgui stb glm eigen tinyxml2 span-lite ezc3d pybind11::module pybind11::embed)
+        Threads::Threads SDL2::Main glad imgui stb glm eigen tinyxml2 span-lite)
 set_target_properties(gengine PROPERTIES PREFIX "${PYTHON_MODULE_PREFIX}"
         SUFFIX "${PYTHON_MODULE_EXTENSION}")
 

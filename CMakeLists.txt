@@ -5,4 +5,3 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake_mod
 
 add_subdirectory(gengine)
 add_subdirectory(demo)
-add_subdirectory(viewer)
