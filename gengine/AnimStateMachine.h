@@ -76,10 +76,6 @@ private:
 public:
 
     AnimStateMachine() {
-        anims.expand(8);
-        states.expand(8);
-        transitions.expand(8);
-
         offset.v = glm::vec3(0.f);
         offset.q = glm::identity<glm::quat>();
     }
