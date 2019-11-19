@@ -23,30 +23,18 @@ public:
         pbRenderer.pointLights[0].enabled = true;
         pbRenderer.pointLights[0].position = {-10.0f, 10.0f + 17.5f, 10.0f};
         pbRenderer.pointLights[0].color = {300.f, 300.f, 300.f};
-        pbRenderer.pointLights[0].constant = 0.0f;
-        pbRenderer.pointLights[0].linear = 0.0f;
-        pbRenderer.pointLights[0].quadratic = 0.0f;
 
         pbRenderer.pointLights[1].enabled = true;
         pbRenderer.pointLights[1].position = {10.0f, 10.0f + 17.5f, 10.0f};
         pbRenderer.pointLights[1].color = {300.f, 300.f, 300.f};
-        pbRenderer.pointLights[1].constant = 0.0f;
-        pbRenderer.pointLights[1].linear = 0.0f;
-        pbRenderer.pointLights[1].quadratic = 0.0f;
 
         pbRenderer.pointLights[2].enabled = true;
         pbRenderer.pointLights[2].position = {-10.0f, -10.0f + 17.5f, 10.0f};
         pbRenderer.pointLights[2].color = {300.f, 300.f, 300.f};
-        pbRenderer.pointLights[2].constant = 0.0f;
-        pbRenderer.pointLights[2].linear = 0.0f;
-        pbRenderer.pointLights[2].quadratic = 0.0f;
 
         pbRenderer.pointLights[3].enabled = true;
         pbRenderer.pointLights[3].position = {10.0f, -10.0f + 17.5f, 10.0f};
         pbRenderer.pointLights[3].color = {300.f, 300.f, 300.f};
-        pbRenderer.pointLights[3].constant = 0.0f;
-        pbRenderer.pointLights[3].linear = 0.0f;
-        pbRenderer.pointLights[3].quadratic = 0.0f;
 
         groundMat = PBRMaterial::quick(
                 "resources/textures/mossy-ground1-albedo.png",

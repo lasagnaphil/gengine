@@ -23,11 +23,6 @@ struct PBRDirLight {
 
 struct PBRPointLight {
     vec3 position;
-
-    float constant;
-    float linear;
-    float quadratic;
-
     vec3 color;
 
     bool enabled;
@@ -36,11 +31,6 @@ struct PBRPointLight {
 struct PBRSpotLight {
     vec3 position;
     vec3 direction;
-
-    float constant;
-    float linear;
-    float quadratic;
-
     vec3 color;
 
     float cutOff;
@@ -51,9 +41,11 @@ struct PBRSpotLight {
 
 out vec4 fragColor;
 
-in vec3 worldPos;
-in vec3 normal;
-in vec2 texCoord;
+in VS_OUT {
+    vec3 worldPos;
+    vec3 normal;
+    vec2 texCoord;
+} fs_in;
 
 uniform vec3 viewPos;
 
@@ -146,20 +138,18 @@ vec3 calcDirLight(PBRDirLight light, vec3 N, vec3 V, vec3 F0, PBRMatParams param
 }
 
 vec3 calcPointLight(PBRPointLight light, vec3 N, vec3 V, vec3 F0, PBRMatParams params) {
-    vec3 L = normalize(light.position - worldPos);
-    float distance = length(light.position - worldPos);
+    vec3 L = normalize(light.position - fs_in.worldPos);
+    float distance = length(light.position - fs_in.worldPos);
     float attenuation = 1.0 / (distance * distance);
-    // float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
     vec3 radiance = light.color * attenuation;
 
     return calcRadiance(N, V, L, F0, radiance, params);
 }
 
 vec3 calcSpotLight(PBRSpotLight light, vec3 N, vec3 V, vec3 F0, PBRMatParams params) {
-    vec3 L = normalize(light.position - worldPos);
-    float distance = length(light.position - worldPos);
+    vec3 L = normalize(light.position - fs_in.worldPos);
+    float distance = length(light.position - fs_in.worldPos);
     float attenuation = 1.0 / (distance * distance);
-    // float attenuation = 1.0f / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
     vec3 radiance = light.color * attenuation;
 
     float theta = dot(L, normalize(-light.direction));
@@ -170,14 +160,14 @@ vec3 calcSpotLight(PBRSpotLight light, vec3 N, vec3 V, vec3 F0, PBRMatParams par
 }
 
 void main() {
-    vec3 N = normalize(normal);
-    vec3 V = normalize(viewPos - worldPos);
+    vec3 N = normalize(fs_in.normal);
+    vec3 V = normalize(viewPos - fs_in.worldPos);
 
     PBRMatParams params;
-    params.albedo = texture(mat.texAlbedo, texCoord).rgb;
-    params.metallic = texture(mat.texMetallic, texCoord).r;
-    params.roughness = texture(mat.texRoughness, texCoord).r;
-    params.ao = texture(mat.texAO, texCoord).r;
+    params.albedo = texture(mat.texAlbedo, fs_in.texCoord).rgb;
+    params.metallic = texture(mat.texMetallic, fs_in.texCoord).r;
+    params.roughness = texture(mat.texRoughness, fs_in.texCoord).r;
+    params.ao = texture(mat.texAO, fs_in.texCoord).r;
 
     vec3 F0 = vec3(0.04);
     F0 = mix(F0, params.albedo, params.metallic);

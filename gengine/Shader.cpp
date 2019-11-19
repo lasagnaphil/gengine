@@ -15,13 +15,13 @@
 #include "shaders/line3d.frag.h"
 #include "shaders/point.vert.h"
 #include "shaders/point.frag.h"
-#include "shaders/phong.vert.h"
 #include "shaders/phong_shadows.vert.h"
 #include "shaders/phong_shadows.frag.h"
 #include "shaders/depth.vert.h"
 #include "shaders/depth.frag.h"
 #include "shaders/depth_debug.vert.h"
 #include "shaders/depth_debug.frag.h"
+#include "shaders/pbr.vert.h"
 #include "shaders/pbr.frag.h"
 
 GLuint compileShader(GLenum type, const GLchar *source) {
@@ -242,5 +242,5 @@ void Shaders::init() {
     Shaders::depthDebug->compileFromString(depth_debug_vert_shader, depth_debug_frag_shader);
 
     Shaders::pbr = Resources::make<Shader>("pbr");
-    Shaders::pbr->compileFromString(phong_vert_shader, pbr_frag_shader);
+    Shaders::pbr->compileFromString(pbr_vert_shader, pbr_frag_shader);
 }

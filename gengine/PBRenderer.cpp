@@ -22,12 +22,10 @@ PBRMaterial::quick(const std::string &albedo, const std::string &metallic, const
     mat->texRoughness = Texture::fromImage(roughnessImage);
     mat->texAO = Texture::fromImage(aoImage);
 
-    /*
     albedoImage->dispose();
     metallicImage->dispose();
     roughnessImage->dispose();
     aoImage->dispose();
-     */
 
     return mat;
 }

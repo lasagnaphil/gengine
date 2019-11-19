@@ -16,15 +16,6 @@
 
 // TODO: Add normal texture (needed for normal mapping)
 struct PBRMaterial {
-    /*
-    glm::vec3 albedo;
-    float __padding1;
-    float metallic;
-    float roughness;
-    float ao;
-    float __padding2;
-     */
-
     Ref<Texture> texAlbedo;
     Ref<Texture> texMetallic;
     Ref<Texture> texRoughness;
@@ -39,53 +30,25 @@ struct PBRMaterial {
 
 struct PBRDirLight {
     glm::vec3 direction;
-    float __padding1;
     glm::vec3 color;
-    float __padding2;
-
     uint32_t enabled = false;
-    float __padding3;
-    float __padding4;
-    float __padding5;
 };
 
 struct PBRPointLight {
     glm::vec3 position;
-    float __padding1;
-
-    float constant;
-    float linear;
-    float quadratic;
-    float __padding2;
-
     glm::vec3 color;
-    float __padding3;
-
     uint32_t enabled = false;
-    float __padding4;
-    float __padding5;
-    float __padding6;
 };
 
 struct PBRSpotLight {
     glm::vec3 position;
-    float __padding1;
     glm::vec3 direction;
-    float __padding2;
-
-    float constant;
-    float linear;
-    float quadratic;
-    float __padding3;
-
     glm::vec3 color;
-    float __padding4;
 
     float cutOff;
     float outerCutOff;
 
     uint32_t enabled = false;
-    float __padding5;
 };
 
 struct PBRCommand {
