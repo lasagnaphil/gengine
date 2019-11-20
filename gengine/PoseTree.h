@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <stack>
+#include <string>
 
 struct PoseTreeNode {
     std::string name;

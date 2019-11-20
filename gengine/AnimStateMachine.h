@@ -10,6 +10,7 @@
 #include "PoseTree.h"
 
 #include <span.hpp>
+#include <unordered_map>
 
 struct Animation {
     std::string name;
