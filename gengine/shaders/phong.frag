@@ -71,11 +71,9 @@ uniform Material material;
 #define NR_POINT_LIGHTS 16
 #define NR_SPOT_LIGHTS 8
 
-layout (std140) uniform LightBlock {
-    uniform DirLight dirLight;
-    uniform PointLight pointLights[NR_POINT_LIGHTS];
-    uniform SpotLight spotLights[NR_SPOT_LIGHTS];
-};
+uniform DirLight dirLight;
+uniform PointLight pointLights[NR_POINT_LIGHTS];
+uniform SpotLight spotLights[NR_SPOT_LIGHTS];
 
 uniform int numPointLights;
 uniform int numSpotLights;

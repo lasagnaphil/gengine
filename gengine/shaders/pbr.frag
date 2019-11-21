@@ -42,9 +42,10 @@ struct PBRSpotLight {
 out vec4 fragColor;
 
 in VS_OUT {
-    vec3 worldPos;
+    vec3 fragPos;
     vec3 normal;
     vec2 texCoord;
+    vec4 fragPos_DirLightSpace;
 } fs_in;
 
 uniform vec3 viewPos;
@@ -73,6 +74,26 @@ layout (std140, binding=2) uniform SpotLightBlock {
     PBRSpotLight spotLights[NR_SPOT_LIGHTS];
 };
 */
+
+uniform sampler2D shadowMap;
+
+float shadowCalculation(vec4 fragPosLightSpace) {
+    float bias = 0.0005;
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    projCoords = projCoords * 0.5 + 0.5;
+    float currentDepth = projCoords.z;
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+    for (int x = -1; x <= 1; ++x) {
+        for (int y = -1; y <= 1; ++y) {
+            float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
+            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
+        }
+    }
+    shadow /= 9.0;
+    return shadow;
+}
+
 
 vec3 fresnelSchlinck(float cosTheta, vec3 F0) {
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
@@ -138,8 +159,8 @@ vec3 calcDirLight(PBRDirLight light, vec3 N, vec3 V, vec3 F0, PBRMatParams param
 }
 
 vec3 calcPointLight(PBRPointLight light, vec3 N, vec3 V, vec3 F0, PBRMatParams params) {
-    vec3 L = normalize(light.position - fs_in.worldPos);
-    float distance = length(light.position - fs_in.worldPos);
+    vec3 L = normalize(light.position - fs_in.fragPos);
+    float distance = length(light.position - fs_in.fragPos);
     float attenuation = 1.0 / (distance * distance);
     vec3 radiance = light.color * attenuation;
 
@@ -147,8 +168,8 @@ vec3 calcPointLight(PBRPointLight light, vec3 N, vec3 V, vec3 F0, PBRMatParams p
 }
 
 vec3 calcSpotLight(PBRSpotLight light, vec3 N, vec3 V, vec3 F0, PBRMatParams params) {
-    vec3 L = normalize(light.position - fs_in.worldPos);
-    float distance = length(light.position - fs_in.worldPos);
+    vec3 L = normalize(light.position - fs_in.fragPos);
+    float distance = length(light.position - fs_in.fragPos);
     float attenuation = 1.0 / (distance * distance);
     vec3 radiance = light.color * attenuation;
 
@@ -161,7 +182,7 @@ vec3 calcSpotLight(PBRSpotLight light, vec3 N, vec3 V, vec3 F0, PBRMatParams par
 
 void main() {
     vec3 N = normalize(fs_in.normal);
-    vec3 V = normalize(viewPos - fs_in.worldPos);
+    vec3 V = normalize(viewPos - fs_in.fragPos);
 
     PBRMatParams params;
     params.albedo = texture(mat.texAlbedo, fs_in.texCoord).rgb;
@@ -190,7 +211,8 @@ void main() {
     }
 
     vec3 ambient = vec3(0.03) * params.albedo * params.ao;
-    vec3 color = ambient + Lo;
+    float shadow = shadowCalculation(fs_in.fragPos_DirLightSpace);
+    vec3 color = ambient + (1 - shadow) * Lo;
 
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0 / 2.2));

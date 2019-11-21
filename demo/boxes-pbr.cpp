@@ -20,6 +20,15 @@ public:
         Ref<Transform> cameraTransform = camera->transform;
         cameraTransform->move({0.0f, 17.5f, 0.0f});
 
+        pbRenderer.dirLightProjVolume = {
+                {-20.f, -20.f, 0.f}, {20.f, 20.f, 1000.f}
+        };
+        pbRenderer.shadowFramebufferSize = {2048, 2048};
+
+        pbRenderer.dirLight.enabled = true;
+        pbRenderer.dirLight.direction = glm::normalize(glm::vec3 {2.0f, -3.0f, 2.0f});
+        pbRenderer.dirLight.color = {0.5f, 0.5f, 0.5f};
+
         pbRenderer.pointLights[0].enabled = true;
         pbRenderer.pointLights[0].position = {-10.0f, 10.0f + 17.5f, 10.0f};
         pbRenderer.pointLights[0].color = {300.f, 300.f, 300.f};

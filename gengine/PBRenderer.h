@@ -13,6 +13,7 @@
 #include "Mesh.h"
 
 #include <array>
+#include <glmx/rect.h>
 
 // TODO: Add normal texture (needed for normal mapping)
 struct PBRMaterial {
@@ -65,6 +66,11 @@ public:
         this->camera = camera;
     }
 
+    void setShadowSettings(glmx::box projVolume, glm::ivec2 shadowFBSize) {
+        this->dirLightProjVolume = projVolume;
+        this->shadowFramebufferSize = shadowFBSize;
+    }
+
     void init();
 
     void queueRender(const PBRCommand& command) {
@@ -79,11 +85,14 @@ public:
     std::array<PBRPointLight, NUM_PBR_POINT_LIGHTS> pointLights;
     std::array<PBRSpotLight, NUM_PBR_SPOT_LIGHTS> spotLights;
 
+    glmx::box dirLightProjVolume;
+    glm::ivec2 shadowFramebufferSize;
+
 private:
     void renderPass(Ref<Shader> shader);
 
-    // GLuint depthMapFBO;
-    // GLuint depthMap;
+    GLuint depthMapFBO;
+    GLuint depthMap;
 
     std::vector<PBRCommand> renderCommands;
 
@@ -93,11 +102,8 @@ private:
 
     Camera* camera;
 
-    // Rect3f dirLightProjVolume;
-    // glm::ivec2 shadowFramebufferSize;
-
-    // Ref<Shader> depthShader;
     Ref<Shader> pbrShader;
+    Ref<Shader> depthShader;
 };
 
 #endif //GENGINE_PBRENDERER_H

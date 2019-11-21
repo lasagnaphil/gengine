@@ -5,6 +5,7 @@
 #include "PBRenderer.h"
 
 #include <imgui.h>
+#include <glm/gtc/matrix_transform.hpp>
 
 Ref<PBRMaterial>
 PBRMaterial::quick(const std::string &albedo, const std::string &metallic, const std::string &roughness,
@@ -29,6 +30,7 @@ PBRMaterial::quick(const std::string &albedo, const std::string &metallic, const
 
     return mat;
 }
+
 PBRenderer::PBRenderer(Camera *camera) :
         camera(camera) {
 
@@ -36,8 +38,30 @@ PBRenderer::PBRenderer(Camera *camera) :
 
 void PBRenderer::init() {
     pbrShader = Shaders::pbr;
+    depthShader = Shaders::depth;
+
+    glGenFramebuffers(1, &depthMapFBO);
+
+    glGenTextures(1, &depthMap);
+    glBindTexture(GL_TEXTURE_2D, depthMap);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
+                 shadowFramebufferSize.x, shadowFramebufferSize.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    float borderColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     pbrShader->use();
+    pbrShader->setInt("depthMap", 8);
+
     /*
     glUniformBlockBinding(pbrShader->program, 0, 0);
     glUniformBlockBinding(pbrShader->program, 1, 1);
@@ -70,7 +94,32 @@ void PBRenderer::render() {
     float near_plane = 0.1f;
     float far_plane = 1000.0f;
 
+    glm::mat4 dirLightProjection = glm::ortho(dirLightProjVolume.min.x, dirLightProjVolume.max.x,
+                                              dirLightProjVolume.min.y, dirLightProjVolume.max.y,
+                                              dirLightProjVolume.min.z, dirLightProjVolume.max.z);
+
+    glm::vec3 dirLightPos = -glm::normalize(dirLight.direction) * dirLightProjVolume.max.z * 0.5f;
+    glm::mat4 dirLightView = glm::lookAt(dirLightPos, glm::vec3(0.0f), {0.0f, 1.0f, 0.0f});
+    glm::mat4 dirLightSpaceMatrix = dirLightProjection * dirLightView;
+
+    depthShader->use();
+    depthShader->setMat4("dirLightSpaceMatrix", dirLightSpaceMatrix);
+
+    glViewport(0, 0, shadowFramebufferSize.x, shadowFramebufferSize.y);
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    {
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glCullFace(GL_FRONT);
+        renderPass(depthShader);
+        glCullFace(GL_BACK);
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     pbrShader->use();
+
     if (camera) {
         pbrShader->setCamera(camera);
     }
@@ -113,6 +162,12 @@ void PBRenderer::render() {
             pbrShader->setVec3((lname + ".color").c_str(), spotLights[i].color);
         }
     }
+
+    pbrShader->setMat4("dirLightSpaceMatrix", dirLightSpaceMatrix);
+
+    glActiveTexture(GL_TEXTURE8);
+    glBindTexture(GL_TEXTURE_2D, depthMap);
+    pbrShader->setInt("shadowMap", 8);
 
     renderPass(pbrShader);
 
