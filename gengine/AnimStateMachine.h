@@ -91,9 +91,9 @@ public:
             Ref<AnimState> stateBefore, Ref<AnimState> stateAfter,
             float transitionTime = 0.0f);
 
-    void addCondition(Ref<AnimTransition> transition, const std::string& name, bool value);
+    void setTransitionCondition(Ref<AnimTransition> transition, const std::string& name, bool value);
 
-    void addTrigger(Ref<AnimTransition> transition, const std::string& name);
+    void setTransitionTrigger(Ref<AnimTransition> transition, const std::string& name);
 
     AnimParam& addParam(const std::string& name, bool value);
 
@@ -114,7 +114,7 @@ public:
 
     void setParam(const std::string& name, bool value);
 
-    void setTrigger();
+    void setTrigger(const std::string& name);
 
     const glmx::pose& getCurrentPose() const {
         return currentPose;

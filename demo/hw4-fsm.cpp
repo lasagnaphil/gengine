@@ -78,18 +78,26 @@ public:
         animFSM.addParam("forward_jump");
 
         auto startWalkingTrans = animFSM.addTransition("start_walking", idleState, walkState, 0.2f);
-        animFSM.addCondition(startWalkingTrans, "is_walking", true);
-        auto stopWalkingTrans = animFSM.addTransition("stop_walking", walkState, idleState, 0.2f);
-        animFSM.addCondition(stopWalkingTrans, "is_walking", false);
-        auto startRunningTrans = animFSM.addTransition("start_running", walkState, runState, 0.2f);
-        animFSM.addCondition(startRunningTrans, "is_running", true);
-        auto stopRunningTrans = animFSM.addTransition("stop_running", runState, walkState, 0.2f);
-        animFSM.addCondition(stopRunningTrans, "is_running", false);
+        animFSM.setTransitionCondition(startWalkingTrans, "is_walking", true);
 
-        auto jumpTrans = animFSM.addTransition("jumping", idleState, jumpState, 1.0f);
-        // animFSM.addTrigger(jumpTrans, "jump");
-        auto forwardJumpTrans = animFSM.addTransition("forward_jumping", walkState, forwardJumpState, 1.0f);
-        // animFSM.addTrigger(forwardJumpTrans, "forward_jump");
+        auto stopWalkingTrans = animFSM.addTransition("stop_walking", walkState, idleState, 0.2f);
+        animFSM.setTransitionCondition(stopWalkingTrans, "is_walking", false);
+
+        auto startRunningTrans = animFSM.addTransition("start_running", walkState, runState, 0.2f);
+        animFSM.setTransitionCondition(startRunningTrans, "is_running", true);
+
+        auto stopRunningTrans = animFSM.addTransition("stop_running", runState, walkState, 0.2f);
+        animFSM.setTransitionCondition(stopRunningTrans, "is_running", false);
+
+        auto jumpTrans = animFSM.addTransition("jumping", idleState, jumpState, 0.1f);
+        animFSM.setTransitionTrigger(jumpTrans, "jump");
+
+        auto stopJumpTrans = animFSM.addTransition("stop_jumping", jumpState, idleState, 0.1f);
+
+        auto forwardJumpTrans = animFSM.addTransition("forward_jumping", walkState, forwardJumpState, 0.1f);
+        animFSM.setTransitionTrigger(forwardJumpTrans, "forward_jump");
+
+        auto stopForwardJumpTrans = animFSM.addTransition("stop_forward_jumping", forwardJumpState, walkState, 0.1f);
 
         animFSM.setCurrentState(idleState);
     }
@@ -107,6 +115,9 @@ public:
         }
         if (inputMgr->isKeyPressed(SDL_SCANCODE_UP)) {
             animFSM.setParam("is_walking", true);
+            if (inputMgr->isKeyEntered(SDL_SCANCODE_SPACE)) {
+                animFSM.setTrigger("forward_jump");
+            }
             if (inputMgr->isKeyPressed(SDL_SCANCODE_LSHIFT)) {
                 animFSM.setParam("is_running", true);
             }
@@ -117,6 +128,9 @@ public:
         else {
             animFSM.setParam("is_walking", false);
             animFSM.setParam("is_running", false);
+        }
+        if (inputMgr->isKeyEntered(SDL_SCANCODE_SPACE)) {
+            animFSM.setTrigger("jump");
         }
         animFSM.update(dt);
         currentPose = animFSM.getCurrentPose();

@@ -5,6 +5,7 @@
 #include <glmx/transform.h>
 #include "AnimStateMachine.h"
 #include <imgui.h>
+#include <iostream>
 
 Ref<Animation> AnimStateMachine::addAnimation(const std::string& name, nonstd::span<glmx::pose> poses, int fps) {
     auto animRef = anims.make();
@@ -33,20 +34,21 @@ AnimStateMachine::addTransition(const std::string& name, Ref<AnimState> stateBef
     transition->stateBefore = stateBefore;
     transition->stateAfter = stateAfter;
     transition->transitionTime = transitionTime;
+    transition->condition = {"", AnimParamType::None};
     return transitionRef;
 }
 
-void AnimStateMachine::addCondition(Ref<AnimTransition> transition, const std::string& name, bool value) {
+void AnimStateMachine::setTransitionCondition(Ref<AnimTransition> transition, const std::string& name, bool value) {
     auto trans = transitions.get(transition);
     trans->condition.name = name;
     trans->condition.type = AnimParamType::Bool;
     trans->condition.equals = value;
 }
 
-void AnimStateMachine::addTrigger(Ref<AnimTransition> transition, const std::string& name) {
+void AnimStateMachine::setTransitionTrigger(Ref<AnimTransition> transition, const std::string& name) {
     auto trans = transitions.get(transition);
     trans->condition.name = name;
-    trans->condition.type = AnimParamType::Bool;
+    trans->condition.type = AnimParamType::Trigger;
 }
 
 AnimParam& AnimStateMachine::addParam(const std::string& name, bool value) {
@@ -70,9 +72,10 @@ void AnimStateMachine::setParam(const std::string& name, bool value) {
     });
 }
 
-void AnimStateMachine::setTrigger() {
+void AnimStateMachine::setTrigger(const std::string& name) {
     transitions.forEach([&](AnimTransition& trans, Ref<AnimTransition> ref) {
-        if (currentState == trans.stateBefore && trans.condition.type == AnimParamType::Trigger) {
+        if (currentState == trans.stateBefore &&
+            trans.condition.name == name && trans.condition.type == AnimParamType::Trigger) {
             params[trans.condition.name].value = true;
         }
     });
@@ -84,7 +87,7 @@ Ref<AnimTransition> AnimStateMachine::selectNextTransition() {
 
     transitions.forEachUntil([&](AnimTransition& trans, Ref<AnimTransition> transRef) {
         if (currentState == trans.stateBefore) {
-            if (trans.condition.type == AnimParamType::None && noCondTrans) {
+            if (trans.condition.type == AnimParamType::None && !noCondTrans) {
                 noCondTrans = transRef;
             }
             else if (trans.condition.type == AnimParamType::Bool) {
@@ -104,11 +107,12 @@ Ref<AnimTransition> AnimStateMachine::selectNextTransition() {
         }
         return false;
     });
-    if (nextTrans.isNull()) {
-        nextTrans = noCondTrans;
+    if (nextTrans) {
+        return nextTrans;
     }
-
-    return nextTrans;
+    else {
+        return noCondTrans;
+    }
 }
 
 void AnimStateMachine::update(float dt) {
@@ -124,6 +128,7 @@ void AnimStateMachine::update(float dt) {
         auto nextTransRef = selectNextTransition();
         if (nextTransRef) {
             auto& nextTrans = *transitions.get(nextTransRef);
+            // std::cout << "Transition found: " << nextTrans.name << std::endl;
             if (nextTrans.condition.type != AnimParamType::None) {
                 currentState = {};
                 currentStateEnded = false;
@@ -205,6 +210,13 @@ void AnimStateMachine::update(float dt) {
         }
 
         // TODO: blend between poses
+    }
+
+    // Now clear all the activated triggers
+    for (auto& [name, param] : params) {
+        if (param.type == AnimParamType::Trigger) {
+            param.value = false;
+        }
     }
 }
 
