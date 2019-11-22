@@ -66,21 +66,34 @@ AnimParam& AnimStateMachine::addParam(const std::string& name) {
 }
 
 void AnimStateMachine::setParam(const std::string& name, bool value) {
+    if (params.count(name)) {
+        if (params[name].type == AnimParamType::Bool) {
+            params[name].value = value;
+        }
+    }
+    /*
     transitions.forEach([&](AnimTransition& trans, Ref<AnimTransition> ref) {
         if (currentState == trans.stateBefore &&
             trans.condition.name == name && trans.condition.type == AnimParamType::Bool) {
-            params[trans.condition.name].value = value;
         }
     });
+     */
 }
 
 void AnimStateMachine::setTrigger(const std::string& name) {
+    if (params.count(name)) {
+        if (params[name].type == AnimParamType::Trigger) {
+            params[name].value = true;
+        }
+    }
+    /*
     transitions.forEach([&](AnimTransition& trans, Ref<AnimTransition> ref) {
         if (currentState == trans.stateBefore &&
             trans.condition.name == name && trans.condition.type == AnimParamType::Trigger) {
             params[trans.condition.name].value = true;
         }
     });
+     */
 }
 
 std::tuple<Ref<AnimTransition>, float> AnimStateMachine::selectNextTransition() {
@@ -119,7 +132,7 @@ std::tuple<Ref<AnimTransition>, float> AnimStateMachine::selectNextTransition() 
 
     if (nextTrans) {
         return {nextTrans, timeFromTransStart};
-    } else{
+    } else {
         return {noCondTrans, timeFromTransStart};
     }
 }

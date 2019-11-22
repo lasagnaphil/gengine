@@ -100,8 +100,6 @@ private:
     Ref<AnimState> currentState = {};
     Ref<AnimTransition> currentTransition = {};
 
-    bool currentStateEnded = false;
-
     glmx::pose currentPose;
     glmx::transform offset;
 

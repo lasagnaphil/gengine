@@ -74,15 +74,21 @@ public:
         auto runBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_35_run&jog.bvh", 0.01f);
         auto jumpBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_03_high jump.bvh", 0.01f);
         auto forwardJumpBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_05_forward jump.bvh", 0.01f);
+        auto walkVeerLeftBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_11_walk, veer left.bvh", 0.01f);
+        auto walkVeerRightBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_13_walk, veer right.bvh", 0.01f);
 
         auto idlePoses = std::vector<glmx::pose>(30, jumpBVH.poseStates[0]);
         auto idleAnim = animFSM.addAnimation("idle", nonstd::span<glmx::pose>(idlePoses.data(), idlePoses.size()));
         auto walkAnim = animFSM.addAnimation("walk", walkBVH.poseStates);
+        auto walkVeerLeftAnim = animFSM.addAnimation("walk_veer_left", walkVeerLeftBVH.poseStates);
+        auto walkVeerRightAnim = animFSM.addAnimation("walk_veer_right", walkVeerRightBVH.poseStates);
         auto runAnim = animFSM.addAnimation("run", runBVH.poseStates);
         auto jumpAnim = animFSM.addAnimation("jump", jumpBVH.poseStates);
         auto forwardJumpAnim = animFSM.addAnimation("forward_jump", forwardJumpBVH.poseStates);
 
-        for (auto& anim : {idleAnim, walkAnim, runAnim, jumpAnim, forwardJumpAnim}) {
+        for (Ref<Animation> anim : {idleAnim, walkAnim, walkVeerLeftAnim, walkVeerRightAnim,
+                                    runAnim, jumpAnim, forwardJumpAnim}) {
+
             animFSM.get(anim)->setStartingRootPos(0.0f, 0.0f);
         }
 
@@ -91,8 +97,12 @@ public:
         auto runState = animFSM.addState("run", runAnim);
         auto jumpState = animFSM.addState("jump", jumpAnim);
         auto forwardJumpState = animFSM.addState("forward_jump", forwardJumpAnim);
+        auto walkVeerLeftState = animFSM.addState("walk_veer_left", walkVeerLeftAnim);
+        auto walkVeerRightState = animFSM.addState("walk_veer_right", walkVeerRightAnim);
 
         animFSM.addParam("is_walking", false);
+        animFSM.addParam("is_walking_veer_left");
+        animFSM.addParam("is_walking_veer_right");
         animFSM.addParam("is_running", false);
         animFSM.addParam("jump");
         animFSM.addParam("forward_jump");
@@ -106,6 +116,20 @@ public:
 
         auto stopWalkingTrans = animFSM.addTransition("stop_walking", walkState, idleState, 0.2f, 0.2f, 0.2f);
         animFSM.setTransitionCondition(stopWalkingTrans, "is_walking", false);
+
+        auto startWalkVeerLeftTrans = animFSM.addTransition("start_walk_veer_left", walkState, walkVeerLeftState,
+                0.2f, 0.2f, 0.2f);
+        animFSM.setTransitionTrigger(startWalkVeerLeftTrans, "is_walking_veer_left");
+
+        auto stopWalkVeerLeftTrans = animFSM.addTransition("stop_walk_veer_left", walkVeerLeftState, walkState,
+                                                            0.2f, 0.2f, 0.2f);
+
+        auto startWalkVeerRightTrans = animFSM.addTransition("start_walk_veer_right", walkState, walkVeerRightState,
+                0.2f, 0.2f, 0.2f);
+        animFSM.setTransitionTrigger(startWalkVeerRightTrans, "is_walking_veer_right");
+
+        auto stopWalkVeerRightTrans = animFSM.addTransition("stop_walk_veer_right", walkVeerRightState, walkState,
+                                                             0.2f, 0.2f, 0.2f);
 
         auto repeatRunningTrans = animFSM.addTransition("repeat_running", runState, runState, 0.1f, 0.1f, 0.1f);
 
@@ -142,9 +166,17 @@ public:
         }
         if (inputMgr->isKeyPressed(SDL_SCANCODE_UP)) {
             animFSM.setParam("is_walking", true);
+
+            if (inputMgr->isKeyPressed(SDL_SCANCODE_LEFT)) {
+                animFSM.setTrigger("is_walking_veer_left");
+            }
+            if (inputMgr->isKeyPressed(SDL_SCANCODE_RIGHT)) {
+                animFSM.setTrigger("is_walking_veer_right");
+            }
             if (inputMgr->isKeyPressed(SDL_SCANCODE_SPACE)) {
                 animFSM.setTrigger("forward_jump");
             }
+
             if (inputMgr->isKeyPressed(SDL_SCANCODE_LSHIFT)) {
                 animFSM.setParam("is_running", true);
             }
@@ -173,7 +205,6 @@ public:
         if (animFSM.p2.size() > 0)
             renderMotionClip(phongRenderer, imRenderer, animFSM.p2, poseTree, debugPoseRenderBody2);
         */
-
 
         phongRenderer.render();
 
