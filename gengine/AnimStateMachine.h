@@ -20,12 +20,44 @@ struct Animation {
     float length() {
         return (poses.size() - 1) * (1.0f / (float)fps);
     }
+
+    glmx::pose getFrame(float time) {
+        time = glm::clamp<float>(time, 0, length());
+        float dt = 1.0f / (float)fps;
+        int f = (int)(time / dt);
+        int fp = (f + 1) % poses.size();
+        float df = (time - (float)f * dt) / dt;
+        return glmx::slerp(poses[f], poses[fp], df);
+    }
+
+    glm::vec3 getStartingRootPos() {
+        return poses[0].v;
+    }
+
+    void setStartingRootPos(glm::vec3 pos) {
+        assert(poses.size() > 0);
+        glm::vec3 offset = poses[0].v - pos;
+        poses[0].v = pos;
+        for (int f = 1; f < poses.size(); f++) {
+            poses[f].v -= offset;
+        }
+    }
+
+    void setStartingRootPos(float x, float z) {
+        assert(poses.size() > 0);
+        glm::vec3 offset = poses[0].v - glm::vec3(x, 0, z);
+        offset.y = 0;
+        poses[0].v.x = x;
+        poses[0].v.z = z;
+        for (int f = 1; f < poses.size(); f++) {
+            poses[f].v -= offset;
+        }
+    }
 };
 
 struct AnimState {
     std::string name;
     Ref<Animation> animation = {};
-    bool loop = false;
 };
 
 enum class AnimParamType {
@@ -53,6 +85,8 @@ struct AnimTransition {
     Ref<AnimState> stateBefore = {};
     Ref<AnimState> stateAfter = {};
     AnimParamCondition condition;
+    float stateBeforeTime;
+    float stateAfterTime;
     float transitionTime;
 };
 
@@ -89,7 +123,7 @@ public:
 
     Ref<AnimTransition> addTransition(const std::string& name,
             Ref<AnimState> stateBefore, Ref<AnimState> stateAfter,
-            float transitionTime = 0.0f);
+            float stateBeforeTime, float stateAfterTime, float transitionTime);
 
     void setTransitionCondition(Ref<AnimTransition> transition, const std::string& name, bool value);
 
@@ -120,11 +154,18 @@ public:
         return currentPose;
     }
 
-    Ref<AnimTransition> selectNextTransition();
-
     void update(float dt);
 
     void renderImGui(const PoseTree& poseTree);
+
+private:
+
+    std::tuple<Ref<AnimTransition>, float> selectNextTransition();
+
+    void stateUpdate(float dt);
+    void transitionUpdate(float dt);
+
+
 };
 
 #endif //GENGINE_ANIMSTATEMACHINE_H
