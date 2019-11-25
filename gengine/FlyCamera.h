@@ -33,8 +33,7 @@ public:
         return transform->getGlobalPosition();
     }
 
-    Ref<Transform> transform;
-    // Ref<Transform> trackballFocus;
+    Ref<Transform> transform = {};
 
     float fov = 90.0f;
     float near = 0.1f;
@@ -42,17 +41,16 @@ public:
     float movementSpeed = 10.0f;
     float mouseSensitivity = 0.1f;
 
+    float pitch = 0.0f;
+    float yaw = 0.0f;
+    bool constrainPitch = true;
+    bool enableZoom = false;
+    bool enableMiddleScroll = false;
+
 private:
     float radius = 300.0f;
     float distance = 10.0f;
-    float pitch = 0.0f;
-    float yaw = 0.0f;
     IntRect viewport;
-    bool constrainPitch = true;
-
-    // UI state
-    bool enableZoom = false;
-    bool enableMiddleScroll = false;
 };
 
 

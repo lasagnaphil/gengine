@@ -20,7 +20,7 @@ public:
 
     void loadResources() override {
         FlyCamera* camera = initCamera<FlyCamera>();
-        camera->transform->setPosition({0.0f, 1.0f, 2.0f});
+        camera->transform->setPosition({0.f, 1.f, 2.f});
 
         Ref<Image> checkerImage = Image::fromFile("resources/textures/checker.png");
         Ref<Texture> planeTexture = Texture::fromImage(checkerImage);
@@ -71,7 +71,7 @@ public:
         debugPoseRenderBody1 = PoseRenderBody::createAsBoxes(poseTree, 0.05f, debugBodyMat1);
         debugPoseRenderBody2 = PoseRenderBody::createAsBoxes(poseTree, 0.05f, debugBodyMat2);
 
-        auto runBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_35_run&jog.bvh", 0.01f);
+        auto runBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_55_run.bvh", 0.01f);
         auto jumpBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_03_high jump.bvh", 0.01f);
         auto forwardJumpBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_05_forward jump.bvh", 0.01f);
         auto walkVeerLeftBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_11_walk, veer left.bvh", 0.01f);
@@ -82,13 +82,19 @@ public:
         auto runTurnRightBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_53_run, 90-degree right turn.bvh", 0.01f);
 
         auto idlePoses = std::vector<glmx::pose>(30, jumpBVH.poseStates[0]);
+        auto walkTurnLeftPoses = nonstd::span<glmx::pose>(walkTurnLeftBVH.poseStates.data() + 40, walkTurnLeftBVH.poseStates.size() - 60);
+        auto walkTurnRightPoses = nonstd::span<glmx::pose>(walkTurnRightBVH.poseStates.data() + 40, walkTurnRightBVH.poseStates.size() - 60);
+        auto runPoses = nonstd::span<glmx::pose>(runBVH.poseStates.data() + 24, runBVH.poseStates.size() - 24);
+        auto runTurnLeftPoses = nonstd::span<glmx::pose>(runTurnLeftBVH.poseStates.data() + 10, runTurnLeftBVH.poseStates.size() - 20);
+        auto runTurnRightPoses = nonstd::span<glmx::pose>(runTurnRightBVH.poseStates.data() + 10, runTurnRightBVH.poseStates.size() - 20);
+
         auto idleAnim = animFSM.addAnimation("idle", nonstd::span<glmx::pose>(idlePoses.data(), idlePoses.size()));
         auto walkAnim = animFSM.addAnimation("walk", walkBVH.poseStates);
         auto walkVeerLeftAnim = animFSM.addAnimation("walk_veer_left", walkVeerLeftBVH.poseStates);
         auto walkVeerRightAnim = animFSM.addAnimation("walk_veer_right", walkVeerRightBVH.poseStates);
-        auto walkTurnLeftAnim = animFSM.addAnimation("walk_turn_left", walkTurnLeftBVH.poseStates);
-        auto walkTurnRightAnim = animFSM.addAnimation("walk_turn_right", walkTurnRightBVH.poseStates);
-        auto runAnim = animFSM.addAnimation("run", runBVH.poseStates);
+        auto walkTurnLeftAnim = animFSM.addAnimation("walk_turn_left", walkTurnLeftPoses);
+        auto walkTurnRightAnim = animFSM.addAnimation("walk_turn_right", walkTurnRightPoses);
+        auto runAnim = animFSM.addAnimation("run", runPoses);
         auto runTurnLeftAnim = animFSM.addAnimation("run_turn_left", runTurnLeftBVH.poseStates);
         auto runTurnRightAnim = animFSM.addAnimation("run_turn_right", runTurnRightBVH.poseStates);
         auto jumpAnim = animFSM.addAnimation("jump", jumpBVH.poseStates);
@@ -150,18 +156,18 @@ public:
                                                              0.2f, 0.2f, 0.2f);
 
         auto startWalkTurnLeftTrans = animFSM.addTransition("start_walk_turn_left", walkState, walkTurnLeftState,
-                0.2f, 0.2f, 0.2f);
+                0.4f, 0.4f, 0.4f);
         animFSM.setTransitionTrigger(startWalkTurnLeftTrans, "is_walking_turn_left");
 
         auto stopWalkTurnLeftTrans = animFSM.addTransition("stop_walk_turn_left", walkTurnLeftState, walkState,
-                0.2f, 0.2f, 0.2f);
+                0.4f, 0.4f, 0.4f);
 
         auto startWalkTurnRightTrans = animFSM.addTransition("start_walk_turn_right", walkState, walkTurnRightState,
-                                                            0.2f, 0.2f, 0.2f);
+                                                            0.4f, 0.4f, 0.4f);
         animFSM.setTransitionTrigger(startWalkTurnRightTrans, "is_walking_turn_right");
 
         auto stopWalkTurnRightTrans = animFSM.addTransition("stop_walk_turn_right", walkTurnRightState, walkState,
-                                                           0.2f, 0.2f, 0.2f);
+                                                           0.4f, 0.4f, 0.4f);
 
         auto repeatRunningTrans = animFSM.addTransition("repeat_running", runState, runState, 0.1f, 0.1f, 0.1f);
 
@@ -172,18 +178,18 @@ public:
         animFSM.setTransitionCondition(stopRunningTrans, "is_running", false);
 
         auto startRunTurnLeftTrans = animFSM.addTransition("start_run_turn_left", runState, runTurnLeftState,
-                                                            0.2f, 0.2f, 0.2f);
+                                                            0.3f, 0.3f, 0.3f);
         animFSM.setTransitionTrigger(startRunTurnLeftTrans, "is_running_turn_left");
 
         auto stopRunTurnLeftTrans = animFSM.addTransition("stop_run_turn_left", runTurnLeftState, runState,
-                                                           0.2f, 0.2f, 0.2f);
+                                                           0.3f, 0.3f, 0.3f);
 
         auto startRunTurnRightTrans = animFSM.addTransition("start_run_turn_right", runState, runTurnRightState,
-                                                             0.2f, 0.2f, 0.2f);
+                                                             0.3f, 0.3f, 0.3f);
         animFSM.setTransitionTrigger(startRunTurnRightTrans, "is_running_turn_right");
 
         auto stopRunTurnRightTrans = animFSM.addTransition("stop_run_turn_right", runTurnRightState, runState,
-                                                            0.2f, 0.2f, 0.2f);
+                                                            0.3f, 0.3f, 0.3f);
 
         auto jumpTrans = animFSM.addTransition("jumping", idleState, jumpState, 0.2f, 0.2f, 0.2f);
         animFSM.setTransitionTrigger(jumpTrans, "jump");
@@ -203,12 +209,24 @@ public:
     }
 
     void update(float dt) override {
+        if (fixCamera) {
+            glm::vec3 cameraPos = currentPose.v;
+            cameraPos.z += 5.f;
+            cameraPos.y += 1.f;
+            FlyCamera* camera = dynamic_cast<FlyCamera*>(this->camera.get());
+            camera->transform->setPosition(cameraPos);
+            camera->pitch = -40.0f;
+        }
+
         static float time = 0.0f;
         time += dt;
         auto inputMgr = InputManager::get();
         if (inputMgr->isMousePressed(SDL_BUTTON_LEFT)) {
             glm::vec2 mPos = inputMgr->getMousePos();
             Ray ray = camera->screenPointToRay(mPos);
+        }
+        if (inputMgr->isKeyEntered(SDL_SCANCODE_1)) {
+            fixCamera = !fixCamera;
         }
         if (inputMgr->isKeyPressed(SDL_SCANCODE_UP)) {
             animFSM.setParam("is_walking", true);
@@ -251,10 +269,12 @@ public:
         renderMotionClip(phongRenderer, imRenderer, currentPose, poseTree, poseRenderBody);
 
         imRenderer.drawAxisTriad(glm::mat4(1.0f), 0.1f, 1.0f, false);
+        /*
         if (animFSM.p1.size() > 0)
             renderMotionClip(phongRenderer, imRenderer, animFSM.p1, poseTree, debugPoseRenderBody1);
         if (animFSM.p2.size() > 0)
             renderMotionClip(phongRenderer, imRenderer, animFSM.p2, poseTree, debugPoseRenderBody2);
+        */
 
         phongRenderer.render();
 
@@ -285,6 +305,8 @@ private:
 
     Ref<PhongMaterial> groundMat;
     Ref<Mesh> groundMesh;
+
+    bool fixCamera = true;
 };
 
 int main(int argc, char** argv) {

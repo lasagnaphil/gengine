@@ -16,7 +16,6 @@ struct Animation {
     std::string name;
     std::vector<glmx::pose> poses;
     int fps;
-    float rotation = 0.0f;
 
     float length() {
         assert(poses.size() > 0);
@@ -71,7 +70,7 @@ struct Animation {
         glmx::transform offset;
         offset.v.x = x - poses[0].v.x;
         offset.v.z = z - poses[0].v.z;
-        if (rot - originalRot < rotThreshold) {
+        if (glm::abs(rot - originalRot) < rotThreshold) {
             offset.q = glm::identity<glm::quat>();
         }
         else {
