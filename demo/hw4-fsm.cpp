@@ -327,11 +327,12 @@ public:
 
         imRenderer.render();
 
+        ImGui::SetNextWindowPos(ImVec2(1556, 13));
+        ImGui::SetNextWindowSize(ImVec2(339, 277));
         phongRenderer.renderImGui();
-        renderImGui();
-    }
 
-    void renderImGui() {
+        ImGui::SetNextWindowPos(ImVec2(23, 158));
+        ImGui::SetNextWindowSize(ImVec2(447, 844));
         animFSM.renderImGui(poseTree);
     }
 
