@@ -16,12 +16,17 @@ struct Animation {
     std::string name;
     std::vector<glmx::pose> poses;
     int fps;
+    float rotation = 0.0f;
 
     float length() {
+        assert(poses.size() > 0);
+
         return (poses.size() - 1) * (1.0f / (float)fps);
     }
 
     glmx::pose getFrame(float time) {
+        assert(poses.size() > 0);
+
         time = glm::clamp<float>(time, 0, length());
         float dt = 1.0f / (float)fps;
         int f = (int)(time / dt);
@@ -31,11 +36,14 @@ struct Animation {
     }
 
     glm::vec3 getStartingRootPos() {
+        assert(poses.size() > 0);
+
         return poses[0].v;
     }
 
     void setStartingRootPos(glm::vec3 pos) {
         assert(poses.size() > 0);
+
         glm::vec3 offset = poses[0].v - pos;
         poses[0].v = pos;
         for (int f = 1; f < poses.size(); f++) {
@@ -45,6 +53,7 @@ struct Animation {
 
     void setStartingRootPos(float x, float z) {
         assert(poses.size() > 0);
+
         glm::vec3 offset = poses[0].v - glm::vec3(x, 0, z);
         offset.y = 0;
         poses[0].v.x = x;
@@ -52,6 +61,36 @@ struct Animation {
         for (int f = 1; f < poses.size(); f++) {
             poses[f].v -= offset;
         }
+    }
+
+    void setStartingRootTrans(float x, float z, float rot, float rotThreshold = 0.0f) {
+        assert(poses.size() > 0);
+
+        float originalRot = glmx::extractYRot(poses[0].q[0]);
+
+        glmx::transform offset;
+        offset.v.x = x - poses[0].v.x;
+        offset.v.z = z - poses[0].v.z;
+        if (rot - originalRot < rotThreshold) {
+            offset.q = glm::identity<glm::quat>();
+        }
+        else {
+            offset.q = glm::angleAxis(rot - originalRot, glm::vec3(0, 1, 0));
+        }
+
+        for (int f = 1; f < poses.size(); f++) {
+            glm::vec3 dv = poses[f].v - poses[0].v;
+            dv.y = 0;
+            dv = offset.q * dv;
+            poses[f].v.x = poses[0].v.x + dv.x + offset.v.x;
+            poses[f].v.z = poses[0].v.z + dv.z + offset.v.z;
+            poses[f].q[0] = offset.q * poses[f].q[0];
+        }
+
+        poses[0].v.x = x;
+        poses[0].v.z = z;
+        poses[0].q[0] = offset.q * poses[0].q[0];
+
     }
 };
 
@@ -101,16 +140,22 @@ private:
     Ref<AnimTransition> currentTransition = {};
 
     glmx::pose currentPose;
-    glmx::transform offset;
+
+    Animation currentAnim;
+    Animation blendAnim1;
+    Animation blendAnim2;
 
     float stateTime = 0.0f;
     float transitionTime = 0.0f;
 
+
 public:
 
+    // DEBUG
+    glmx::pose p1, p2;
+
     AnimStateMachine() {
-        offset.v = glm::vec3(0.f);
-        offset.q = glm::identity<glm::quat>();
+        // anims.expand(32);
     }
 
     template <class T>
@@ -142,6 +187,7 @@ public:
 
     void setCurrentState(Ref<AnimState> state) {
         currentState = state;
+        currentAnim = *anims.get(states.get(state)->animation);
     }
 
     void setParam(const std::string& name, bool value);

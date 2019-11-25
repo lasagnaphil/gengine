@@ -144,7 +144,7 @@ struct GenAllocator {
 
         // delete node from free list
         uint32_t newIndex = firstAvailable;
-        new (&data[newIndex]) T(std::forward<Args>(args)...);
+        data[newIndex] = T(std::forward<Args>(args)...);
         auto& newIndices = indices[newIndex];
         firstAvailable = newIndices.nextIndex;
 
@@ -154,6 +154,12 @@ struct GenAllocator {
 
         // also return the reference object of the resource
         return Ref<T> {newIndex, newIndices.generation};
+    }
+
+    Ref<T> clone(Ref<T> ref) {
+        Ref<T> newRef = make();
+        data[newRef.index] = data[ref.index];
+        return newRef;
     }
 
     bool has(Ref<T> ref) const {
@@ -194,7 +200,7 @@ struct GenAllocator {
         auto idx = indices[ref.index];
 
         if (idx.generation != 0 && idx.generation == ref.generation) {
-            return reinterpret_cast<T*>(&data[ref.index]);
+            return &data[ref.index];
         }
         else {
             return nullptr;
@@ -202,15 +208,13 @@ struct GenAllocator {
     }
 
     void release(Ref<T> ref) {
-        auto idx = indices[ref.index];
+        auto& idx = indices[ref.index];
 
         assert(idx.generation != 0);
         assert(idx.generation == ref.generation);
 
         std::swap(idx.nextIndex, firstAvailable);
-        IF_CONSTEXPR(std::is_base_of<IDisposable, T>()) {
-            reinterpret_cast<T*>(&data[ref.index])->dispose();
-        }
+        data[ref.index].~T();
 
         count--;
     }
@@ -219,9 +223,8 @@ struct GenAllocator {
     void forEach(Fun&& fun) {
         for (uint32_t i = 0; i < capacity; ++i) {
             if (indices[i].generation != 0) {
-                T* ptr = reinterpret_cast<T*>(&data[i]);
                 Ref<T> ref = {i, indices[i].generation};
-                fun(*ptr, ref);
+                fun(data[i], ref);
             }
         }
     }
@@ -230,9 +233,8 @@ struct GenAllocator {
     void forEachUntil(Fun&& fun) {
         for (uint32_t i = 0; i < capacity; ++i) {
             if (indices[i].generation != 0) {
-                T* ptr = reinterpret_cast<T*>(&data[i]);
                 Ref<T> ref = {i, indices[i].generation};
-                bool end = fun(*ptr, ref);
+                bool end = fun(data[i], ref);
                 if (end) return;
             }
         }

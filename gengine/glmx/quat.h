@@ -7,6 +7,7 @@
 
 #include <glm/vec3.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include "euler.h"
 
 namespace glmx {
     inline glm::vec3 log(glm::quat q) {
@@ -29,6 +30,13 @@ namespace glmx {
         }
         glm::vec3 u = v / s;
         return glm::quat(s, u);
+    }
+
+    inline float extractYRot(glm::quat q) {
+        if (q.y * q.y + q.w * q.w <= glm::epsilon<float>()) {
+            return 0.0f;
+        }
+        return 2 * glm::atan(q.y, q.w);
     }
 }
 

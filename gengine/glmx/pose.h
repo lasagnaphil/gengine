@@ -50,6 +50,10 @@ namespace glmx {
         }
 
         std::size_t size() const { return q.size(); }
+
+        glmx::transform getRoot() {
+            return {v, q[0]};
+        }
     };
 
     struct pose_euler {
@@ -158,7 +162,7 @@ namespace glmx {
     }
 
     inline void translate_root(pose& p, glm::vec3 v) {
-        p.v += v;
+        p.v += p.q[0] * v;
     }
 
     inline void rotate_root(pose& p, glm::quat q) {
@@ -166,8 +170,7 @@ namespace glmx {
     }
 
     inline void transform_root(pose& p, const glmx::transform& t) {
-        // p.v += p.q[0] * t.v;
-        p.v += t.v;
+        p.v += p.q[0] * t.v;
         p.q[0] = p.q[0] * t.q;
     }
 

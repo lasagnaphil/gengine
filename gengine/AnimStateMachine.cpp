@@ -71,13 +71,6 @@ void AnimStateMachine::setParam(const std::string& name, bool value) {
             params[name].value = value;
         }
     }
-    /*
-    transitions.forEach([&](AnimTransition& trans, Ref<AnimTransition> ref) {
-        if (currentState == trans.stateBefore &&
-            trans.condition.name == name && trans.condition.type == AnimParamType::Bool) {
-        }
-    });
-     */
 }
 
 void AnimStateMachine::setTrigger(const std::string& name) {
@@ -86,14 +79,6 @@ void AnimStateMachine::setTrigger(const std::string& name) {
             params[name].value = true;
         }
     }
-    /*
-    transitions.forEach([&](AnimTransition& trans, Ref<AnimTransition> ref) {
-        if (currentState == trans.stateBefore &&
-            trans.condition.name == name && trans.condition.type == AnimParamType::Trigger) {
-            params[trans.condition.name].value = true;
-        }
-    });
-     */
 }
 
 std::tuple<Ref<AnimTransition>, float> AnimStateMachine::selectNextTransition() {
@@ -140,48 +125,56 @@ std::tuple<Ref<AnimTransition>, float> AnimStateMachine::selectNextTransition() 
 void AnimStateMachine::stateUpdate(float dt) {
     stateTime += dt;
     auto& state = *states.get(currentState);
-    auto& anim = *anims.get(state.animation);
 
-    float frameDt = 1.0f / (float)anim.fps;
-    int animSize = anim.poses.size();
+    float frameDt = 1.0f / (float)currentAnim.fps;
+    int animSize = currentAnim.poses.size();
     float animTime = animSize * frameDt;
 
     auto [nextTransRef, timeSinceTransStart] = selectNextTransition();
     if (nextTransRef) {
         auto& nextTrans = *transitions.get(nextTransRef);
+        auto& stateBefore = *states.get(nextTrans.stateBefore);
+        auto& stateAfter = *states.get(nextTrans.stateAfter);
 
         currentState = {};
         currentTransition = nextTransRef;
         transitionTime = 0.0f;
+
+        blendAnim1 = currentAnim;
+        blendAnim2 = *anims.get(stateAfter.animation);
+        glmx::transform currentRootTrans = currentAnim.getFrame(stateTime).getRoot();
+        float yrot = glmx::extractYRot(currentRootTrans.q);
+        blendAnim2.setStartingRootTrans(currentRootTrans.v.x, currentRootTrans.v.z, yrot, glm::pi<float>() / 8);
 
         transitionUpdate(timeSinceTransStart);
 
         return;
     }
 
-    currentPose = anim.getFrame(stateTime);
+    currentPose = currentAnim.getFrame(stateTime);
 }
 
 void AnimStateMachine::transitionUpdate(float dt) {
     auto& curTrans = *transitions.get(currentTransition);
     auto& stateBefore = *states.get(curTrans.stateBefore);
     auto& stateAfter = *states.get(curTrans.stateAfter);
-    auto& stateBeforeAnim = *anims.get(stateBefore.animation);
-    auto& stateAfterAnim = *anims.get(stateAfter.animation);
 
     transitionTime += dt;
 
     if (transitionTime > curTrans.transitionTime) {
-        float p2_start_time = curTrans.stateAfterTime + (transitionTime - curTrans.transitionTime);
-        glm::vec3 p1_start_pos = stateBeforeAnim.getFrame(stateTime).v;
-        glm::vec3 p2_start_pos = stateAfterAnim.getFrame(p2_start_time).v;
-        glm::vec3 last_pos = stateAfterAnim.getFrame(curTrans.transitionTime).v;
-        offset.v += last_pos + p1_start_pos - p2_start_pos;
-        offset.v.y = 0.0f;
+        /*
+        float p2StartTime = curTrans.stateAfterTime + (transitionTime - curTrans.transitionTime);
+        glmx::transform p1Start = blendAnim1.getFrame(stateTime).getRoot();
+        glmx::transform p2Start = blendAnim2.getFrame(p2StartTime).getRoot();
+        glm::vec3 last_pos = blendAnim2.getFrame(curTrans.transitionTime).v;
+        glm::vec3 offset = last_pos + p1_start_pos - p2_start_pos;
+        offset.y = 0.0f;
+         */
 
         currentState = curTrans.stateAfter;
         currentTransition = {};
         stateTime = curTrans.stateAfterTime;
+        currentAnim = blendAnim2;
 
         stateUpdate(transitionTime - curTrans.transitionTime);
 
@@ -190,29 +183,24 @@ void AnimStateMachine::transitionUpdate(float dt) {
 
     // TODO: implement time rescaling
     assert(curTrans.stateBeforeTime == curTrans.stateAfterTime);
-    assert(stateBeforeAnim.fps == stateAfterAnim.fps);
+    assert(blendAnim1.fps == blendAnim2.fps);
 
     auto easeFunc = [](float t) { return -0.5 * cos(M_PI * t) + 0.5; };
 
     float u = easeFunc(transitionTime / curTrans.transitionTime);
-    glm::vec3 p1_start_pos = stateBeforeAnim.getFrame(stateTime).v;
-    glm::vec3 p2_start_pos = stateAfterAnim.getFrame(0).v;
-    glmx::pose p1 = stateBeforeAnim.getFrame(stateTime + transitionTime);
-    glmx::pose p2 = stateAfterAnim.getFrame(transitionTime);
-    p2.v.x = p2.v.x - p2_start_pos.x + p1_start_pos.x;
-    p2.v.z = p2.v.z - p2_start_pos.z + p1_start_pos.z;
+    p1 = blendAnim1.getFrame(stateTime + transitionTime);
+    p2 = blendAnim2.getFrame(transitionTime);
     currentPose = glmx::slerp(p1, p2, u);
 }
 
 void AnimStateMachine::update(float dt) {
+    assert (currentState || currentTransition);
     if (currentState) {
         stateUpdate(dt);
     }
     else if (currentTransition) {
         transitionUpdate(dt);
     }
-
-    glmx::transform_root(currentPose, offset);
 
     // Now clear all the activated triggers
     for (auto& [name, param] : params) {
@@ -243,12 +231,14 @@ void AnimStateMachine::renderImGui(const PoseTree& poseTree) {
         ImGui::SliderFloat("Transition Time", &transitionTime, 0, curTrans.stateBeforeTime + curTrans.stateAfterTime);
     }
 
+    /*
     ImGui::InputFloat3("Offset translation", (float*)&offset.v);
     glm::vec3 v = glmx::quatToEuler(offset.q, EulOrdZYXs);
     ImGui::SliderFloat3("Offset rotation", (float*)&v, -M_PI, M_PI);
     offset.q = glmx::eulerToQuat(v, EulOrdZYXs);
+     */
 
-    ImGui::InputFloat3(poseTree[0].name.c_str(), (float*)&currentPose.v);
+    ImGui::InputFloat3((poseTree[0].name + "_pos").c_str(), (float*)&currentPose.v);
     for (uint32_t i = 0; i < currentPose.size(); i++) {
         auto& node = poseTree[i];
         glm::vec3 v = glmx::quatToEuler(currentPose.q[i], EulOrdZYXs);
