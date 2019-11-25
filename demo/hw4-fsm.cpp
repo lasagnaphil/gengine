@@ -78,10 +78,13 @@ public:
         auto walkVeerRightBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_13_walk, veer right.bvh", 0.01f);
         auto walkTurnLeftBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_17_walk, 90-degree left turn.bvh", 0.01f);
         auto walkTurnRightBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_19_walk, 90-degree right turn.bvh", 0.01f);
+        auto runVeerLeftBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_48_run, veer left.bvh", 0.01f);
+        auto runVeerRightBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_49_run, veer right.bvh", 0.01f);
         auto runTurnLeftBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_51_run, 90-degree left turn.bvh", 0.01f);
         auto runTurnRightBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_53_run, 90-degree right turn.bvh", 0.01f);
 
         auto idlePoses = std::vector<glmx::pose>(30, jumpBVH.poseStates[0]);
+        auto walkPoses = nonstd::span<glmx::pose>(walkBVH.poseStates.data(), walkBVH.poseStates.size() - 10);
         auto walkTurnLeftPoses = nonstd::span<glmx::pose>(walkTurnLeftBVH.poseStates.data() + 40, walkTurnLeftBVH.poseStates.size() - 60);
         auto walkTurnRightPoses = nonstd::span<glmx::pose>(walkTurnRightBVH.poseStates.data() + 40, walkTurnRightBVH.poseStates.size() - 60);
         auto runPoses = nonstd::span<glmx::pose>(runBVH.poseStates.data() + 24, runBVH.poseStates.size() - 24);
@@ -89,12 +92,14 @@ public:
         auto runTurnRightPoses = nonstd::span<glmx::pose>(runTurnRightBVH.poseStates.data() + 10, runTurnRightBVH.poseStates.size() - 20);
 
         auto idleAnim = animFSM.addAnimation("idle", nonstd::span<glmx::pose>(idlePoses.data(), idlePoses.size()));
-        auto walkAnim = animFSM.addAnimation("walk", walkBVH.poseStates);
+        auto walkAnim = animFSM.addAnimation("walk", walkPoses);
         auto walkVeerLeftAnim = animFSM.addAnimation("walk_veer_left", walkVeerLeftBVH.poseStates);
         auto walkVeerRightAnim = animFSM.addAnimation("walk_veer_right", walkVeerRightBVH.poseStates);
         auto walkTurnLeftAnim = animFSM.addAnimation("walk_turn_left", walkTurnLeftPoses);
         auto walkTurnRightAnim = animFSM.addAnimation("walk_turn_right", walkTurnRightPoses);
         auto runAnim = animFSM.addAnimation("run", runPoses);
+        auto runVeerLeftAnim = animFSM.addAnimation("run_veer_left", runVeerLeftBVH.poseStates);
+        auto runVeerRightAnim = animFSM.addAnimation("run_veer_right", runVeerRightBVH.poseStates);
         auto runTurnLeftAnim = animFSM.addAnimation("run_turn_left", runTurnLeftBVH.poseStates);
         auto runTurnRightAnim = animFSM.addAnimation("run_turn_right", runTurnRightBVH.poseStates);
         auto jumpAnim = animFSM.addAnimation("jump", jumpBVH.poseStates);
@@ -102,7 +107,7 @@ public:
 
         for (Ref<Animation> anim : {idleAnim, walkAnim, walkVeerLeftAnim, walkVeerRightAnim,
                                     walkTurnLeftAnim, walkTurnRightAnim,
-                                    runAnim, runTurnLeftAnim, runTurnRightAnim,
+                                    runAnim, runVeerLeftAnim, runVeerRightAnim, runTurnLeftAnim, runTurnRightAnim,
                                     jumpAnim, forwardJumpAnim}) {
 
             animFSM.get(anim)->setStartingRootPos(0.0f, 0.0f);
@@ -117,6 +122,8 @@ public:
         auto walkVeerRightState = animFSM.addState("walk_veer_right", walkVeerRightAnim);
         auto walkTurnLeftState = animFSM.addState("walk_turn_left", walkTurnLeftAnim);
         auto walkTurnRightState = animFSM.addState("walk_turn_right", walkTurnRightAnim);
+        auto runVeerLeftState = animFSM.addState("run_veer_left", runVeerLeftAnim);
+        auto runVeerRightState = animFSM.addState("run_veer_right", runVeerRightAnim);
         auto runTurnLeftState = animFSM.addState("run_turn_left", runTurnLeftAnim);
         auto runTurnRightState = animFSM.addState("run_turn_right", runTurnRightAnim);
 
@@ -126,6 +133,8 @@ public:
         animFSM.addParam("is_walking_turn_left");
         animFSM.addParam("is_walking_turn_right");
         animFSM.addParam("is_running", false);
+        animFSM.addParam("is_running_veer_left");
+        animFSM.addParam("is_running_veer_right");
         animFSM.addParam("is_running_turn_left");
         animFSM.addParam("is_running_turn_right");
         animFSM.addParam("jump");
@@ -176,6 +185,20 @@ public:
 
         auto stopRunningTrans = animFSM.addTransition("stop_running", runState, walkState, 0.2f, 0.2f, 0.2f);
         animFSM.setTransitionCondition(stopRunningTrans, "is_running", false);
+
+        auto startRunVeerLeftTrans = animFSM.addTransition("start_run_veer_left", runState, runVeerLeftState,
+                                                           0.3f, 0.3f, 0.3f);
+        animFSM.setTransitionTrigger(startRunVeerLeftTrans, "is_running_veer_left");
+
+        auto stopRunVeerLeftTrans = animFSM.addTransition("stop_run_veer_left", runVeerLeftState, runState,
+                                                          0.3f, 0.3f, 0.3f);
+
+        auto startRunVeerRightTrans = animFSM.addTransition("start_run_veer_right", runState, runVeerRightState,
+                                                            0.3f, 0.3f, 0.3f);
+        animFSM.setTransitionTrigger(startRunVeerRightTrans, "is_running_veer_right");
+
+        auto stopRunVeerRightTrans = animFSM.addTransition("stop_run_veer_right", runVeerRightState, runState,
+                                                          0.3f, 0.3f, 0.3f);
 
         auto startRunTurnLeftTrans = animFSM.addTransition("start_run_turn_left", runState, runTurnLeftState,
                                                             0.3f, 0.3f, 0.3f);
@@ -233,20 +256,41 @@ public:
 
             if (inputMgr->isKeyPressed(SDL_SCANCODE_LSHIFT)) {
                 animFSM.setParam("is_running", true);
-                if (inputMgr->isKeyPressed(SDL_SCANCODE_LEFT)) {
-                    animFSM.setTrigger("is_running_turn_left");
+                if (inputMgr->isKeyPressed(SDL_SCANCODE_LALT)) {
+                    if (inputMgr->isKeyPressed(SDL_SCANCODE_LEFT)) {
+                        animFSM.setTrigger("is_running_veer_left");
+                    }
+                    if (inputMgr->isKeyPressed(SDL_SCANCODE_RIGHT)) {
+                        animFSM.setTrigger("is_running_veer_right");
+                    }
                 }
-                if (inputMgr->isKeyPressed(SDL_SCANCODE_RIGHT)) {
-                    animFSM.setTrigger("is_running_turn_right");
+                else {
+                    if (inputMgr->isKeyPressed(SDL_SCANCODE_LEFT)) {
+                        animFSM.setTrigger("is_running_turn_left");
+                    }
+                    if (inputMgr->isKeyPressed(SDL_SCANCODE_RIGHT)) {
+                        animFSM.setTrigger("is_running_turn_right");
+                    }
                 }
             }
+
             else {
                 animFSM.setParam("is_running", false);
-                if (inputMgr->isKeyPressed(SDL_SCANCODE_LEFT)) {
-                    animFSM.setTrigger("is_walking_turn_left");
+                if (inputMgr->isKeyPressed(SDL_SCANCODE_LALT)) {
+                    if (inputMgr->isKeyPressed(SDL_SCANCODE_LEFT)) {
+                        animFSM.setTrigger("is_walking_veer_left");
+                    }
+                    if (inputMgr->isKeyPressed(SDL_SCANCODE_RIGHT)) {
+                        animFSM.setTrigger("is_walking_veer_right");
+                    }
                 }
-                if (inputMgr->isKeyPressed(SDL_SCANCODE_RIGHT)) {
-                    animFSM.setTrigger("is_walking_turn_right");
+                else {
+                    if (inputMgr->isKeyPressed(SDL_SCANCODE_LEFT)) {
+                        animFSM.setTrigger("is_walking_turn_left");
+                    }
+                    if (inputMgr->isKeyPressed(SDL_SCANCODE_RIGHT)) {
+                        animFSM.setTrigger("is_walking_turn_right");
+                    }
                 }
                 if (inputMgr->isKeyPressed(SDL_SCANCODE_SPACE)) {
                     animFSM.setTrigger("forward_jump");
