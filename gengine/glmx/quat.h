@@ -24,12 +24,12 @@ namespace glmx {
     }
 
     inline glm::quat exp(glm::vec3 v) {
-        float s = glm::length(v);
-        if (s <= glm::epsilon<float>()) {
+        float theta = glm::length(v);
+        if (theta <= glm::epsilon<float>()) {
             return glm::identity<glm::quat>();
         }
-        glm::vec3 u = v / s;
-        return glm::quat(s, u);
+        glm::vec3 u = v / theta;
+        return glm::quat(glm::cos(theta/2), glm::sin(theta/2) * u);
     }
 
     inline float extractYRot(glm::quat q) {
@@ -38,6 +38,32 @@ namespace glmx {
         }
         return 2 * glm::atan(q.y, q.w);
     }
+
+    inline glm::mat4 rotMatrixBetweenVecs(glm::vec3 a, glm::vec3 b) {
+        glm::vec3 v = glm::cross(a, b);
+        float s2 = glm::dot(v, v);
+        if (s2 < glm::epsilon<float>()) {
+            return glm::mat4(1.0f);
+        }
+        else {
+            // Rodrigue's formula
+            float c = glm::dot(a, b);
+            glm::mat3 vhat;
+            vhat[0][0] = vhat[1][1] = vhat[2][2] = 0;
+            vhat[2][1] = v[0]; vhat[1][2] = -v[0];
+            vhat[0][2] = v[1]; vhat[2][0] = -v[1];
+            vhat[1][0] = v[2]; vhat[0][1] = -v[2];
+            return glm::mat3(1.0f) + vhat + vhat*vhat*(1 - c)/(s2);
+        }
+    }
+
+    inline glm::quat quatBetweenVecs(glm::vec3 a, glm::vec3 b) {
+        glm::vec3 w = glm::cross(a, b);
+        glm::quat q = glm::quat(1.f + dot(a, b), w);
+        return glm::normalize(q);
+    }
+
+
 }
 
 #endif //GENGINE_QUAT_H

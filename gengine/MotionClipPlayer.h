@@ -26,10 +26,12 @@ struct MotionClipPlayer {
     void init();
 
     const glmx::pose& getPoseState() const {
+        assert(currentFrameIdx < data->numFrames);
         return data->getFrameState(currentFrameIdx);
     }
 
     glmx::pose& getPoseState() {
+        assert(currentFrameIdx < data->numFrames);
         return data->getFrameState(currentFrameIdx);
     }
 
