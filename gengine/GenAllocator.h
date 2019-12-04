@@ -208,13 +208,12 @@ struct GenAllocator {
     }
 
     void release(Ref<T> ref) {
-        auto& idx = indices[ref.index];
-
+        auto idx = indices[ref.index];
         assert(idx.generation != 0);
         assert(idx.generation == ref.generation);
 
-        std::swap(idx.nextIndex, firstAvailable);
-        data[ref.index].~T();
+        indices[ref.index].nextIndex = firstAvailable;
+        firstAvailable = ref.index;
 
         count--;
     }
