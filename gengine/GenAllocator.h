@@ -260,6 +260,11 @@ struct Resources {
         return getStorage<T>().tryGet(ref);
     }
 
+    template <typename T>
+    static Ref<T> clone(Ref<T> ref) {
+        return getStorage<T>().clone(ref);
+    }
+
     template <class T, class ...Args>
     static Ref<T> make(Args... args) {
         return getStorage<T>().make(args...);
