@@ -157,7 +157,12 @@ inline void renderMotionClip(PBRenderer& renderer, DebugRenderer& imRenderer,
         }
 
         if (!node.isEndSite) {
-            curTransform = curTransform * glm::translate(node.offset) * glm::mat4_cast(poseState.q[nodeIdx]);
+            if (nodeIdx == 0) {
+                curTransform = curTransform * glm::mat4_cast(poseState.q[nodeIdx]);
+            }
+            else {
+                curTransform = curTransform * glm::translate(node.offset) * glm::mat4_cast(poseState.q[nodeIdx]);
+            }
             for (auto childID : node.childJoints) {
                 recursionStack.push({childID, curTransform});
             }
