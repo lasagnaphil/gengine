@@ -34,10 +34,15 @@ set(STB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/stb)
 add_library(stb INTERFACE)
 target_include_directories(stb INTERFACE ${STB_DIR})
 
-# tinyml2
+# tinyxml2
 set(TINYXML2_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/tinyxml2)
 add_library(tinyxml2 STATIC ${TINYXML2_DIR}/tinyxml2.cpp)
 target_include_directories(tinyxml2 PUBLIC ${TINYXML2_DIR})
+
+# tiny_obj_loader
+set(TINYOBJLOADER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/tiny_obj_loader)
+add_library(tinyobjloader STATIC ${TINYOBJLOADER_DIR}/tiny_obj_loader.cc)
+target_include_directories(tinyobjloader PUBLIC ${TINYOBJLOADER_DIR})
 
 # span-lite
 set(SPAN_LITE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/span-lite)
@@ -56,7 +61,7 @@ add_library(gengine STATIC ${GENGINE_SOURCES} ${GENGINE_GLMX_SOURCES})
 target_include_directories(gengine
         PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(gengine
-        Threads::Threads SDL2::Main glad imgui stb glm eigen tinyxml2 span-lite)
+        Threads::Threads SDL2::Main glad imgui stb glm eigen tinyxml2 tinyobjloader span-lite)
 set_target_properties(gengine PROPERTIES PREFIX "${PYTHON_MODULE_PREFIX}"
         SUFFIX "${PYTHON_MODULE_EXTENSION}")
 

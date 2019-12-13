@@ -2,7 +2,10 @@
 // Created by lasagnaphil on 19. 3. 16.
 //
 
+#include <unordered_map>
 #include "Mesh.h"
+#include "tiny_obj_loader.h"
+#include <glm/gtx/norm.hpp>
 
 float Mesh::cubeVertices[8*36] = {
         -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
@@ -84,6 +87,79 @@ void Mesh::initVBO() {
 void Mesh::updateVBO() {
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size(), vertices.data());
+}
+
+
+MeshCollider Mesh::generateCollider() {
+    assert (indices.size() == 0 && "Meshes with index buffer not supported");
+
+    MeshCollider collider;
+
+    // TODO: This is a very inefficient O(n^2) algorithm.
+    const float threshold = 1e-6;
+    for (auto& vertex : vertices) {
+        int i;
+        for (i = 0; i < collider.points.size(); i++) {
+            glm::vec3 p = collider.points[i];
+            if (glm::length2(p - vertex.pos) < threshold) {
+                collider.indices.push_back(i);
+                break;
+            }
+        }
+        if (i == collider.points.size()) {
+            collider.indices.push_back(collider.points.size());
+            collider.points.push_back(vertex.pos);
+        }
+    }
+
+    return collider;
+}
+
+Ref<Mesh> Mesh::fromOBJFile(const std::string& filename, bool onlyVertices) {
+    using namespace tinyobj;
+    ObjReader objReader;
+    attrib_t attrib;
+    std::vector<shape_t> shapes;
+    std::vector<material_t> materials;
+
+    std::string warn;
+    std::string err;
+    bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filename.c_str());
+    if (!ret) {
+        fprintf(stderr, "Error in Mesh::fromFile: failed to parse OBJ file %s\n", filename.c_str());
+        return {};
+    }
+
+    assert(onlyVertices);
+
+    Ref<Mesh> mesh = Resources::make<Mesh>();
+    for (const auto& shape : shapes) {
+        for (const auto& index : shape.mesh.indices) {
+            Mesh::Vertex vertex;
+            vertex.pos = {
+                    attrib.vertices[3 * index.vertex_index + 0],
+                    attrib.vertices[3 * index.vertex_index + 1],
+                    attrib.vertices[3 * index.vertex_index + 2]
+            };
+            vertex.normal = {
+                    attrib.normals[3 * index.normal_index + 0],
+                    attrib.normals[3 * index.normal_index + 1],
+                    attrib.normals[3 * index.normal_index + 2]
+            };
+            /*
+            vertex.uv = {
+                    attrib.texcoords[2 * index.texcoord_index + 0],
+                    attrib.texcoords[2 * index.texcoord_index + 1]
+            };
+             */
+            vertex.uv = {0.f, 0.f};
+            mesh->vertices.push_back(vertex);
+            mesh->indices.push_back(mesh->indices.size());
+        }
+    }
+
+    mesh->initVBO();
+    return mesh;
 }
 
 Ref<Mesh> Mesh::makeCube(const glm::vec3 &scale) {
@@ -331,5 +407,6 @@ Ref<Mesh> Mesh::makeCapsule(float radius, float height, unsigned int sectorCount
     mesh->initVBO();
     return mesh;
 }
+
 
 
