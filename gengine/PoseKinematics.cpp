@@ -206,6 +206,45 @@ solveIKSimple(const PoseTree &poseTree, glmx::pose &pose, uint32_t mIdx,
     pose = toQuat(poseEuler);
 }
 
+void
+solveTwoJointIK(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 target,
+        glm::quat a_gr, glm::quat b_gr, glm::quat& a_lr, glm::quat& b_lr, float eps) {
+
+    using namespace glm;
+
+    float lab = length(b - a);
+    float lcb = length(b - c);
+    float lat = clamp(length(target - a), eps, lab + lcb - eps);
+
+
+    float ac_ab_0 = acos(clamp(dot(normalize(c - a), normalize(b - a)), -1.f, 1.f));
+    float ba_bc_0 = acos(clamp(dot(normalize(a - b), normalize(c - b)), -1.f, 1.f));
+    float ac_at_0 = acos(clamp(dot(normalize(c - a), normalize(target - a)), -1.f, 1.f));
+
+    float ac_ab_1 = acos(clamp((lcb*lcb-lab*lab-lat*lat) / (-2*lab*lat), -1.f, 1.f));
+    float ba_bc_1 = acos(clamp((lat*lat-lab*lab-lcb*lcb) / (-2*lab*lcb), -1.f, 1.f));
+
+    vec3 axis0 = normalize(cross(c - a, b - a));
+    vec3 axis1 = normalize(cross(c - a, target - a));
+
+    quat r0 = angleAxis(ac_ab_1 - ac_ab_0, inverse(a_gr) * axis0);
+    quat r1 = angleAxis(ba_bc_1 - ba_bc_0, inverse(b_gr) * axis0);
+    quat r2 = angleAxis(ac_at_0, inverse(a_gr) * axis1);
+
+    a_lr = a_lr * r0 * r2;
+    b_lr = b_lr * r1;
+}
+
+void
+solveTwoJointIK(const PoseTree &poseTree, glmx::pose &pose, uint32_t aIdx, uint32_t bIdx, uint32_t cIdx,
+                glm::vec3 target, float eps) {
+    glmx::transform aT = calcFK(poseTree, pose, aIdx);
+    glmx::transform bT = calcFK(poseTree, pose, bIdx);
+    glmx::transform cT = calcFK(poseTree, pose, cIdx);
+
+    solveTwoJointIK(aT.v, bT.v, cT.v, target, aT.q, bT.q, pose.q[aIdx], pose.q[bIdx], eps);
+}
+
 float quatDistance(glm::quat q1, glm::quat q2) {
     float dot = q1.w * q2.w + q1.x * q2.x + q1.y * q2.y + q1.z * q2.z;
     return glm::acos(2*dot*dot - 1);
@@ -325,3 +364,4 @@ void solveIK(const PoseTree& poseTree, glmx::pose& pose, const IKProblem& ik) {
 
     printf("Optimization succeeded: iter=%d, cost=%f\n", iter, newCost);
 }
+

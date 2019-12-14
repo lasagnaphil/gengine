@@ -32,6 +32,16 @@ void solveIKSimple(const PoseTree& poseTree, glmx::pose& pose, uint32_t mIdx,
                    glmx::transform mT,
                    LeastSquareMethod lsqMethod = LeastSquareMethod::SVD);
 
+// 2-joint IK: http://theorangeduck.com/page/simple-two-joint
+void solveTwoJointIK(
+        glm::vec3 a, glm::vec3 b, glm::vec3 c,
+        glm::vec3 target,
+        glm::quat a_gr, glm::quat b_gr, glm::quat& a_lr, glm::quat& b_lr, float eps = 0.01f);
+
+void solveTwoJointIK(const PoseTree& poseTree, glmx::pose& pose,
+        uint32_t aIdx, uint32_t bIdx, uint32_t cIdx, glm::vec3 target, float eps = 0.01f);
+
+
 struct IKProblem {
     glm::vec3 targetPos;
     glm::quat targetRot;
