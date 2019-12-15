@@ -186,7 +186,10 @@ public:
 
     void setCurrentState(Ref<AnimState> state) {
         currentState = state;
+        currentTransition = {};
         currentAnim = *anims.get(states.get(state)->animation);
+        stateTime = 0.0f;
+        transitionTime = 0.0f;
     }
 
     float getStateTime() { return stateTime; }
