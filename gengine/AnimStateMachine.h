@@ -147,6 +147,7 @@ private:
     float stateTime = 0.0f;
     float transitionTime = 0.0f;
 
+    bool rotationEnabled = true;
 
 public:
 
@@ -183,10 +184,25 @@ public:
         return states.get(currentState);
     }
 
-
     void setCurrentState(Ref<AnimState> state) {
         currentState = state;
         currentAnim = *anims.get(states.get(state)->animation);
+    }
+
+    float getStateTime() { return stateTime; }
+    float getTransitionTime() { return transitionTime; }
+
+    Animation& getCurrentAnim() { return currentAnim; }
+    const Animation& getCurrentAnim() const { return currentAnim; }
+
+    void moveCurrentAnim(glm::vec3 offset) {
+        for (auto& pose : currentAnim.poses) {
+            pose.v += offset;
+        }
+    }
+
+    void enableRotation(bool enable) {
+        rotationEnabled = enable;
     }
 
     void setParam(const std::string& name, bool value);

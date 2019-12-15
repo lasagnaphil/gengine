@@ -46,6 +46,13 @@ struct MotionClipData {
     glm::quat& getJointRot(uint32_t frameIdx, uint32_t jointIdx) { return poseStates[frameIdx].q[jointIdx]; }
     const glm::quat& getJointRot(uint32_t frameIdx, uint32_t jointIdx) const { return poseStates[frameIdx].q[jointIdx]; }
 
+    nonstd::span<glmx::pose> slice(uint32_t start, uint32_t end) {
+        assert(start >= 0);
+        assert(end <= poseStates.size());
+        assert(start < end);
+        return nonstd::span<glmx::pose>(poseStates.data() + start, end - start);
+    }
+
     void saveToFile(const std::string& filename, int eulerOrd);
 
 private:

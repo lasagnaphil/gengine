@@ -143,8 +143,14 @@ void AnimStateMachine::stateUpdate(float dt) {
         blendAnim1 = currentAnim;
         blendAnim2 = *anims.get(stateAfter.animation);
         glmx::transform currentRootTrans = currentAnim.getFrame(stateTime).getRoot();
+
         float yrot = glmx::extractYRot(currentRootTrans.q);
-        blendAnim2.setStartingRootTrans(currentRootTrans.v.x, currentRootTrans.v.z, yrot, glm::pi<float>() / 8);
+        if (rotationEnabled) {
+            blendAnim2.setStartingRootTrans(currentRootTrans.v.x, currentRootTrans.v.z, yrot, glm::pi<float>() / 8);
+        }
+        else {
+            blendAnim2.setStartingRootTrans(currentRootTrans.v.x, currentRootTrans.v.z, yrot, FLT_MAX);
+        }
 
         transitionUpdate(timeSinceTransStart);
 
