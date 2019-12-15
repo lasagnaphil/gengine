@@ -115,6 +115,13 @@ MeshCollider Mesh::generateCollider() {
     return collider;
 }
 
+void Mesh::rotate(glm::quat rot) {
+    for (auto& vertex : vertices) {
+        vertex.pos = rot * vertex.pos;
+        vertex.normal = rot * vertex.normal;
+    }
+}
+
 Ref<Mesh> Mesh::fromOBJFile(const std::string& filename, bool onlyVertices) {
     using namespace tinyobj;
     ObjReader objReader;
@@ -146,6 +153,7 @@ Ref<Mesh> Mesh::fromOBJFile(const std::string& filename, bool onlyVertices) {
                     attrib.normals[3 * index.normal_index + 1],
                     attrib.normals[3 * index.normal_index + 2]
             };
+            // TODO
             /*
             vertex.uv = {
                     attrib.texcoords[2 * index.texcoord_index + 0],
@@ -161,6 +169,7 @@ Ref<Mesh> Mesh::fromOBJFile(const std::string& filename, bool onlyVertices) {
     mesh->initVBO();
     return mesh;
 }
+
 
 Ref<Mesh> Mesh::makeCube(const glm::vec3 &scale) {
     std::vector<Vertex> vertices((Vertex*)cubeVertices, ((Vertex*)cubeVertices) + 36);
@@ -407,6 +416,4 @@ Ref<Mesh> Mesh::makeCapsule(float radius, float height, unsigned int sectorCount
     mesh->initVBO();
     return mesh;
 }
-
-
 

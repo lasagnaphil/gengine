@@ -9,6 +9,7 @@
 #include <glm/vec2.hpp>
 #include <glm/gtc/constants.hpp>
 #include <glm/trigonometric.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include <glad/glad.h>
 
 #include <vector>
@@ -49,6 +50,8 @@ struct Mesh {
     void updateVBO();
 
     MeshCollider generateCollider();
+
+    void rotate(glm::quat rot);
 
     static Ref<Mesh> fromOBJFile(const std::string& filename, bool onlyVertices = true);
     static Ref<Mesh> makeCube(const glm::vec3& scale = {1.0f, 1.0f, 1.0f});
