@@ -188,6 +188,7 @@ public:
         currentState = state;
         currentTransition = {};
         currentAnim = *anims.get(states.get(state)->animation);
+        currentPose = currentAnim.poses[0];
         stateTime = 0.0f;
         transitionTime = 0.0f;
     }
