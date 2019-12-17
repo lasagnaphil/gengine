@@ -49,21 +49,29 @@ set(SPAN_LITE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/span-lite)
 add_library(span-lite INTERFACE)
 target_include_directories(span-lite INTERFACE ${SPAN_LITE_DIR})
 
+option(GENGINE_ENABLE_PHYSX "Enable PhysX" OFF)
+
+if (GENGINE_ENABLE_PHYSX)
+    find_package(PhysX REQUIRED)
+endif()
+
 # Add the source files to the library
 file(GLOB GENGINE_SOURCES *.cpp)
 file(GLOB GENGINE_GLMX_SOURCES glmx/*.cpp)
-add_library(gengine STATIC ${GENGINE_SOURCES} ${GENGINE_GLMX_SOURCES})
-
-# Use this compile definition to use std::shared_ptr instead of generational storage
-# target_compile_definitions(gengine PUBLIC USE_SHARED_PTR)
+file(GLOB GENGINE_PHYSX_SOURCES physx/*.cpp)
+add_library(gengine STATIC ${GENGINE_SOURCES} ${GENGINE_GLMX_SOURCES} ${GENGINE_PHYSX_SOURCES})
 
 # include/linking
 target_include_directories(gengine
         PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(gengine
         Threads::Threads SDL2::Main glad imgui stb glm eigen tinyxml2 tinyobjloader span-lite)
-set_target_properties(gengine PROPERTIES PREFIX "${PYTHON_MODULE_PREFIX}"
-        SUFFIX "${PYTHON_MODULE_EXTENSION}")
+
+if (GENGINE_ENABLE_PHYSX)
+    target_include_directories(gengine PUBLIC gengine ${PhysX_INCLUDE_DIR} ${PxShared_INCLUDE_DIR})
+    target_link_libraries(gengine debug ${PhysX_LIBRARIES_DEBUG})
+    target_link_libraries(gengine optimized ${PhysX_LIBRARIES_RELEASE})
+endif()
 
 # Compile shaders into header files
 add_executable(embed_shader shaders/embed_shader.cpp)
