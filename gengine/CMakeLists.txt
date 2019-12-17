@@ -59,7 +59,11 @@ endif()
 file(GLOB GENGINE_SOURCES *.cpp)
 file(GLOB GENGINE_GLMX_SOURCES glmx/*.cpp)
 file(GLOB GENGINE_PHYSX_SOURCES physx/*.cpp)
-add_library(gengine STATIC ${GENGINE_SOURCES} ${GENGINE_GLMX_SOURCES} ${GENGINE_PHYSX_SOURCES})
+add_library(gengine STATIC ${GENGINE_SOURCES} ${GENGINE_GLMX_SOURCES})
+
+if (GENGINE_ENABLE_PHYSX)
+    add_library(gengine STATIC ${GENGINE_PHYSX_SOURCES})
+endif()
 
 # include/linking
 target_include_directories(gengine
