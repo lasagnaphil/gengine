@@ -1,15 +1,11 @@
-//
-// Created by lasagnaphil on 19. 4. 30.
-//
-
-#define _DEBUG
-
-#include <iostream>
 #include <InputManager.h>
 #include "App.h"
 #include "PBRenderer.h"
-#include "GizmosRenderer.h"
 #include "FlyCamera.h"
+#include "physx/PhysicsWorld.h"
+
+PxDefaultAllocator gAllocator = {};
+PxDefaultErrorCallback gErrorCallback = {};
 
 class MyApp : public App {
 public:
@@ -26,7 +22,7 @@ public:
         pbRenderer.shadowFramebufferSize = {2048, 2048};
 
         pbRenderer.dirLight.enabled = true;
-        pbRenderer.dirLight.direction = glm::normalize(glm::vec3 {2.0f, -3.0f, 2.0f});
+        pbRenderer.dirLight.direction = glm::normalize(glm::vec3 {2.0f, -3.0f, -2.0f});
         pbRenderer.dirLight.color = {0.5f, 0.5f, 0.5f};
 
         pbRenderer.pointLights[0].enabled = true;
@@ -69,6 +65,12 @@ public:
         }
 
         sphereMesh = Mesh::makeSphere();
+
+        pxFoundation = PxCreateFoundation(PX_PHYSICS_VERSION, gAllocator, gErrorCallback);
+        if (!pxFoundation) {
+            fprintf(stderr, "PxCreateFoundation Failed!\n");
+            exit(EXIT_FAILURE);
+        }
     }
 
     void setDemo1() {
@@ -136,6 +138,7 @@ public:
     }
 
     void release() override {
+        world.release();
     }
 
 private:
@@ -146,6 +149,9 @@ private:
     Ref<Mesh> groundMesh;
     Ref<Mesh> sphereMesh;
     std::vector<Ref<Transform>> sphereTransforms;
+
+    PxFoundation* pxFoundation;
+    PhysicsWorld world;
 };
 
 int main(int argc, char** argv) {
