@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <stack>
 #include <string>
+#include <glm/vec3.hpp>
 
 struct PoseTreeNode {
     std::string name;
