@@ -7,3 +7,6 @@
 [submodule "gengine/deps/fmt"]
 	path = gengine/deps/fmt
 	url = https://github.com/fmtlib/fmt.git
+[submodule "gengine/deps/bitsery"]
+	path = gengine/deps/bitsery
+	url = https://github.com/fraillt/bitsery

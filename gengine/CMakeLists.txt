@@ -53,6 +53,10 @@ target_include_directories(span-lite INTERFACE ${SPAN_LITE_DIR})
 set(FMT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/fmt)
 add_subdirectory(${FMT_DIR} EXCLUDE_FROM_ALL)
 
+# bitsery
+set(BITSERY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/bitsery)
+add_subdirectory(${BITSERY_DIR} EXCLUDE_FROM_ALL)
+
 option(GENGINE_ENABLE_PHYSX "Enable PhysX" OFF)
 
 if (GENGINE_ENABLE_PHYSX)
@@ -73,7 +77,7 @@ endif()
 target_include_directories(gengine
         PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(gengine
-        Threads::Threads SDL2::Main glad imgui stb glm eigen tinyxml2 tinyobjloader span-lite fmt)
+        Threads::Threads SDL2::Main glad imgui stb glm eigen tinyxml2 tinyobjloader span-lite fmt bitsery)
 
 if (GENGINE_ENABLE_PHYSX)
     target_include_directories(gengine PUBLIC gengine ${PhysX_INCLUDE_DIR} ${PxShared_INCLUDE_DIR})
