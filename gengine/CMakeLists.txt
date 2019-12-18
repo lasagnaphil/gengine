@@ -49,6 +49,10 @@ set(SPAN_LITE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/span-lite)
 add_library(span-lite INTERFACE)
 target_include_directories(span-lite INTERFACE ${SPAN_LITE_DIR})
 
+# fmt
+set(FMT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/fmt)
+add_subdirectory(${FMT_DIR} EXCLUDE_FROM_ALL)
+
 option(GENGINE_ENABLE_PHYSX "Enable PhysX" OFF)
 
 if (GENGINE_ENABLE_PHYSX)
@@ -69,7 +73,7 @@ endif()
 target_include_directories(gengine
         PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(gengine
-        Threads::Threads SDL2::Main glad imgui stb glm eigen tinyxml2 tinyobjloader span-lite)
+        Threads::Threads SDL2::Main glad imgui stb glm eigen tinyxml2 tinyobjloader span-lite fmt)
 
 if (GENGINE_ENABLE_PHYSX)
     target_include_directories(gengine PUBLIC gengine ${PhysX_INCLUDE_DIR} ${PxShared_INCLUDE_DIR})
