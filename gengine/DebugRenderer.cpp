@@ -6,6 +6,7 @@
 #include <glm/trigonometric.hpp>
 #include "DebugRenderer.h"
 #include "Shader.h"
+#include "Colors.h"
 
 #include "shaders/colorpoint3d.vert.h"
 #include "shaders/colorpoint3d.frag.h"
