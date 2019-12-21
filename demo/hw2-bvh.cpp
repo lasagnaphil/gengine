@@ -39,6 +39,8 @@ public:
 
         // Load BVH file, only copy the tree structure of the human
         motionClipData = MotionClipData::loadFromFile("resources/cmu_07_02_1.bvh", 0.01f);
+        motionClipData.removeCMUPhantomJoints();
+
         if (!motionClipData.valid)
         {
             std::cerr << "BVH Not Found!" << std::endl;

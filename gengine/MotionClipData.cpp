@@ -394,3 +394,77 @@ void MotionClipData::saveToFileRecursive(uint32_t jointIdx, std::ostream& ofs, i
     }
     ofs << tabs << "}" << endl;
 }
+
+void MotionClipData::removeJoint(uint32_t nodeIdx) {
+    if (nodeIdx == (uint32_t)-1) {
+        fprintf(stderr, "Tring to remove invalid joint!\n");
+    }
+    assert(poseTree[nodeIdx].childJoints.size() == 1 && "Only joints with one child can be removed");
+    uint32_t parentIdx = poseTree[nodeIdx].parent;
+    uint32_t childIdx = poseTree[nodeIdx].childJoints[0];
+
+    auto& node = poseTree[nodeIdx];
+    auto& parentNode = poseTree[parentIdx];
+    auto& childNode = poseTree[childIdx];
+    std::string nodeName = node.name;
+
+    poseTree[childIdx].parent = parentIdx;
+
+    for (uint32_t& i : parentNode.childJoints) {
+        if (i == nodeIdx) {
+            i = childIdx;
+            break;
+        }
+    }
+
+    poseTree.numJoints--;
+    poseTree.numNodes--;
+    poseTree.allNodes.erase(poseTree.allNodes.begin() + nodeIdx, poseTree.allNodes.begin() + nodeIdx+1);
+
+    for (auto& pose : poseStates) {
+        glm::quat q = pose.q[nodeIdx];
+        pose.q[childIdx] = q * pose.q[childIdx];
+        pose.q.erase(pose.q.begin() + nodeIdx, pose.q.begin() + nodeIdx+1);
+    }
+
+    for (auto& node : poseTree.allNodes) {
+        if (node.parent > nodeIdx) {
+            node.parent--;
+        }
+        for (uint32_t& i : node.childJoints) {
+            if (i > nodeIdx) {
+                i--;
+            }
+        }
+    }
+
+    poseTree.nodeNameMap.erase(nodeName);
+    for (auto& [key, i] : poseTree.nodeNameMap) {
+        if (i > nodeIdx) {
+            i--;
+        }
+    }
+}
+
+void MotionClipData::removeJoint(const std::string& nodeName) {
+    uint32_t nodeIdx = poseTree.findIdx(nodeName);
+    if (nodeIdx != (uint32_t)-1) {
+        removeJoint(nodeIdx);
+    }
+    else {
+        fprintf(stderr, "Trying to remove invalid joint %s!\n", nodeName.c_str());
+    }
+}
+
+void MotionClipData::removeCMUPhantomJoints() {
+    removeJoint("LHipJoint");
+    removeJoint("RHipJoint");
+    removeJoint("LowerBack");
+    removeJoint("Neck");
+    removeJoint("LeftShoulder");
+    removeJoint("LeftFingerBase");
+    removeJoint("LThumb");
+    removeJoint("RightShoulder");
+    removeJoint("RightFingerBase");
+    removeJoint("RThumb");
+}
