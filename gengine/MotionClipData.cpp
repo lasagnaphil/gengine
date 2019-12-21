@@ -69,7 +69,6 @@ MotionClipData MotionClipData::loadFromFile(const std::string& filename, float s
         switch (state) {
             case ParseState::Root: {
                 PoseTreeNode curJoint;
-                curJoint.isEndSite = false;
                 curJointID = 0; // root joint id
 
                 curJoint.parent = 0;
@@ -120,7 +119,6 @@ MotionClipData MotionClipData::loadFromFile(const std::string& filename, float s
             }
             case ParseState::Joint: {
                 PoseTreeNode childJoint;
-                childJoint.isEndSite = false;
                 childJointID = data.poseTree.allNodes.size();
                 PoseTreeNode& curJoint = data.poseTree.allNodes[curJointID];
 
@@ -176,7 +174,6 @@ MotionClipData MotionClipData::loadFromFile(const std::string& filename, float s
             }
             case ParseState::EndSite: {
                 PoseTreeNode childJoint;
-                childJoint.isEndSite = true;
                 curJointID = childJointID;
                 uint32_t endSiteID = endSites.size();
                 PoseTreeNode& curJoint = data.poseTree.allNodes[curJointID];
@@ -291,6 +288,8 @@ MotionClipData MotionClipData::loadFromFile(const std::string& filename, float s
         }
     }
 
+    data.poseTree.constructNodeNameMapping();
+
     return data;
 }
 
@@ -300,7 +299,7 @@ void MotionClipData::print() const {
 
 void MotionClipData::printRecursive(uint32_t jointID, int depth) const {
     const PoseTreeNode& joint = poseTree.allNodes[jointID];
-    if (!joint.isEndSite) {
+    if (!joint.isEndSite()) {
         for (int i = 0; i < depth; i++) { std::cout << "    "; }
         std::cout << "Name: " << joint.name << std::endl;
         for (int i = 0; i < depth; i++) { std::cout << "    "; }
@@ -365,7 +364,7 @@ void MotionClipData::saveToFileRecursive(uint32_t jointIdx, std::ostream& ofs, i
             case EulOrdZYZs: ofs << " Zrotation Yrotation Zrotation" << endl; break;
         }
     }
-    else if (!node.isEndSite) {
+    else if (!node.isEndSite()) {
         ofs << tabs << "JOINT " << node.name << endl;
         ofs << tabs << "{" << endl;
         ofs << tabs << "\tOFFSET " << node.offset.x << " " << node.offset.y << " " << node.offset.z << endl;

@@ -36,7 +36,7 @@ void renderMotionClip(PhongRenderer& renderer, DebugRenderer& imRenderer, const 
         recursionStack.pop();
 
         const PoseTreeNode& node = poseTree[nodeIdx];
-        if (!node.isEndSite) {
+        if (!node.isEndSite()) {
             // render bone related to current node (we exclude root node)
             if (nodeIdx != 0 && glm::length(node.offset) > glm::epsilon<float>()) {
                 glm::vec3 a = glm::normalize(node.offset);
@@ -116,7 +116,7 @@ renderMotionClip(PBRenderer& renderer, DebugRenderer& imRenderer, const glmx::po
             }
         }
 
-        if (!node.isEndSite) {
+        if (!node.isEndSite()) {
             if (nodeIdx == 0) {
                 curTransform = curTransform * glm::mat4_cast(poseState.q[nodeIdx]);
             }
@@ -164,7 +164,7 @@ void renderMotionClipComplex(PBRenderer& renderer, DebugRenderer& imRenderer, co
             }
         }
 
-        if (!node.isEndSite) {
+        if (!node.isEndSite()) {
             if (nodeIdx == 0) {
                 curTransform = curTransform * glm::mat4_cast(poseState.q[nodeIdx]);
             }

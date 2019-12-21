@@ -57,7 +57,7 @@ MatrixXf calcEulerJacobian(
 
 glmx::transform calcFK(const PoseTree &poseTree, const glmx::pose &pose, uint32_t mIdx) {
     uint32_t i = mIdx;
-    if (poseTree[i].isEndSite) {
+    if (poseTree[i].isEndSite()) {
         i = poseTree[i].parent;
     }
 
@@ -65,7 +65,7 @@ glmx::transform calcFK(const PoseTree &poseTree, const glmx::pose &pose, uint32_
 
     while (true) {
         auto& node = poseTree[i];
-        if (poseTree[i].isEndSite) {
+        if (poseTree[i].isEndSite()) {
             t = glmx::transform(node.offset) * t;
         }
         else {
@@ -94,7 +94,7 @@ std::vector<glmx::transform> calcFK(const PoseTree& poseTree, const glmx::pose& 
         recursionStack.pop();
 
         auto& node = poseTree[idx];
-        if (poseTree[idx].isEndSite) {
+        if (poseTree[idx].isEndSite()) {
             transforms[idx] = transforms[parentIdx] * glmx::transform(node.offset);
         } else {
             transforms[idx] = transforms[parentIdx] * glmx::transform(node.offset, pose.q[idx]);
@@ -120,7 +120,7 @@ std::vector<glmx::transform> calcFK(const PoseTree& poseTree, glm::vec3 rootPos,
         recursionStack.pop();
 
         auto& node = poseTree[idx];
-        if (poseTree[idx].isEndSite) {
+        if (poseTree[idx].isEndSite()) {
             transforms[idx] = transforms[parentIdx] * glmx::transform(node.offset);
         } else {
             glm::quat q = glmx::eulerToQuat({poseEuler[3*idx], poseEuler[3*idx+1], poseEuler[3*idx+2]}, EulOrdXYZs);
