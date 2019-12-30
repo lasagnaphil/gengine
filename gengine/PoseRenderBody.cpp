@@ -36,36 +36,37 @@ void renderMotionClip(PhongRenderer& renderer, DebugRenderer& imRenderer, const 
         recursionStack.pop();
 
         const PoseTreeNode& node = poseTree[nodeIdx];
-        if (!node.isEndSite()) {
-            // render bone related to current node (we exclude root node)
-            if (nodeIdx != 0 && glm::length(node.offset) > glm::epsilon<float>()) {
-                glm::vec3 a = glm::normalize(node.offset);
-                glm::vec3 b = {0, 1, 0};
-                glm::mat4 initialRot, initialTrans;
-                if (node.offset.y >= 0) {
-                    initialRot = glmx::rotMatrixBetweenVecs(a, b);
-                    initialTrans = glm::translate(glm::vec3{0.0f, glm::length(node.offset)/2, 0.0f});
-                }
-                else {
-                    initialRot = glmx::rotMatrixBetweenVecs(a, -b);
-                    initialTrans = glm::translate(glm::vec3{0.0f, -glm::length(node.offset)/2, 0.0f});
-                }
-                glm::mat4 initialBoneTransform = initialRot * initialTrans;
-                glm::mat4 T = curTransform * initialBoneTransform;
 
-                if (body.meshes[nodeIdx]) {
-                    renderer.queueRender(PhongRenderCommand {
-                            body.meshes[nodeIdx],
-                            body.materials[nodeIdx],
-                            T
-                    });
-                }
+        // render bone related to current node (we exclude root node)
+        if (nodeIdx != 0) {
+            glm::vec3 a = glm::normalize(node.offset);
+            glm::vec3 b = {0, 1, 0};
+            glm::mat4 initialRot, initialTrans;
+            if (node.offset.y >= 0) {
+                initialRot = glmx::rotMatrixBetweenVecs(a, b);
+                initialTrans = glm::translate(glm::vec3{0.0f, glm::length(node.offset)/2, 0.0f});
+            }
+            else {
+                initialRot = glmx::rotMatrixBetweenVecs(a, -b);
+                initialTrans = glm::translate(glm::vec3{0.0f, -glm::length(node.offset)/2, 0.0f});
+            }
+            glm::mat4 initialBoneTransform = initialRot * initialTrans;
+            glm::mat4 T = curTransform * initialBoneTransform;
 
-                if (debug) {
-                    imRenderer.drawAxisTriad(T, 0.02f, 0.2f, false);
-                }
+            if (body.meshes[nodeIdx]) {
+                renderer.queueRender(PhongRenderCommand {
+                        body.meshes[nodeIdx],
+                        body.materials[nodeIdx],
+                        T
+                });
             }
 
+            if (debug) {
+                imRenderer.drawAxisTriad(T, 0.02f, 0.2f, false);
+            }
+        }
+
+        if (!node.isEndSite()) {
             curTransform = curTransform * glm::translate(node.offset) * glm::mat4_cast(poseState.q[nodeIdx]);
             for (auto childID : node.childJoints) {
                 recursionStack.push({childID, curTransform});
@@ -88,7 +89,7 @@ renderMotionClip(PBRenderer& renderer, DebugRenderer& imRenderer, const glmx::po
         const PoseTreeNode& node = poseTree[nodeIdx];
 
         // render bone related to current node (we exclude root node)
-        if (nodeIdx != 0 && glm::length(node.offset) > glm::epsilon<float>()) {
+        if (nodeIdx != 0) {
             glm::vec3 a = glm::normalize(node.offset);
             glm::vec3 b = {0, 1, 0};
             glm::mat4 initialRot, initialTrans;
