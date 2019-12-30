@@ -15,45 +15,34 @@ struct PoseTreeNode {
     glm::vec3 offset;
     uint32_t parent;
     std::vector<uint32_t> childJoints;
-    bool isEndSite = false;
 
     bool isRoot() const { return parent == 0; }
+    bool isEndSite() const { return childJoints.size() == 0; }
 };
 
 struct PoseTree {
     std::vector<PoseTreeNode> allNodes;
+    std::unordered_map<std::string, uint32_t> nodeNameMap;
 
     uint32_t numJoints = 0;
     uint32_t numNodes = 0;
 
-    // Creates a pose tree from a node list.
-    // It automatically fills childJoints field, so you don't have to specify it.
-    static PoseTree fromNodeList(std::vector<PoseTreeNode>& nodes) {
-        PoseTree tree;
-        tree.allNodes = nodes;
-        for (uint32_t nodeIdx = 1; nodeIdx < nodes.size(); nodeIdx++) {
-            tree.numNodes++;
-            auto& node = tree[nodeIdx];
-            if (node.isEndSite) {
-                tree.numJoints++;
-                tree[node.parent].childJoints.push_back(nodeIdx);
-            }
+    void constructNodeNameMapping() {
+        for (int i = 0; i < allNodes.size(); i++) {
+            nodeNameMap[allNodes[i].name] = i;
         }
-        return tree;
     }
 
     const PoseTreeNode& operator[](uint32_t idx) const { return allNodes[idx]; }
     PoseTreeNode& operator[](uint32_t idx) { return allNodes[idx]; }
 
     const PoseTreeNode* operator[](const std::string& name) const {
-        auto it = std::find_if(allNodes.begin(), allNodes.end(), [&](const PoseTreeNode& node) {
-            return node.name == name;
-        });
-        if (it == allNodes.end()) {
-            return nullptr;
+        auto it = nodeNameMap.find(name);
+        if (it != nodeNameMap.end()) {
+            return &allNodes[it->second];
         }
         else {
-            return it.base();
+            return nullptr;
         }
     }
 
@@ -62,14 +51,12 @@ struct PoseTree {
     }
 
     uint32_t findIdx(const std::string& name) const {
-        auto it = std::find_if(allNodes.begin(), allNodes.end(), [&](const PoseTreeNode& node) {
-            return node.name == name;
-        });
-        if (it == allNodes.end()) {
-            return (uint32_t) -1;
+        auto it = nodeNameMap.find(name);
+        if (it != nodeNameMap.end()) {
+            return it->second;
         }
         else {
-            return it - allNodes.begin();
+            return (uint32_t)-1;
         }
     }
 

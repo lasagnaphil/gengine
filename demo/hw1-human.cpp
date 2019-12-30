@@ -71,6 +71,7 @@ public:
 
         // Load BVH file, only copy the tree structure of the human
         MotionClipData tmpBvh = MotionClipData::loadFromFile("resources/cmu_07_02_1.bvh", 0.01f);
+        tmpBvh.removeCMUPhantomJoints();
         poseTree = tmpBvh.poseTree;
 
         // Create empty pose
@@ -79,8 +80,8 @@ public:
 
         glmx::pose p1 = basePose, p2 = basePose, p3 = basePose, p4 = basePose;
 
-        auto LHipJointIdx = poseTree.findIdx("LHipJoint");
-        auto RHipJointIdx = poseTree.findIdx("RHipJoint");
+        auto LHipJointIdx = poseTree.findIdx("LeftUpLeg");
+        auto RHipJointIdx = poseTree.findIdx("RightUpLeg");
         auto LeftShoulderIdx = poseTree.findIdx("LeftShoulder");
         auto RightShoulderIdx = poseTree.findIdx("RightShoulder");
         auto LeftArmIdx = poseTree.findIdx("LeftArm");

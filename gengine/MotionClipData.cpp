@@ -69,7 +69,6 @@ MotionClipData MotionClipData::loadFromFile(const std::string& filename, float s
         switch (state) {
             case ParseState::Root: {
                 PoseTreeNode curJoint;
-                curJoint.isEndSite = false;
                 curJointID = 0; // root joint id
 
                 curJoint.parent = 0;
@@ -120,7 +119,6 @@ MotionClipData MotionClipData::loadFromFile(const std::string& filename, float s
             }
             case ParseState::Joint: {
                 PoseTreeNode childJoint;
-                childJoint.isEndSite = false;
                 childJointID = data.poseTree.allNodes.size();
                 PoseTreeNode& curJoint = data.poseTree.allNodes[curJointID];
 
@@ -176,7 +174,6 @@ MotionClipData MotionClipData::loadFromFile(const std::string& filename, float s
             }
             case ParseState::EndSite: {
                 PoseTreeNode childJoint;
-                childJoint.isEndSite = true;
                 curJointID = childJointID;
                 uint32_t endSiteID = endSites.size();
                 PoseTreeNode& curJoint = data.poseTree.allNodes[curJointID];
@@ -291,6 +288,8 @@ MotionClipData MotionClipData::loadFromFile(const std::string& filename, float s
         }
     }
 
+    data.poseTree.constructNodeNameMapping();
+
     return data;
 }
 
@@ -300,7 +299,7 @@ void MotionClipData::print() const {
 
 void MotionClipData::printRecursive(uint32_t jointID, int depth) const {
     const PoseTreeNode& joint = poseTree.allNodes[jointID];
-    if (!joint.isEndSite) {
+    if (!joint.isEndSite()) {
         for (int i = 0; i < depth; i++) { std::cout << "    "; }
         std::cout << "Name: " << joint.name << std::endl;
         for (int i = 0; i < depth; i++) { std::cout << "    "; }
@@ -365,7 +364,7 @@ void MotionClipData::saveToFileRecursive(uint32_t jointIdx, std::ostream& ofs, i
             case EulOrdZYZs: ofs << " Zrotation Yrotation Zrotation" << endl; break;
         }
     }
-    else if (!node.isEndSite) {
+    else if (!node.isEndSite()) {
         ofs << tabs << "JOINT " << node.name << endl;
         ofs << tabs << "{" << endl;
         ofs << tabs << "\tOFFSET " << node.offset.x << " " << node.offset.y << " " << node.offset.z << endl;
@@ -406,4 +405,78 @@ void MotionClipData::switchZtoYup() {
     for (auto& node : poseTree.allNodes) {
         node.offset = glmx::Rx(-M_PI/2) * node.offset;
     }
+}
+
+void MotionClipData::removeJoint(uint32_t nodeIdx) {
+    if (nodeIdx == (uint32_t)-1) {
+        fprintf(stderr, "Tring to remove invalid joint!\n");
+    }
+    assert(poseTree[nodeIdx].childJoints.size() == 1 && "Only joints with one child can be removed");
+    uint32_t parentIdx = poseTree[nodeIdx].parent;
+    uint32_t childIdx = poseTree[nodeIdx].childJoints[0];
+
+    auto& node = poseTree[nodeIdx];
+    auto& parentNode = poseTree[parentIdx];
+    auto& childNode = poseTree[childIdx];
+    std::string nodeName = node.name;
+
+    poseTree[childIdx].parent = parentIdx;
+
+    for (uint32_t& i : parentNode.childJoints) {
+        if (i == nodeIdx) {
+            i = childIdx;
+            break;
+        }
+    }
+
+    poseTree.numJoints--;
+    poseTree.numNodes--;
+    poseTree.allNodes.erase(poseTree.allNodes.begin() + nodeIdx, poseTree.allNodes.begin() + nodeIdx+1);
+
+    for (auto& pose : poseStates) {
+        glm::quat q = pose.q[nodeIdx];
+        pose.q[childIdx] = q * pose.q[childIdx];
+        pose.q.erase(pose.q.begin() + nodeIdx, pose.q.begin() + nodeIdx+1);
+    }
+
+    for (auto& node : poseTree.allNodes) {
+        if (node.parent > nodeIdx) {
+            node.parent--;
+        }
+        for (uint32_t& i : node.childJoints) {
+            if (i > nodeIdx) {
+                i--;
+            }
+        }
+    }
+
+    poseTree.nodeNameMap.erase(nodeName);
+    for (auto& [key, i] : poseTree.nodeNameMap) {
+        if (i > nodeIdx) {
+            i--;
+        }
+    }
+}
+
+void MotionClipData::removeJoint(const std::string& nodeName) {
+    uint32_t nodeIdx = poseTree.findIdx(nodeName);
+    if (nodeIdx != (uint32_t)-1) {
+        removeJoint(nodeIdx);
+    }
+    else {
+        fprintf(stderr, "Trying to remove invalid joint %s!\n", nodeName.c_str());
+    }
+}
+
+void MotionClipData::removeCMUPhantomJoints() {
+    removeJoint("LHipJoint");
+    removeJoint("RHipJoint");
+    removeJoint("LowerBack");
+    removeJoint("Neck");
+    removeJoint("LeftShoulder");
+    removeJoint("LeftFingerBase");
+    removeJoint("LThumb");
+    removeJoint("RightShoulder");
+    removeJoint("RightFingerBase");
+    removeJoint("RThumb");
 }

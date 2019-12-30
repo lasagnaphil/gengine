@@ -33,10 +33,10 @@ PBRMaterial::quick(const std::string &albedo, const std::string &metallic, const
 
 PBRenderer::PBRenderer(Camera *camera) :
         camera(camera) {
-
 }
 
 void PBRenderer::init() {
+
     pbrShader = Shaders::pbr;
     depthShader = Shaders::depth;
 

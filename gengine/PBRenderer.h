@@ -11,6 +11,7 @@
 #include "Shader.h"
 #include "Texture.h"
 #include "Mesh.h"
+#include "Colors.h"
 
 #include <array>
 #include <glmx/rect.h>
@@ -81,12 +82,19 @@ public:
 
     void renderImGui();
 
-    PBRDirLight dirLight;
+    PBRDirLight dirLight = {
+            glm::normalize(glm::vec3 {2.0f, -3.0f, 2.0f}),
+            {1.0f, 1.0f, 1.0f},
+            true
+    };
+
     std::array<PBRPointLight, NUM_PBR_POINT_LIGHTS> pointLights;
     std::array<PBRSpotLight, NUM_PBR_SPOT_LIGHTS> spotLights;
 
-    glmx::box dirLightProjVolume;
-    glm::ivec2 shadowFramebufferSize;
+    glmx::box dirLightProjVolume = {
+            {-10.f, -10.f, 0.f}, {10.f, 10.f, 1000.f}
+    };
+    glm::ivec2 shadowFramebufferSize = {2048, 2048};
 
 private:
     void renderPass(Ref<Shader> shader);
