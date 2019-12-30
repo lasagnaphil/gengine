@@ -63,7 +63,13 @@ namespace glmx {
         return glm::normalize(q);
     }
 
+    inline glm::vec3 ex() { return glm::vec3(1, 0, 0); }
+    inline glm::vec3 ey() { return glm::vec3(0, 1, 0); }
+    inline glm::vec3 ez() { return glm::vec3(0, 0, 1); }
 
+    inline glm::quat Rx(float theta) { return glm::angleAxis(theta, ex()); }
+    inline glm::quat Ry(float theta) { return glm::angleAxis(theta, ey()); }
+    inline glm::quat Rz(float theta) { return glm::angleAxis(theta, ez()); }
 }
 
 #endif //GENGINE_QUAT_H

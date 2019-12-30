@@ -21,6 +21,8 @@
 #include <glm/ext/quaternion_trigonometric.hpp>
 #include <glmx/euler.h>
 
+#include "PoseTree.h"
+
 /*
  * The mathmatical formulation of the following classes are at:
  * http://mrl.snu.ac.kr/publications/RotationAndOrientation.pdf
@@ -184,7 +186,7 @@ namespace glmx {
         return d;
     }
 
-    void renderImGui(const pose& pose);
+    void renderPoseImGui(pose& pose, const PoseTree& poseTree);
 }
 
 #endif //PHYSICS_BENCHMARKS_POSE_H

@@ -7,7 +7,9 @@
 #include "Utils.h"
 #include <imgui.h>
 
-void renderPoseImGui(const glmx::pose& pose, const PoseTree& poseTree) {
+namespace glmx {
+
+void renderPoseImGui(glmx::pose& pose, const PoseTree& poseTree) {
     std::stack<uint32_t> recursionStack;
     recursionStack.push(0);
 
@@ -23,6 +25,6 @@ void renderPoseImGui(const glmx::pose& pose, const PoseTree& poseTree) {
             ImGui::TreePop();
         }
     }
-
 }
 
+}

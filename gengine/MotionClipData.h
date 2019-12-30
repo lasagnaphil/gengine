@@ -55,6 +55,8 @@ struct MotionClipData {
 
     void saveToFile(const std::string& filename, int eulerOrd);
 
+    void switchZtoYup();
+
 private:
     void printRecursive(uint32_t jointID, int depth) const;
     void saveToFileRecursive(uint32_t jointID, std::ostream& ofs, int depth, int eulerOrd);

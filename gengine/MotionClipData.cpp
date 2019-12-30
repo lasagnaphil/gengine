@@ -395,3 +395,15 @@ void MotionClipData::saveToFileRecursive(uint32_t jointIdx, std::ostream& ofs, i
     }
     ofs << tabs << "}" << endl;
 }
+
+void MotionClipData::switchZtoYup() {
+    for (auto& pose : poseStates) {
+        pose.v = glmx::Rx(-M_PI/2) * pose.v;
+        for (int i = 0; i < pose.q.size(); i++) {
+            pose.q[i] = glmx::Rx(-M_PI/2) * pose.q[i] * glmx::Rx(M_PI/2);
+        }
+    }
+    for (auto& node : poseTree.allNodes) {
+        node.offset = glmx::Rx(-M_PI/2) * node.offset;
+    }
+}
