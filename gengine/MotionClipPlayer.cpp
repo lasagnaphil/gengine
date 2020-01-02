@@ -6,42 +6,19 @@
 
 #include "GizmosRenderer.h"
 
-void MotionClipPlayer::init() {
-    std::vector<glm::vec3> rootPositions(data->numFrames);
-    for (int i = 0; i < data->numFrames; i++) {
-        rootPositions[i] = data->getRootPos(i);
-    }
-
-    trajectoryMesh = Resources::make<LineMesh>(rootPositions);
-    trajectoryMesh->init();
-
-    trajectoryMat = Resources::make<LineMaterial>();
-    trajectoryMat->drawLines = true;
-    trajectoryMat->drawPoints = true;
-    trajectoryMat->lineColor = {1.0f, 0.0f, 0.0f, 1.0f};
-    trajectoryMat->lineType = GL_LINE_STRIP;
-    trajectoryMat->lineWidth = 2.0f;
-    trajectoryMat->pointColor = {1.0f, 0.0f, 0.0f, 1.0f};
-    trajectoryMat->pointSize = 4.0f;
-}
-
 void MotionClipPlayer::update(float dt) {
     static float frameUpdateLag = 0.0f;
     static float motionUpdateLag = 0.0f;
     if (isPlaying) {
         frameUpdateLag += dt;
-        while (frameUpdateLag >= data->frameTime) {
+        while (frameUpdateLag >= getFrameTime()) {
             nextFrame();
-            frameUpdateLag -= data->frameTime;
+            frameUpdateLag -= getFrameTime();
         }
     }
     else {
         frameUpdateLag = 0.0f;
     }
-}
-
-void MotionClipPlayer::queueGizmosRender(GizmosRenderer &renderer, glm::mat4 modelMatrix) {
-    renderer.queueLine({trajectoryMesh, trajectoryMat, modelMatrix});
 }
 
 void MotionClipPlayer::renderImGui() {
@@ -68,9 +45,13 @@ void MotionClipPlayer::renderImGui() {
         stop();
     }
 
-    if (ImGui::SliderInt("Frame##PoseMesh frame slider", &currentFrameIdx, 0, data->numFrames - 1)) {
-        shouldUpdate = true;
-    }
+    ImGui::SliderInt("Frame##PoseMesh frame slider", &currentFrameIdx, 0, getNumFrames() - 1);
 
     ImGui::End();
+}
+
+void BVHMotionClipPlayer::renderImGui() {
+    MotionClipPlayer::renderImGui();
+
+    // TODO: Display BVH joint data
 }

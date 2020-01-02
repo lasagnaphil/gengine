@@ -11,28 +11,16 @@
 struct GizmosRenderer;
 
 struct MotionClipPlayer {
-    MotionClipData* data;
-
+protected:
     int currentFrameIdx = 0;
     bool isPlaying = false;
-    bool shouldUpdate = false;
 
-    Ref<LineMesh> trajectoryMesh;
-    Ref<LineMaterial> trajectoryMat;
+public:
+    virtual uint32_t getNumFrames() = 0;
+    virtual float getFrameTime() = 0;
 
-    MotionClipPlayer() : data(nullptr) {}
-    MotionClipPlayer(MotionClipData* data) : data(data) {}
-
-    void init();
-
-    const glmx::pose& getPoseState() const {
-        assert(currentFrameIdx < data->numFrames);
-        return data->getFrameState(currentFrameIdx);
-    }
-
-    glmx::pose& getPoseState() {
-        assert(currentFrameIdx < data->numFrames);
-        return data->getFrameState(currentFrameIdx);
+    bool playing() {
+        return isPlaying;
     }
 
     void play() {
@@ -51,29 +39,66 @@ struct MotionClipPlayer {
     void previousFrame() {
         currentFrameIdx--;
         if (currentFrameIdx == -1) {
-            currentFrameIdx = data->numFrames - 1;
+            currentFrameIdx = getNumFrames() - 1;
         }
-        shouldUpdate = true;
     }
 
     void nextFrame() {
         currentFrameIdx++;
-        if (currentFrameIdx >= data->numFrames) {
+        if (currentFrameIdx >= getNumFrames()) {
             currentFrameIdx = 0;
         }
-        shouldUpdate = true;
+    }
+
+    uint32_t getFrameIdx() {
+        return currentFrameIdx;
     }
 
     void setFrame(uint32_t frameIdx) {
-        assert(frameIdx >= 0 && frameIdx < data->numFrames);
+        assert(frameIdx >= 0 && frameIdx < getNumFrames());
         currentFrameIdx = frameIdx;
     }
 
     void update(float dt);
 
-    void queueGizmosRender(GizmosRenderer& renderer, glm::mat4 modelMatrix);
+    virtual void renderImGui();
+};
 
-    void renderImGui();
+struct BVHMotionClipPlayer : public MotionClipPlayer {
+    MotionClipData* clip;
+
+    Ref<LineMesh> trajectoryMesh;
+    Ref<LineMaterial> trajectoryMat;
+
+    BVHMotionClipPlayer(MotionClipData* clip = nullptr) : MotionClipPlayer(), clip(clip) {}
+
+    void setClip(MotionClipData* clip) {
+        this->clip = clip;
+    }
+
+    uint32_t getNumFrames() override {
+        assert(clip);
+        return clip->numFrames;
+    }
+
+    float getFrameTime() override {
+        assert(clip);
+        return clip->frameTime;
+    }
+
+    const glmx::pose& getPoseState() const {
+        assert(clip);
+        assert(currentFrameIdx < clip->numFrames);
+        return clip->getFrameState(currentFrameIdx);
+    }
+
+    glmx::pose& getPoseState() {
+        assert(clip);
+        assert(currentFrameIdx < clip->numFrames);
+        return clip->getFrameState(currentFrameIdx);
+    }
+
+    void renderImGui() override;
 };
 
 #endif //PHYSICS_BENCHMARKS_MOTIONCLIPPLAYER_H

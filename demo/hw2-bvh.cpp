@@ -46,8 +46,7 @@ public:
             std::cerr << "BVH Not Found!" << std::endl;
             exit(1);
         }
-        motionClipPlayer = MotionClipPlayer(&motionClipData);
-        motionClipPlayer.init();
+        motionClipPlayer = BVHMotionClipPlayer(&motionClipData);
 
         // Material of human
         Ref<PhongMaterial> bodyMat = Resources::make<PhongMaterial>();
@@ -80,7 +79,6 @@ public:
         renderMotionClip(phongRenderer, imRenderer, motionClipPlayer.getPoseState(), motionClipData.poseTree, poseRenderBody);
         phongRenderer.render();
 
-        motionClipPlayer.queueGizmosRender(gizmosRenderer, glm::mat4(1.0f));
         gizmosRenderer.render();
 
         phongRenderer.renderImGui();
@@ -92,7 +90,7 @@ public:
 
 private:
     MotionClipData motionClipData;
-    MotionClipPlayer motionClipPlayer;
+    BVHMotionClipPlayer motionClipPlayer;
     PoseRenderBody poseRenderBody;
 
     int frameIdx = 0;
