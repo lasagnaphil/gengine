@@ -63,6 +63,8 @@ struct MotionClipData {
 
     void removeCMUPhantomJoints();
 
+    bool checkValidity();
+
 private:
     void printRecursive(uint32_t jointID, int depth) const;
     void saveToFileRecursive(uint32_t jointID, std::ostream& ofs, int depth, int eulerOrd);

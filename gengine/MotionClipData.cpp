@@ -531,3 +531,13 @@ void MotionClipData::removeCMUPhantomJoints() {
     removeJoint("RightFingerBase");
     removeJoint("RThumb");
 }
+
+bool MotionClipData::checkValidity() {
+    if (!valid) return false;
+    for (auto& node : poseTree.allNodes) {
+        if (std::isnan(node.offset.x) || std::isnan(node.offset.y) || std::isnan(node.offset.z)) {
+            return false;
+        }
+    }
+    return true;
+}
