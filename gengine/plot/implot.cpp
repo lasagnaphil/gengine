@@ -11,6 +11,7 @@
 #include "shaders/plot_point2d.vert.h"
 #include "shaders/plot_point2d.frag.h"
 #include <imgui.h>
+#include <SDL2/SDL_mouse.h>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
@@ -77,7 +78,9 @@ ImPlot2DContext ImPlot2DContext::create(float sizeX, float sizeY) {
     return ctx;
 }
 
-void ImPlot2DContext::show() {
+ImPlot2DResult ImPlot2DContext::show() {
+    ImPlot2DResult res;
+
     // TODO: We should protect this code using a mutex
     //       so that nobody would try to use the image before rendering is complete
     renderFinished = false;
@@ -89,21 +92,21 @@ void ImPlot2DContext::show() {
     glViewport(0, 0, sizeX, sizeY);
 
     // Calculate the view mat to show all points
-    float minX = std::numeric_limits<float>::max();
-    float maxX = std::numeric_limits<float>::min();
-    float minY = std::numeric_limits<float>::max();
-    float maxY = std::numeric_limits<float>::min();
+    bounds.min.x = std::numeric_limits<float>::max();
+    bounds.max.x = std::numeric_limits<float>::min();
+    bounds.min.y = std::numeric_limits<float>::max();
+    bounds.max.y = std::numeric_limits<float>::min();
     for (auto& point : points2D) {
-        if (point.pos.x < minX) minX = point.pos.x;
-        if (point.pos.x > maxX) maxX = point.pos.x;
-        if (point.pos.y < minY) minY = point.pos.y;
-        if (point.pos.y > maxY) maxY = point.pos.y;
+        if (point.pos.x < bounds.min.x) bounds.min.x = point.pos.x;
+        if (point.pos.x > bounds.max.x) bounds.max.x = point.pos.x;
+        if (point.pos.y < bounds.min.y) bounds.min.y = point.pos.y;
+        if (point.pos.y > bounds.max.y) bounds.max.y = point.pos.y;
     }
-    float borderX = 0.1f * (maxX - minX);
-    float borderY = 0.1f * (maxY - minY);
-    minX -= borderX; maxX += borderX; minY -= borderY; maxY += borderY;
+    float borderX = 0.1f * (bounds.max.x - bounds.min.x);
+    float borderY = 0.1f * (bounds.max.y - bounds.min.y);
+    bounds.min.x -= borderX; bounds.max.x += borderX; bounds.min.y -= borderY; bounds.max.y += borderY;
 
-    glm::vec2 scale = {sizeX / (maxX - minX), sizeY / (maxY - minY)};
+    glm::vec2 scale = {sizeX / (bounds.max.x - bounds.min.x), sizeY / (bounds.max.y - bounds.min.y)};
     if (scale.x == 0.0f) {
         scale.x = 1.0f;
     }
@@ -112,7 +115,7 @@ void ImPlot2DContext::show() {
     }
     viewMat = glm::mat4(1.0f);
     viewMat = glm::scale(viewMat, {scale.x, scale.y, 1.0f});
-    viewMat = glm::translate(viewMat, {-minX, -minY, 0});
+    viewMat = glm::translate(viewMat, {-bounds.min.x, -bounds.min.y, 0});
 
     point2d_shader->use();
     point2d_shader->setMat4("view", viewMat);
@@ -130,10 +133,45 @@ void ImPlot2DContext::show() {
     auto displaySize = ImGui::GetIO().DisplaySize;
     glViewport(0, 0, displaySize.x, displaySize.y);
 
+    // Now for the imgui part
+    ImGui::Image((void*)tex, ImVec2(sizeX, sizeY));
+
+    ImVec2 mouse = ImGui::GetIO().MousePos;
+    auto frameMin = ImGui::GetItemRectMin();
+    auto frameMax = ImGui::GetItemRectMax();
+    float relMouseX = (mouse.x - frameMin.x) / (frameMax.x - frameMin.x);
+    float screenToFrameX = (bounds.max.x - bounds.min.x) / sizeX;
+    float screenToFrameY = (bounds.max.y - bounds.min.y) / sizeY;
+    float mX = bounds.min.x + screenToFrameX * (mouse.x - frameMin.x);
+    float mY = bounds.max.y - screenToFrameY * (mouse.y - frameMin.y);
+
+    int selected = -1;
+    float distMin2 = std::numeric_limits<float>::max();
+    for (int i = 0; i < points2D.size(); i++) {
+        float x = points2D[i].pos.x;
+        float y = points2D[i].pos.y;
+        float dist2 = (x - mX) * (x - mX) + (y - mY) * (y - mY);
+        if (dist2 < distMin2) {
+            distMin2 = dist2;
+            selected = i;
+        }
+    }
+    float threshold = grabRadius * grabRadius * screenToFrameX * screenToFrameY;
+
+    if (selected != -1 && distMin2 < threshold) {
+        ImGui::SetTooltip("(%4.3f, %4.3f)", points2D[selected].pos.x, points2D[selected].pos.y);
+        if (ImGui::IsItemClicked()) {
+            res.clickedPointIdx = selected;
+        }
+    }
+
     // clear the buffers after rendering is finished
     clear();
 
     renderFinished = true;
+
+    res.mousePos = {mX, mY};
+    return res;
 }
 
 void ImPlot2DContext::saveToImage(const std::string& filename) {
@@ -143,19 +181,5 @@ void ImPlot2DContext::saveToImage(const std::string& filename) {
     stbi_write_png(filename.c_str(), sizeX, sizeY, 3, pixels, 3*sizeX);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     delete[] pixels;
-}
-
-ImPlot2DMouseResult ImPlot2DContext::mouseClick(int x, int y, uint8_t mouseButton) {
-    // TODO
-    return ImPlot2DMouseResult();
-}
-
-ImPlot2DMouseResult ImPlot2DContext::mouseHover(int x, int y) {
-    // TODO
-    return ImPlot2DMouseResult();
-}
-
-void ImPlot2DContext::mouseDrag(int relX, int relY) {
-    // TODO
 }
 

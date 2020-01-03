@@ -11,6 +11,7 @@
 #include <glm/vec3.hpp>
 #include <glm/mat4x4.hpp>
 
+#include "glmx/rect.h"
 #include "Colors.h"
 #include "Shader.h"
 
@@ -30,21 +31,17 @@ struct Line2D {
     float pointSize;
 };
 
-struct ImPlot2DMouseResult {
-    // Position of mouse in the plot view
-    glm::vec2 pos;
-
-    // If point clicked: the index of the clicked point
-    std::optional<uint32_t> pointIdx;
-
-    // If line clicked: the (line index, point index) of the clicked line plot
-    std::optional<std::tuple<uint32_t, uint32_t>> lineIdx;
+struct ImPlot2DResult {
+    glm::vec2 mousePos;
+    std::optional<uint32_t> clickedPointIdx = {};
+    std::optional<uint32_t> clickedLineIdx = {};
 };
 
 struct ImPlot2DContext {
     std::vector<Point2D> points2D;
     std::vector<Line2D> lines2D;
 
+    glmx::rect bounds;
     glm::mat4 viewMat;
     glm::mat4 projMat;
 
@@ -64,6 +61,8 @@ struct ImPlot2DContext {
     uint32_t tex = 0;
     float sizeX;
     float sizeY;
+
+    float grabRadius = 4.0f;
 
     bool renderFinished = false;
 
@@ -127,17 +126,9 @@ struct ImPlot2DContext {
 
     // Methods related to rendering
 
-    void show();
+    ImPlot2DResult show();
 
     void saveToImage(const std::string& filename);
-
-    // Methods related to mouse events
-
-    ImPlot2DMouseResult mouseClick(int x, int y, uint8_t mouseButton);
-
-    ImPlot2DMouseResult mouseHover(int x, int y);
-
-    void mouseDrag(int relX, int relY);
 };
 
 }
