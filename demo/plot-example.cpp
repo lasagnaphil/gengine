@@ -21,6 +21,8 @@ struct ExamplePlotApp : public App {
     }
 
     void render() override {
+        std::vector<float> X = {10, 20, 30, 40, 50};
+        std::vector<float> Y = {10, 30, 60, 100, 150};
         plt.plotPoints(X, Y, colors::Blue, 5.0f);
         plt.show();
 
@@ -48,9 +50,6 @@ struct ExamplePlotApp : public App {
 
         ImGui::End();
     }
-
-    std::vector<float> X = {10, 20, 30, 40, 50};
-    std::vector<float> Y = {10, 30, 60, 100, 150};
 };
 
 int main() {

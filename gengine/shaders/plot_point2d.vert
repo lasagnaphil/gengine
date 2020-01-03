@@ -10,7 +10,7 @@ uniform mat4 view;
 uniform mat4 proj;
 
 void main() {
-    gl_Position = proj * view * vec4(inPos.x, inPos.y, 0.0, 1.0);
+    gl_Position = proj * view * vec4(inPos, 0.0, 1.0);
     gl_PointSize = inSize;
     color = inColor;
 }

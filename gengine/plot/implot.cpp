@@ -10,6 +10,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "shaders/plot_point2d.vert.h"
 #include "shaders/plot_point2d.frag.h"
+#include <imgui.h>
 
 using namespace plt;
 
@@ -82,6 +83,33 @@ void ImPlot2DContext::show() {
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
+    glViewport(0, 0, sizeX, sizeY);
+
+    // Calculate the view mat to show all points
+    float minX = std::numeric_limits<float>::max();
+    float maxX = std::numeric_limits<float>::min();
+    float minY = std::numeric_limits<float>::max();
+    float maxY = std::numeric_limits<float>::min();
+    for (auto& point : points2D) {
+        if (point.pos.x < minX) minX = point.pos.x;
+        if (point.pos.x > maxX) maxX = point.pos.x;
+        if (point.pos.y < minY) minY = point.pos.y;
+        if (point.pos.y > maxY) maxY = point.pos.y;
+    }
+    float borderX = 0.1f * (maxX - minX);
+    float borderY = 0.1f * (maxY - minY);
+    minX -= borderX; maxX += borderX; minY -= borderY; maxY += borderY;
+
+    glm::vec2 scale = {sizeX / (maxX - minX), sizeY / (maxY - minY)};
+    if (scale.x == 0.0f) {
+        scale.x = 1.0f;
+    }
+    if (scale.y == 0.0f) {
+        scale.y = 1.0f;
+    }
+    viewMat = glm::mat4(1.0f);
+    viewMat = glm::scale(viewMat, {scale.x, scale.y, 1.0f});
+    viewMat = glm::translate(viewMat, {-minX, -minY, 0});
 
     point2d_shader->use();
     point2d_shader->setMat4("view", viewMat);
@@ -96,6 +124,8 @@ void ImPlot2DContext::show() {
     glBindVertexArray(0);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    auto displaySize = ImGui::GetIO().DisplaySize;
+    glViewport(0, 0, displaySize.x, displaySize.y);
 
     // clear the buffers after rendering is finished
     clear();
