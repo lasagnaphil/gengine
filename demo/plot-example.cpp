@@ -30,7 +30,7 @@ struct ExamplePlotApp : public App {
         ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
         ImGui::Begin("ImPlotApp");
 
-        ImGui::Image((void*)plt.tex, ImVec2(plt.sizeX, plt.sizeY), ImVec2(0, 1), ImVec2(1, 0));
+        ImGui::Image((void*)plt.tex, ImVec2(plt.sizeX, plt.sizeY));
 
         /*
         auto mousePos = ImGui::GetMousePos();
@@ -50,9 +50,14 @@ struct ExamplePlotApp : public App {
 
         ImGui::End();
     }
+
+    void release() override {
+        plt.saveToImage("graph.png");
+    }
 };
 
 int main() {
     auto app = ExamplePlotApp();
     app.start();
+    app.release();
 }

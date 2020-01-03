@@ -12,6 +12,9 @@
 #include "shaders/plot_point2d.frag.h"
 #include <imgui.h>
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
 using namespace plt;
 
 ImPlot2DContext ImPlot2DContext::create(float sizeX, float sizeY) {
@@ -68,7 +71,7 @@ ImPlot2DContext ImPlot2DContext::create(float sizeX, float sizeY) {
     ctx.point2d_shader = Resources::make<Shader>();
     ctx.point2d_shader->compileFromString(plot_point2d_vert_shader, plot_point2d_frag_shader);
 
-    ctx.projMat = glm::ortho(0.0f, sizeX, 0.0f, sizeY, -1.0f, 1.0f);
+    ctx.projMat = glm::ortho(0.0f, sizeX, sizeY, 0.0f, -1.0f, 1.0f);
     ctx.viewMat = glm::mat4(1.0f);
 
     return ctx;
@@ -134,7 +137,12 @@ void ImPlot2DContext::show() {
 }
 
 void ImPlot2DContext::saveToImage(const std::string& filename) {
-    // TODO
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    GLubyte* pixels = new GLubyte[int(sizeX) * int(sizeY) * 3];
+    glReadPixels(0, 0, sizeX, sizeY, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+    stbi_write_png(filename.c_str(), sizeX, sizeY, 3, pixels, 3*sizeX);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    delete[] pixels;
 }
 
 ImPlot2DMouseResult ImPlot2DContext::mouseClick(int x, int y, uint8_t mouseButton) {
