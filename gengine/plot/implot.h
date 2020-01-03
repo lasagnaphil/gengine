@@ -12,6 +12,7 @@
 #include <glm/mat4x4.hpp>
 
 #include "Colors.h"
+#include "Shader.h"
 
 namespace plt {
 
@@ -45,9 +46,20 @@ struct ImPlot2DContext {
     std::vector<Line2D> lines2D;
 
     glm::mat4 viewMat;
+    glm::mat4 projMat;
 
     uint32_t fbo = 0;
     uint32_t rbo = 0;
+
+    uint32_t pointVAO;
+    uint32_t pointVBO;
+
+    uint32_t lineVAO;
+    uint32_t lineVBO;
+    std::vector<glm::vec2> entireLinePos;
+    std::vector<uint32_t> lineStartIndices;
+
+    Ref<Shader> point2d_shader;
 
     uint32_t tex = 0;
     float sizeX;

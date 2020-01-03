@@ -22,12 +22,11 @@ struct ImPlotApp : public App {
     }
 
     void update(float dt) override {
-
     }
 
     void render() override {
         ImGui::SetNextWindowPos(ImVec2(0, 0));
-        ImGui::SetNextWindowSize(ImGui::GetWindowSize());
+        ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
         ImGui::Begin("ImPlotApp");
         if (ctx.renderFinished) {
             ImGui::Image((void*)ctx.tex, ImVec2(ctx.sizeX, ctx.sizeY));

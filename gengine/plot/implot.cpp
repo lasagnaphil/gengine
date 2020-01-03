@@ -6,6 +6,10 @@
 
 #include <glad/glad.h>
 #include <fmt/core.h>
+#include <Shader.h>
+#include <glm/gtc/matrix_transform.hpp>
+#include "shaders/plot_point2d.vert.h"
+#include "shaders/plot_point2d.frag.h"
 
 using namespace plt;
 
@@ -14,6 +18,7 @@ ImPlot2DContext ImPlot2DContext::create(float sizeX, float sizeY) {
     ctx.sizeX = sizeX;
     ctx.sizeY = sizeY;
 
+    // Create framebuffer and framebuffer texture
     glGenFramebuffers(1, &ctx.fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, ctx.fbo);
 
@@ -40,6 +45,31 @@ ImPlot2DContext ImPlot2DContext::create(float sizeX, float sizeY) {
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+    // Create vaos and vbos for point / line
+
+    glGenVertexArrays(1, &ctx.pointVAO);
+    glBindVertexArray(ctx.pointVAO);
+
+    glGenBuffers(1, &ctx.pointVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, ctx.pointVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Point2D) * 1024, nullptr, GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Point2D), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Point2D), (void*)offsetof(Point2D, color));
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(Point2D), (void*)offsetof(Point2D, size));
+
+    glBindVertexArray(0);
+
+    // Compile shaders
+
+    ctx.point2d_shader = Resources::make<Shader>();
+    ctx.point2d_shader->compileFromString(plot_point2d_vert_shader, plot_point2d_frag_shader);
+
+    ctx.projMat = glm::ortho(0.0f, sizeX, 0.0f, sizeY, -1.0f, 1.0f);
+    ctx.viewMat = glm::mat4(1.0f);
+
     return ctx;
 }
 
@@ -49,11 +79,21 @@ void ImPlot2DContext::show() {
     renderFinished = false;
 
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
 
-    // TODO: actually render all the stuff
+    point2d_shader->use();
+    point2d_shader->setMat4("view", viewMat);
+    point2d_shader->setMat4("proj", projMat);
+
+    glBindBuffer(GL_ARRAY_BUFFER, pointVBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Point2D) * points2D.size(), points2D.data());
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glBindVertexArray(pointVAO);
+    glDrawArrays(GL_POINTS, 0, points2D.size());
+    glBindVertexArray(0);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
