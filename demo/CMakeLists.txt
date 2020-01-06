@@ -38,3 +38,9 @@ add_executable(gengine_demo_hw4_fsm hw4-fsm.cpp)
 target_include_directories(gengine_demo_hw4_fsm PUBLIC gengine)
 target_link_libraries(gengine_demo_hw4_fsm gengine)
 add_dependencies(gengine_demo_hw4_fsm copy_resource_folder)
+
+add_executable(gengine_demo_plot plot-example.cpp)
+target_include_directories(gengine_demo_plot PUBLIC gengine)
+target_link_libraries(gengine_demo_plot gengine)
+add_dependencies(gengine_demo_plot copy_resource_folder)
+

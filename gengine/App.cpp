@@ -70,8 +70,7 @@ void APIENTRY glDebugOutput(GLenum source,
     std::cout << std::endl;
 
     if (severity == GL_DEBUG_SEVERITY_HIGH) {
-        std::cerr << "Quitting program because of error." << std::endl;
-        exit(EXIT_FAILURE);
+        assert(false && "Quitting program because of GL error!");
     }
 }
 
@@ -228,7 +227,6 @@ void App::start() {
         fps = (int)std::roundf(1.f / (duration_cast<Ns>(Clock::now() - current).count() * 1e-9));
     }
 }
-
 
 void App::loadResources() {
 
