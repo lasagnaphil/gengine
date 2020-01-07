@@ -85,37 +85,13 @@ ImPlot2DResult ImPlot2DContext::show() {
     //       so that nobody would try to use the image before rendering is complete
     renderFinished = false;
 
+    if (autoscaleEnabled) { autoscale(); }
+
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
     glViewport(0, 0, sizeX, sizeY);
-
-    // Calculate the view mat to show all points
-    bounds.min.x = std::numeric_limits<float>::max();
-    bounds.max.x = std::numeric_limits<float>::min();
-    bounds.min.y = std::numeric_limits<float>::max();
-    bounds.max.y = std::numeric_limits<float>::min();
-    for (auto& point : points2D) {
-        if (point.pos.x < bounds.min.x) bounds.min.x = point.pos.x;
-        if (point.pos.x > bounds.max.x) bounds.max.x = point.pos.x;
-        if (point.pos.y < bounds.min.y) bounds.min.y = point.pos.y;
-        if (point.pos.y > bounds.max.y) bounds.max.y = point.pos.y;
-    }
-    float borderX = 0.1f * (bounds.max.x - bounds.min.x);
-    float borderY = 0.1f * (bounds.max.y - bounds.min.y);
-    bounds.min.x -= borderX; bounds.max.x += borderX; bounds.min.y -= borderY; bounds.max.y += borderY;
-
-    glm::vec2 scale = {sizeX / (bounds.max.x - bounds.min.x), sizeY / (bounds.max.y - bounds.min.y)};
-    if (scale.x == 0.0f) {
-        scale.x = 1.0f;
-    }
-    if (scale.y == 0.0f) {
-        scale.y = 1.0f;
-    }
-    viewMat = glm::mat4(1.0f);
-    viewMat = glm::scale(viewMat, {scale.x, scale.y, 1.0f});
-    viewMat = glm::translate(viewMat, {-bounds.min.x, -bounds.min.y, 0});
 
     point2d_shader->use();
     point2d_shader->setMat4("view", viewMat);
@@ -139,9 +115,9 @@ ImPlot2DResult ImPlot2DContext::show() {
     ImVec2 mouse = ImGui::GetIO().MousePos;
     auto frameMin = ImGui::GetItemRectMin();
     auto frameMax = ImGui::GetItemRectMax();
-    float relMouseX = (mouse.x - frameMin.x) / (frameMax.x - frameMin.x);
-    float screenToFrameX = (bounds.max.x - bounds.min.x) / sizeX;
-    float screenToFrameY = (bounds.max.y - bounds.min.y) / sizeY;
+    float screenToFrameX = 1.0f / viewMat[0][0];
+    float screenToFrameY = 1.0f / viewMat[1][1];
+    glm::vec4 relMousePos = viewMat * glm::vec4(mouse.x - frameMin.x, mouse.y - frameMin.y, 0.0f, 1.0f);
     float mX = bounds.min.x + screenToFrameX * (mouse.x - frameMin.x);
     float mY = bounds.max.y - screenToFrameY * (mouse.y - frameMin.y);
 
@@ -165,6 +141,42 @@ ImPlot2DResult ImPlot2DContext::show() {
         }
     }
 
+    if (ImGui::IsMouseDragging(1)) {
+        ImVec2 dm = ImGui::GetIO().MouseDelta;
+        float scaleX = 1.0f / viewMat[0][0];
+        float scaleY = 1.0f / viewMat[1][1];
+        bounds.min -= glm::vec2(scaleX * dm.x, -scaleY * dm.y);
+        bounds.max -= glm::vec2(scaleX * dm.x, -scaleY * dm.y);
+        autoscaleEnabled = false;
+    }
+
+    if (ImGui::Button("Auto-scale")) {
+        autoscale();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Zoom in")) {
+        autoscaleEnabled = false;
+        bounds.min = (bounds.min + (bounds.min + bounds.max)/2.0f) / 2.0f;
+        bounds.max = (bounds.max + (bounds.min + bounds.max)/2.0f) / 2.0f;
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Zoom out")) {
+        autoscaleEnabled = false;
+        bounds.min = 2.0f*bounds.min - (bounds.min + bounds.max)/2.0f;
+        bounds.max = 2.0f*bounds.max - (bounds.min + bounds.max)/2.0f;
+    }
+
+    glm::vec2 scale = {sizeX / (bounds.max.x - bounds.min.x), sizeY / (bounds.max.y - bounds.min.y)};
+    if (scale.x == 0.0f) {
+        scale.x = 1.0f;
+    }
+    if (scale.y == 0.0f) {
+        scale.y = 1.0f;
+    }
+    viewMat = glm::mat4(1.0f);
+    viewMat = glm::scale(viewMat, {scale.x, scale.y, 1.0f});
+    viewMat = glm::translate(viewMat, {-bounds.min.x, -bounds.min.y, 0});
+
     // clear the buffers after rendering is finished
     clear();
 
@@ -172,6 +184,26 @@ ImPlot2DResult ImPlot2DContext::show() {
 
     res.mousePos = {mX, mY};
     return res;
+}
+
+void ImPlot2DContext::autoscale() {
+    // Calculate the view mat to show all points
+    bounds.min.x = std::numeric_limits<float>::max();
+    bounds.max.x = std::numeric_limits<float>::min();
+    bounds.min.y = std::numeric_limits<float>::max();
+    bounds.max.y = std::numeric_limits<float>::min();
+    for (auto& point : points2D) {
+        if (point.pos.x < bounds.min.x) bounds.min.x = point.pos.x;
+        if (point.pos.x > bounds.max.x) bounds.max.x = point.pos.x;
+        if (point.pos.y < bounds.min.y) bounds.min.y = point.pos.y;
+        if (point.pos.y > bounds.max.y) bounds.max.y = point.pos.y;
+    }
+    float borderX = 0.1f * (bounds.max.x - bounds.min.x);
+    float borderY = 0.1f * (bounds.max.y - bounds.min.y);
+    bounds.min.x -= borderX; bounds.max.x += borderX; bounds.min.y -= borderY; bounds.max.y += borderY;
+
+
+    autoscaleEnabled = true;
 }
 
 void ImPlot2DContext::saveToImage(const std::string& filename) {

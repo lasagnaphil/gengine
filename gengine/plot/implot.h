@@ -66,6 +66,8 @@ struct ImPlot2DContext {
 
     bool renderFinished = false;
 
+    bool autoscaleEnabled = true;
+
     static ImPlot2DContext create(float sizeX, float sizeY);
 
     void plotPoint(const Point2D& point) {
@@ -127,6 +129,8 @@ struct ImPlot2DContext {
     // Methods related to rendering
 
     ImPlot2DResult show();
+
+    void autoscale();
 
     void saveToImage(const std::string& filename);
 };
