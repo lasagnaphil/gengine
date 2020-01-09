@@ -10,6 +10,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "shaders/plot_point2d.vert.h"
 #include "shaders/plot_point2d.frag.h"
+#include "shaders/plot_line2d.vert.h"
+#include "shaders/plot_line2d.frag.h"
 #include <imgui.h>
 #include <SDL2/SDL_mouse.h>
 
@@ -65,12 +67,24 @@ ImPlot2DContext ImPlot2DContext::create(float sizeX, float sizeY) {
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(Point2D), (void*)offsetof(Point2D, size));
 
+    glGenVertexArrays(1, &ctx.lineVAO);
+    glBindVertexArray(ctx.lineVAO);
+
+    glGenBuffers(1, &ctx.lineVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, ctx.lineVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * 32678, nullptr, GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), (void*)0);
+
     glBindVertexArray(0);
 
     // Compile shaders
 
-    ctx.point2d_shader = Resources::make<Shader>();
-    ctx.point2d_shader->compileFromString(plot_point2d_vert_shader, plot_point2d_frag_shader);
+    ctx.point2DShader = Resources::make<Shader>();
+    ctx.point2DShader->compileFromString(plot_point2d_vert_shader, plot_point2d_frag_shader);
+
+    ctx.line2DShader = Resources::make<Shader>();
+    ctx.line2DShader->compileFromString(plot_line2d_vert_shader, plot_line2d_frag_shader);
 
     ctx.projMat = glm::ortho(0.0f, sizeX, sizeY, 0.0f, -1.0f, 1.0f);
     ctx.viewMat = glm::mat4(1.0f);
@@ -93,9 +107,10 @@ ImPlot2DResult ImPlot2DContext::show() {
     glEnable(GL_DEPTH_TEST);
     glViewport(0, 0, sizeX, sizeY);
 
-    point2d_shader->use();
-    point2d_shader->setMat4("view", viewMat);
-    point2d_shader->setMat4("proj", projMat);
+    // Draw points
+    point2DShader->use();
+    point2DShader->setMat4("view", viewMat);
+    point2DShader->setMat4("proj", projMat);
 
     glBindBuffer(GL_ARRAY_BUFFER, pointVBO);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Point2D) * points2D.size(), points2D.data());
@@ -104,6 +119,42 @@ ImPlot2DResult ImPlot2DContext::show() {
     glBindVertexArray(pointVAO);
     glDrawArrays(GL_POINTS, 0, points2D.size());
     glBindVertexArray(0);
+
+    // Draw lines
+    line2DShader->use();
+    line2DShader->setMat4("view", viewMat);
+    line2DShader->setMat4("proj", projMat);
+
+    uint32_t linePointCount = 0;
+    lineStartIndices.push_back(0);
+    for (auto& line : lines2D) {
+        linePointCount += line.pos.size();
+        lineStartIndices.push_back(linePointCount);
+    }
+    entireLinePos.reserve(linePointCount);
+    for (auto& line : lines2D) {
+        for (auto& pos : line.pos) {
+            entireLinePos.push_back(pos);
+        }
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, lineVBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(glm::vec2) * entireLinePos.size(), entireLinePos.data());
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glBindVertexArray(lineVAO);
+    for (int l = 0; l < lines2D.size(); l++) {
+        auto& line = lines2D[l];
+        line2DShader->setVec3("color", line.color);
+        glLineWidth(line.lineWidth);
+        glDrawArrays(GL_LINE_STRIP, lineStartIndices[l], lineStartIndices[l+1] - lineStartIndices[l]);
+        if (line.drawPoints) {
+            glPointSize(line.pointSize);
+            glDrawArrays(GL_POINTS, lineStartIndices[l], lineStartIndices[l+1] - lineStartIndices[l]);
+        }
+    }
+    glBindVertexArray(0);
+    glLineWidth(1.0f);
+    glPointSize(1.0f);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     auto displaySize = ImGui::GetIO().DisplaySize;
@@ -186,6 +237,13 @@ ImPlot2DResult ImPlot2DContext::show() {
     return res;
 }
 
+void ImPlot2DContext::clear() {
+    points2D.clear();
+    lines2D.clear();
+    lineStartIndices.clear();
+    entireLinePos.clear();
+}
+
 void ImPlot2DContext::autoscale() {
     // Calculate the view mat to show all points
     bounds.min.x = std::numeric_limits<float>::max();
@@ -214,4 +272,5 @@ void ImPlot2DContext::saveToImage(const std::string& filename) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     delete[] pixels;
 }
+
 

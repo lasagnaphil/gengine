@@ -33,6 +33,10 @@ struct ExamplePlotApp : public App {
             fmt::print("Point {} clicked!\n", *res.clickedPointIdx);
         }
 
+        X = {10, 20, 30, 40, 50};
+        Y = {150, 100, 60, 30, 10};
+        plt.plotLine(X, Y, colors::Red, 2.0f, true, 4.0f);
+
         ImGui::End();
     }
 

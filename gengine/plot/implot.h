@@ -56,7 +56,8 @@ struct ImPlot2DContext {
     std::vector<glm::vec2> entireLinePos;
     std::vector<uint32_t> lineStartIndices;
 
-    Ref<Shader> point2d_shader;
+    Ref<Shader> point2DShader;
+    Ref<Shader> line2DShader;
 
     uint32_t tex = 0;
     float sizeX;
@@ -104,7 +105,7 @@ struct ImPlot2DContext {
         });
     }
 
-    void plotLines(nonstd::span<float> X, nonstd::span<float> Y,
+    void plotLine(nonstd::span<float> X, nonstd::span<float> Y,
             glm::vec3 color = colors::Blue, float lineWidth = 1.0f, bool drawPoints = true, float pointSize = 2.0f) {
         assert(X.size() == Y.size());
         std::vector<glm::vec2> pos(X.size());
@@ -121,10 +122,7 @@ struct ImPlot2DContext {
         lines2D.insert(lines2D.begin(), lines.begin(), lines.end());
     }
 
-    void clear() {
-        points2D.clear();
-        lines2D.clear();
-    }
+    void clear();
 
     // Methods related to rendering
 
