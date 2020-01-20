@@ -6,6 +6,9 @@
 #include "PhysicsWorld.h"
 #include "Shader.h"
 
+#include "shaders/physx_debug.vert.h"
+#include "shaders/physx_debug.frag.h"
+
 using namespace physx;
 
 void PhysXDebugRenderer::init(PhysicsWorld& world) {
@@ -30,7 +33,7 @@ void PhysXDebugRenderer::init(PhysicsWorld& world) {
     // world.scene->setVisualizationParameter(PxVisualizationParameter::eMBP_REGIONS, 1.0f);
 
     debugShader = Resources::make<Shader>("physx_debug");
-    debugShader->compileFromFile("shaders/physx_debug.vert", "shaders/physx_debug.frag");
+    debugShader->compileFromString(physx_debug_vert_shader, physx_debug_frag_shader);
 
     const PxRenderBuffer &renderBuffer = world.getRenderBuffer();
 
