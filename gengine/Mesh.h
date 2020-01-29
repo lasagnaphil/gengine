@@ -15,7 +15,7 @@
 #include <vector>
 
 #include "Shader.h"
-#include "GenAllocator.h"
+#include "Arena.h"
 
 struct MeshCollider {
     std::vector<glm::vec3> points;

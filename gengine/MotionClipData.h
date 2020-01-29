@@ -5,7 +5,7 @@
 #ifndef MOTION_EDITING_POSEDATA_H
 #define MOTION_EDITING_POSEDATA_H
 
-#include "GenAllocator.h"
+#include "Arena.h"
 #include "glmx/pose.h"
 #include "PoseTree.h"
 

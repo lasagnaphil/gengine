@@ -83,8 +83,9 @@ struct Ref {
 };
 
 template <typename T>
-struct GenAllocator {
+struct Arena {
 
+private:
     struct Indices {
         uint32_t nextIndex;
         uint32_t generation;
@@ -92,65 +93,76 @@ struct GenAllocator {
 
     // Note: the following doesn't work because of some undefined behavior? Need to examine this later.
     // std::vector<std::aligned_storage_t<sizeof(T), alignof(T)>> data;
-    std::vector<T> data;
+    T* data;
     std::vector<Indices> indices;
 
-    uint32_t count;
-    uint32_t capacity;
+    uint32_t _size;
+    uint32_t _capacity;
 
     uint32_t firstAvailable;
 
-    GenAllocator(uint32_t capacity = 0) :
-        count(0), capacity(capacity), data(capacity), indices(capacity), firstAvailable(0)
+public:
+    Arena(uint32_t capacity = 0) :
+            _size(0), _capacity(capacity), data(nullptr), indices(capacity), firstAvailable(0)
     {
+        data = (T*)std::aligned_alloc(alignof(T), capacity * sizeof(T));
         for (uint32_t i = 0; i < capacity; ++i) {
             indices[i].nextIndex = i + 1;
             indices[i].generation = 0;
         }
     }
 
-    void dispose() {
-        for (uint32_t i = 0; i < capacity; ++i) {
-            if (indices[i].generation == 0) {
-                // This doesn't work in C++14 because of the lack of constexpr if
-                // So we need to manually free resources before deleting allocator
-                IF_CONSTEXPR(std::is_base_of<IDisposable, T>()) {
-                    reinterpret_cast<T*>(&data[i])->dispose();
-                }
+    ~Arena() {
+        for (uint32_t i = 0; i < _capacity; ++i) {
+            if (indices[i].generation != 0) {
+                (data[i]).~T();
             }
         }
     }
 
-    void expand(uint32_t newCapacity) {
-        assert (newCapacity >= capacity);
+    inline uint32_t size() { return _size; }
+    inline uint32_t capacity() { return _capacity; }
 
-        data.resize(newCapacity);
+    void expand(uint32_t newCapacity) {
+        assert (newCapacity >= _capacity);
+
+        T* oldData = data;
+        data = (T*)std::aligned_alloc(alignof(T), newCapacity * sizeof(T));
         indices.resize(newCapacity);
 
-        for (uint32_t i = capacity; i < newCapacity; ++i) {
+        // invoke move constructor for filled items
+        for (uint32_t i = 0; i < _capacity; i++) {
+            if (indices[i].generation != 0) {
+                new (data + i) T(std::move(oldData[i]));
+            }
+        }
+        // construct the free list of the indices
+        for (uint32_t i = _capacity; i < newCapacity; ++i) {
             indices[i].nextIndex = i + 1;
             indices[i].generation = 0;
         }
 
-        capacity = newCapacity;
+        _capacity = newCapacity;
+
+        std::free(oldData);
     }
 
     template <class ...Args>
     Ref<T> make(Args&&... args) {
         // if the item list is full
-        if (firstAvailable == capacity) {
-            expand(capacity == 0? 4 : capacity * 2);
+        if (firstAvailable == _capacity) {
+            expand(_capacity == 0 ? 4 : _capacity * 2);
         }
 
         // delete node from free list
         uint32_t newIndex = firstAvailable;
-        data[newIndex] = T(std::forward<Args>(args)...);
+        new(data + newIndex) T(std::forward<Args>(args)...);
         auto& newIndices = indices[newIndex];
         firstAvailable = newIndices.nextIndex;
 
         newIndices.generation++;
 
-        count++;
+        _size++;
 
         // also return the reference object of the resource
         return Ref<T> {newIndex, newIndices.generation};
@@ -173,7 +185,7 @@ struct GenAllocator {
         assert(idx.generation != 0);
         assert(idx.generation == ref.generation);
 
-        return reinterpret_cast<T*>(&data[ref.index]);
+        return &data[ref.index];
     }
 
     T* get(Ref<T> ref) {
@@ -182,14 +194,14 @@ struct GenAllocator {
         assert(idx.generation != 0);
         assert(idx.generation == ref.generation);
 
-        return reinterpret_cast<T*>(&data[ref.index]);
+        return &data[ref.index];
     }
 
     const T* tryGet(Ref<T> ref) const {
         auto idx = indices[ref.index];
 
         if (idx.generation != 0 && idx.generation == ref.generation) {
-            return reinterpret_cast<T*>(&data[ref.index]);
+            return &data[ref.index];
         }
         else {
             return nullptr;
@@ -213,14 +225,15 @@ struct GenAllocator {
         assert(idx.generation == ref.generation);
 
         indices[ref.index].nextIndex = firstAvailable;
+        indices[ref.index].generation = 0;
         firstAvailable = ref.index;
 
-        count--;
+        _size--;
     }
 
     template <class Fun>
     void forEach(Fun&& fun) {
-        for (uint32_t i = 0; i < capacity; ++i) {
+        for (uint32_t i = 0; i < _capacity; ++i) {
             if (indices[i].generation != 0) {
                 Ref<T> ref = {i, indices[i].generation};
                 fun(data[i], ref);
@@ -230,7 +243,7 @@ struct GenAllocator {
 
     template <class Fun>
     void forEachUntil(Fun&& fun) {
-        for (uint32_t i = 0; i < capacity; ++i) {
+        for (uint32_t i = 0; i < _capacity; ++i) {
             if (indices[i].generation != 0) {
                 Ref<T> ref = {i, indices[i].generation};
                 bool end = fun(data[i], ref);
@@ -242,13 +255,9 @@ struct GenAllocator {
 
 struct Resources {
     friend class constructor;
-    struct constructor {
-        constructor();
-    };
-    static constructor cons;
 
     template <class T>
-    static GenAllocator<T>& getStorage();
+    static Arena<T>& getStorage();
 
     template <class T>
     static T* get(Ref<T> ref) {

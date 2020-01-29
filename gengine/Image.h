@@ -6,7 +6,7 @@
 #define MOTION_EDITING_IMAGE_H
 
 #include <string>
-#include "GenAllocator.h"
+#include "Arena.h"
 
 struct Image {
     unsigned char* data = nullptr;

@@ -12,7 +12,7 @@
 
 #include <memory>
 
-#include "GenAllocator.h"
+#include "Arena.h"
 #include "Shader.h"
 #include "PhongRenderer.h"
 #include "PBRenderer.h"

@@ -6,7 +6,7 @@
 #define MOTION_EDITING_TEXTURE_H
 
 #include "Image.h"
-#include "GenAllocator.h"
+#include "Arena.h"
 #include "IDisposable.h"
 
 #include <glm/vec3.hpp>

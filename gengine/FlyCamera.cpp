@@ -9,7 +9,7 @@
 #include <glm/gtx/vector_angle.hpp>
 #include <glm/gtc/quaternion.hpp>
 
-#include "GenAllocator.h"
+#include "Arena.h"
 #include "FlyCamera.h"
 #include "Transform.h"
 #include "InputManager.h"

@@ -6,7 +6,7 @@
 #define GENGINE_ANIMSTATEMACHINE_H
 
 #include "glmx/pose.h"
-#include "GenAllocator.h"
+#include "Arena.h"
 #include "PoseTree.h"
 
 #include <span.hpp>
@@ -130,9 +130,9 @@ struct AnimTransition {
 
 struct AnimStateMachine {
 private:
-    GenAllocator<Animation> anims;
-    GenAllocator<AnimState> states;
-    GenAllocator<AnimTransition> transitions;
+    Arena<Animation> anims;
+    Arena<AnimState> states;
+    Arena<AnimTransition> transitions;
     std::unordered_map<std::string, AnimParam> params;
 
     Ref<AnimState> currentState = {};
