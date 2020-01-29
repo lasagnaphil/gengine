@@ -53,7 +53,7 @@ public:
     MyApp() : App(true) {}
 
     void loadResources() override {
-        FlyCamera* camera = initCamera<FlyCamera>();
+        FlyCamera* camera = dynamic_cast<FlyCamera*>(this->camera.get());
         camera->transform->setPosition({0.0f, 1.0f, 2.0f});
 
         Ref<Image> checkerImage = Image::fromFile("resources/textures/checker.png");
@@ -71,7 +71,6 @@ public:
 
         // Load BVH file, only copy the tree structure of the human
         MotionClipData tmpBvh = MotionClipData::loadFromFile("resources/cmu_07_02_1.bvh", 0.01f);
-        tmpBvh.removeCMUPhantomJoints();
         poseTree = tmpBvh.poseTree;
 
         // Create empty pose
@@ -213,7 +212,9 @@ private:
 
 int main(int argc, char** argv) {
     MyApp app;
-    app.start();
+    app.load();
+    app.startMainLoop();
+    app.release();
 
     return 0;
 }

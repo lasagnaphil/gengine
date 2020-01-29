@@ -16,7 +16,7 @@ public:
     MyApp() : App(false) {}
 
     void loadResources() override {
-        FlyCamera* camera = initCamera<FlyCamera>();
+        FlyCamera* camera = dynamic_cast<FlyCamera*>(this->camera.get());
         Ref<Transform> cameraTransform = camera->transform;
         cameraTransform->move({-10.0f, 20.0f, 10.0f});
 
@@ -121,7 +121,9 @@ private:
 
 int main(int argc, char** argv) {
     MyApp app;
-    app.start();
+    app.load();
+    app.startMainLoop();
+    app.release();
 
     return 0;
 }

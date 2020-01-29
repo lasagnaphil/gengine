@@ -3,6 +3,7 @@
 //
 
 #include "PhongRenderer.h"
+#include "fmt/core.h"
 
 PhongRenderer::PhongRenderer(Rect3f projVolume, glm::ivec2 shadowFBSize, Camera *camera) :
 
@@ -18,6 +19,10 @@ PhongRenderer::PhongRenderer(Rect3f projVolume, glm::ivec2 shadowFBSize, Camera 
 }
 
 void PhongRenderer::init() {
+    if (camera == nullptr) {
+        fmt::print(stderr, "Camera not attached to PhongRenderer!\n");
+        exit(EXIT_FAILURE);
+    }
     depthShader = Shaders::depth;
     debugDepthShader = Shaders::depthDebug;
     phongShader = Shaders::phong;

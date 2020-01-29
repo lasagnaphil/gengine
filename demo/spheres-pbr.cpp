@@ -5,10 +5,10 @@
 
 class MyApp : public App {
 public:
-    MyApp() : App(false, AppRenderSettings::PBR) {}
+    MyApp() : App(false, AppSettings::defaultPBR()) {}
 
     void loadResources() override {
-        FlyCamera* camera = initCamera<FlyCamera>();
+        FlyCamera* camera = dynamic_cast<FlyCamera*>(this->camera.get());
         Ref<Transform> cameraTransform = camera->transform;
         cameraTransform->move({0.0f, 17.5f, 0.0f});
 
@@ -142,7 +142,9 @@ private:
 
 int main(int argc, char** argv) {
     MyApp app;
-    app.start();
+    app.load();
+    app.startMainLoop();
+    app.release();
 
     return 0;
 }

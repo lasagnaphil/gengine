@@ -21,7 +21,7 @@ public:
     MyApp() : App(true) {}
 
     void loadResources() override {
-        FlyCamera* camera = initCamera<FlyCamera>();
+        FlyCamera* camera = dynamic_cast<FlyCamera*>(this->camera.get());
         camera->transform->setPosition({0.0f, 1.0f, 2.0f});
 
         Ref<Image> checkerImage = Image::fromFile("resources/textures/checker.png");
@@ -102,7 +102,9 @@ private:
 
 int main(int argc, char** argv) {
     MyApp app;
-    app.start();
+    app.load();
+    app.startMainLoop();
+    app.release();
 
     return 0;
 }

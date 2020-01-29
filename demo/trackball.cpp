@@ -13,10 +13,10 @@
 
 class MyApp : public App {
 public:
-    MyApp() : App(false) {}
+    MyApp() : App(false, AppSettings { AppSettings::Renderer::Phong, AppSettings::Camera::TrackballCamera }) {}
 
     void loadResources() override {
-        TrackballCamera* camera = initCamera<TrackballCamera>();
+        TrackballCamera* camera = dynamic_cast<TrackballCamera*>(camera);
 
         Ref<Image> checkerImage = Image::fromFile("resources/textures/checker.png");
         Ref<Texture> planeTexture = Texture::fromImage(checkerImage);
@@ -85,7 +85,9 @@ private:
 
 int main(int argc, char** argv) {
     MyApp app;
-    app.start();
+    app.load();
+    app.startMainLoop();
+    app.release();
 
     return 0;
 }

@@ -7,6 +7,7 @@
 
 #include "LineMesh.h"
 #include "FlyCamera.h"
+#include <fmt/core.h>
 
 struct LineRenderCommand {
     Ref<LineMesh> mesh;
@@ -22,7 +23,10 @@ struct GizmosRenderer {
     }
 
     void init() {
-
+        if (camera == nullptr) {
+            fmt::print(stderr, "Camera not attached to PhongRenderer!\n");
+            exit(EXIT_FAILURE);
+        }
     }
 
     void queueLine(const LineRenderCommand& command) {
