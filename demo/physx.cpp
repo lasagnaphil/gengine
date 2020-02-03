@@ -22,10 +22,10 @@ struct PhysicsObject {
 
 class MyApp : public App {
 public:
-    MyApp() : App(false, AppRenderSettings::PBR) {}
+    MyApp() : App(false, AppSettings::defaultPBR()) {}
 
     void loadResources() override {
-        FlyCamera* camera = initCamera<FlyCamera>();
+        FlyCamera* camera = dynamic_cast<FlyCamera*>(this->camera.get());
         camera->movementSpeed = 1.0f;
         Ref<Transform> cameraTransform = camera->transform;
         cameraTransform->setPosition({0.0f, 0.0f, 1.0f});
@@ -551,7 +551,9 @@ private:
 
 int main(int argc, char** argv) {
     MyApp app;
-    app.start();
+    app.load();
+    app.startMainLoop();
+    app.release();
 
     return 0;
 }
