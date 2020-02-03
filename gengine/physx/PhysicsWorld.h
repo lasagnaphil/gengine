@@ -6,7 +6,9 @@
 #define PHYSICS_BENCHMARKS_PHYSICSWORLD_H
 
 #ifndef NDEBUG
-#define _DEBUG
+#if !defined _DEBUG
+#define _DEBUG 1
+#endif
 #endif
 
 #include <PxPhysicsAPI.h>

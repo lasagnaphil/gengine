@@ -5,6 +5,12 @@
 #ifndef PHYSICS_BENCHMARKS_PHYSXDEBUGRENDERER_H
 #define PHYSICS_BENCHMARKS_PHYSXDEBUGRENDERER_H
 
+#ifndef NDEBUG
+#if !defined _DEBUG
+#define _DEBUG 1
+#endif
+#endif
+
 #include <glad/glad.h>
 #include <span.hpp>
 #include <common/PxRenderBuffer.h>

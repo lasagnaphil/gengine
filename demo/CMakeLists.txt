@@ -44,3 +44,7 @@ target_include_directories(gengine_demo_plot PUBLIC gengine)
 target_link_libraries(gengine_demo_plot gengine)
 add_dependencies(gengine_demo_plot copy_resource_folder)
 
+add_executable(gengine_demo_physx physx.cpp)
+target_include_directories(gengine_demo_physx PUBLIC gengine)
+target_link_libraries(gengine_demo_physx gengine)
+add_dependencies(gengine_demo_physx copy_resource_folder)

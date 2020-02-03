@@ -5,6 +5,12 @@
 #ifndef ANIMATION_PROJECT_PHYSICSBODY_H
 #define ANIMATION_PROJECT_PHYSICSBODY_H
 
+#ifndef NDEBUG
+#if !defined _DEBUG
+#define _DEBUG 1
+#endif
+#endif
+
 #include <Defer.h>
 #include "PhysXGLM.h"
 #include "PxRigidDynamic.h"
