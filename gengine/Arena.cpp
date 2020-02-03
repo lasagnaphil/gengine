@@ -2,7 +2,7 @@
 // Created by lasagnaphil on 19. 3. 7.
 //
 
-#include "GenAllocator.h"
+#include "Arena.h"
 #include "Transform.h"
 #include "Shader.h"
 #include "Texture.h"
@@ -32,18 +32,14 @@ template <> __Type &Ref<__Type>::operator*() const { return *Resources::get(*thi
 template <> __Type *Ref<__Type>::get() { return Resources::get(*this); } \
 template <> __Type *Ref<__Type>::tryGet() { return Resources::tryGet(*this); } \
 template <> void Ref<__Type>::release() { Resources::release(*this); } \
-static GenAllocator<__Type> __Type##Storage; \
-template <> GenAllocator<__Type>& Resources::getStorage() { return __Type##Storage; }
+static Arena<__Type> __Type##Storage; \
+template <> Arena<__Type>& Resources::getStorage() { return __Type##Storage; }
 
 LIST_OF_VARIABLES
 #undef GLOBAL_TYPE
 
 #define GLOBAL_TYPE(__Type, __id, __capacity) \
 __Type##Storage = GenAllocator<__Type>(__capacity);
-
-Resources::constructor::constructor() {
-    // LIST_OF_VARIABLES
-}
 
 #undef GLOBAL_TYPE
 

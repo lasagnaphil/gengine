@@ -14,7 +14,7 @@
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
-#include "GenAllocator.h"
+#include "Arena.h"
 
 struct PhongMaterial;
 struct PBRMaterial;

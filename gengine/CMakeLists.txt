@@ -57,6 +57,11 @@ add_subdirectory(${FMT_DIR} EXCLUDE_FROM_ALL)
 set(BITSERY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/bitsery)
 add_subdirectory(${BITSERY_DIR} EXCLUDE_FROM_ALL)
 
+# doctest
+set(DOCTEST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/doctest)
+add_library(doctest INTERFACE)
+target_include_directories(doctest INTERFACE ${DOCTEST_DIR})
+
 option(GENGINE_ENABLE_PHYSX "Enable PhysX" OFF)
 
 if (GENGINE_ENABLE_PHYSX)
@@ -79,7 +84,7 @@ endif()
 target_include_directories(gengine
         PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(gengine
-        Threads::Threads SDL2::Main glad imgui stb glm eigen tinyxml2 tinyobjloader span-lite fmt bitsery)
+        Threads::Threads SDL2::Main glad imgui stb glm eigen tinyxml2 tinyobjloader span-lite fmt bitsery doctest)
 
 if (GENGINE_ENABLE_PHYSX)
     target_include_directories(gengine PUBLIC gengine ${PhysX_INCLUDE_DIR} ${PxShared_INCLUDE_DIR})
@@ -108,3 +113,5 @@ endforeach()
 
 add_custom_target(compile_shaders DEPENDS ${SHADER_HEADER_FILES})
 add_dependencies(gengine compile_shaders)
+
+add_subdirectory(tests)

@@ -10,7 +10,7 @@
 #include <glad/glad.h>
 #include <span.hpp>
 
-#include "GenAllocator.h"
+#include "Arena.h"
 
 struct LineMaterial {
     GLenum lineType;

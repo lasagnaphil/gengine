@@ -5,6 +5,7 @@
 #include "PBRenderer.h"
 
 #include <imgui.h>
+#include <fmt/core.h>
 #include <glm/gtc/matrix_transform.hpp>
 
 Ref<PBRMaterial>
@@ -36,6 +37,10 @@ PBRenderer::PBRenderer(Camera *camera) :
 }
 
 void PBRenderer::init() {
+    if (camera == nullptr) {
+        fmt::print(stderr, "Camera not attached to PhongRenderer!\n");
+        exit(EXIT_FAILURE);
+    }
 
     pbrShader = Shaders::pbr;
     depthShader = Shaders::depth;

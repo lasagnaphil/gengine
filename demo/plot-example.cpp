@@ -13,7 +13,7 @@ struct ExamplePlotApp : public App {
 
     void loadResources() override {
         // TODO: need static camera
-        FlyCamera* camera = initCamera<FlyCamera>();
+        FlyCamera* camera = dynamic_cast<FlyCamera*>(this->camera.get());
         plt = plt::ImPlot2DContext::create(400.0f, 400.0f);
     }
 
@@ -47,6 +47,7 @@ struct ExamplePlotApp : public App {
 
 int main() {
     auto app = ExamplePlotApp();
-    app.start();
+    app.load();
+    app.startMainLoop();
     app.release();
 }

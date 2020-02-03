@@ -7,6 +7,7 @@
 #include "DebugRenderer.h"
 #include "Shader.h"
 #include "Colors.h"
+#include <fmt/core.h>
 
 #include "shaders/colorpoint3d.vert.h"
 #include "shaders/colorpoint3d.frag.h"
@@ -14,6 +15,11 @@
 #include "shaders/colorline3d.frag.h"
 
 void DebugRenderer::init() {
+    if (camera == nullptr) {
+        fmt::print(stderr, "Camera not attached to PhongRenderer!\n");
+        exit(EXIT_FAILURE);
+    }
+
     imPointShader = Resources::make<Shader>();
     imPointShader->compileFromString(colorpoint3d_vert_shader, colorpoint3d_frag_shader);
     imPointShader->use();

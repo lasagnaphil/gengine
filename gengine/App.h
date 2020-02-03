@@ -12,7 +12,7 @@
 
 #include <memory>
 
-#include "GenAllocator.h"
+#include "Arena.h"
 #include "Shader.h"
 #include "PhongRenderer.h"
 #include "PBRenderer.h"
@@ -20,17 +20,33 @@
 #include "Camera.h"
 #include "DebugRenderer.h"
 
-enum class AppRenderSettings {
-    Phong, PBR
+struct AppSettings {
+    enum class Renderer {
+        Phong, PBR
+    } renderer;
+
+    enum class Camera {
+        FlyCamera, TrackballCamera
+    } camera;
+
+    static AppSettings defaultPhong() {
+        return AppSettings { Renderer::Phong, Camera::FlyCamera };
+    }
+    static AppSettings defaultPBR() {
+        return AppSettings { Renderer::PBR, Camera::FlyCamera };
+    }
 };
 
 class App {
 public:
-    App(bool useDisplayFPS = false, AppRenderSettings settings = AppRenderSettings::Phong) :
-        useDisplayFPS(useDisplayFPS), renderSettings(settings) {}
+    App(bool useDisplayFPS = false, AppSettings settings = AppSettings::defaultPhong()) :
+        useDisplayFPS(useDisplayFPS), settings(settings) {}
 
     virtual ~App();
-    void start();
+
+    void load();
+    void startMainLoop();
+
     virtual void loadResources();
     virtual void processInput(SDL_Event& event);
     virtual void update(float dt);
@@ -45,20 +61,13 @@ protected:
     GizmosRenderer gizmosRenderer;
     DebugRenderer imRenderer;
 
-    AppRenderSettings renderSettings;
+    AppSettings settings;
 
     Ref<Transform> rootTransform;
     std::unique_ptr<Camera> camera = nullptr;
 
-    template <typename T>
-    T* initCamera() {
-        camera = std::make_unique<T>(rootTransform);
-        return dynamic_cast<T*>(camera.get());
-    }
-
 private:
     void internalProcessInput();
-    void internalLoadResources();
     void internalUpdate(float dt);
     void internalRender();
 

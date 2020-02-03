@@ -7,7 +7,7 @@
 #include <iostream>
 
 #include "Image.h"
-#include "GenAllocator.h"
+#include "Arena.h"
 
 Ref<Image> Image::fromFile(const std::string& filename, int desiredChannels){
     Ref<Image> image = Resources::make<Image>();

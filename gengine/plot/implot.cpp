@@ -161,7 +161,7 @@ ImPlot2DResult ImPlot2DContext::show() {
     glViewport(0, 0, displaySize.x, displaySize.y);
 
     // Now for the imgui part
-    ImGui::Image((void*)tex, ImVec2(sizeX, sizeY));
+    ImGui::Image(reinterpret_cast<void*>(tex), ImVec2(sizeX, sizeY));
 
     ImVec2 mouse = ImGui::GetIO().MousePos;
     auto frameMin = ImGui::GetItemRectMin();

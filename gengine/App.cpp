@@ -16,7 +16,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-#include "GenAllocator.h"
+#include "Arena.h"
+#include "TrackballCamera.h"
 
 static void sdl_die(const char * message) {
     fprintf(stderr, "%s: %s\n", message, SDL_GetError());
@@ -74,7 +75,7 @@ void APIENTRY glDebugOutput(GLenum source,
     }
 }
 
-void App::start() {
+void App::load() {
     // Initialize SDL
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         fprintf(stderr, "Couldn't initialize SDL");
@@ -163,31 +164,39 @@ void App::start() {
     ImGui_ImplOpenGL3_Init(glsl_version);
 #endif
 
-
     stbi_set_flip_vertically_on_load(true);
 
-    internalLoadResources();
+    Shaders::init();
 
-    if (renderSettings == AppRenderSettings::Phong)
+    rootTransform = Resources::make<Transform>();
+    rootTransform->update();
+
+    if (settings.camera == AppSettings::Camera::FlyCamera) {
+        camera = std::make_unique<FlyCamera>(rootTransform);
+    }
+    else if (settings.camera == AppSettings::Camera::TrackballCamera) {
+        camera = std::make_unique<TrackballCamera>(rootTransform);
+    }
+
+    if (settings.renderer == AppSettings::Renderer::Phong) {
         phongRenderer.setCamera(camera.get());
-    else if (renderSettings == AppRenderSettings::PBR)
+        phongRenderer.init();
+    }
+    else if (settings.renderer == AppSettings::Renderer::PBR) {
         pbRenderer.setCamera(camera.get());
+        pbRenderer.init();
+    }
 
     gizmosRenderer.setCamera(camera.get());
-    imRenderer.setCamera(camera.get());
-
-    if (renderSettings == AppRenderSettings::Phong)
-        phongRenderer.init();
-    else if (renderSettings == AppRenderSettings::PBR)
-        pbRenderer.init();
-
     gizmosRenderer.init();
+
+    imRenderer.setCamera(camera.get());
     imRenderer.init();
 
-    //
-    // Program loop
-    //
+    loadResources();
+}
 
+void App::startMainLoop() {
     using Clock = std::chrono::high_resolution_clock;
     using Time = decltype(Clock::now());
     using Ns = std::chrono::nanoseconds;
@@ -246,15 +255,6 @@ void App::render() {
 
 void App::release() {
 
-}
-
-void App::internalLoadResources() {
-    Shaders::init();
-
-    rootTransform = Resources::make<Transform>();
-    rootTransform->update();
-
-    loadResources();
 }
 
 void App::internalProcessInput() {
@@ -319,6 +319,5 @@ void App::internalRender() {
 }
 
 App::~App() {
-    release();
     SDL_DestroyWindow(window);
 }
