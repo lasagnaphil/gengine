@@ -12,6 +12,11 @@ PoseRenderBody PoseRenderBody::createAsBoxes(const PoseTree& poseTree, float wid
 
     body.meshes[0] = {};
     for (int i = 1; i < poseTree.numNodes; i++) {
+        // Don't render rigmesh nodes
+        if (poseTree[i].name.find("RIGMESH") != std::string::npos) {
+            body.meshes[i] = {};
+            continue;
+        }
         float offsetLength = glm::length(poseTree[i].offset);
         if (offsetLength > 0) {
             body.meshes[i] = Mesh::makeCube({width, offsetLength, width});
@@ -67,7 +72,12 @@ void renderMotionClip(PhongRenderer& renderer, DebugRenderer& imRenderer, const 
         }
 
         if (!node.isEndSite()) {
-            curTransform = curTransform * glm::translate(node.offset) * glm::mat4_cast(poseState.q[nodeIdx]);
+            if (nodeIdx == 0) {
+                curTransform = curTransform * glm::mat4_cast(poseState.q[nodeIdx]);
+            }
+            else {
+                curTransform = curTransform * glm::translate(node.offset) * glm::mat4_cast(poseState.q[nodeIdx]);
+            }
             for (auto childID : node.childJoints) {
                 recursionStack.push({childID, curTransform});
             }

@@ -137,33 +137,32 @@ Ref<Mesh> Mesh::fromOBJFile(const std::string& filename, bool onlyVertices) {
         return {};
     }
 
-    assert(onlyVertices);
-
     Ref<Mesh> mesh = Resources::make<Mesh>();
-    for (const auto& shape : shapes) {
-        for (const auto& index : shape.mesh.indices) {
-            Mesh::Vertex vertex;
-            vertex.pos = {
-                    attrib.vertices[3 * index.vertex_index + 0],
-                    attrib.vertices[3 * index.vertex_index + 1],
-                    attrib.vertices[3 * index.vertex_index + 2]
-            };
-            vertex.normal = {
-                    attrib.normals[3 * index.normal_index + 0],
-                    attrib.normals[3 * index.normal_index + 1],
-                    attrib.normals[3 * index.normal_index + 2]
-            };
-            // TODO
-            /*
-            vertex.uv = {
-                    attrib.texcoords[2 * index.texcoord_index + 0],
-                    attrib.texcoords[2 * index.texcoord_index + 1]
-            };
-             */
-            vertex.uv = {0.f, 0.f};
-            mesh->vertices.push_back(vertex);
-            mesh->indices.push_back(mesh->indices.size());
+    if (onlyVertices) {
+        for (const auto& shape : shapes) {
+            for (const auto& index : shape.mesh.indices) {
+                Mesh::Vertex vertex;
+                vertex.pos = {
+                        attrib.vertices[3 * index.vertex_index + 0],
+                        attrib.vertices[3 * index.vertex_index + 1],
+                        attrib.vertices[3 * index.vertex_index + 2]
+                };
+                vertex.normal = {
+                        attrib.normals[3 * index.normal_index + 0],
+                        attrib.normals[3 * index.normal_index + 1],
+                        attrib.normals[3 * index.normal_index + 2]
+                };
+                vertex.uv = {
+                        attrib.texcoords[2 * index.texcoord_index + 0],
+                        attrib.texcoords[2 * index.texcoord_index + 1]
+                };
+                mesh->vertices.push_back(vertex);
+                mesh->indices.push_back(mesh->indices.size());
+            }
         }
+    }
+    else {
+        assert(false);
     }
 
     mesh->initVBO();

@@ -462,15 +462,16 @@ void MotionClipData::removeJoint(uint32_t nodeIdx) {
     if (nodeIdx == (uint32_t)-1) {
         fprintf(stderr, "Tring to remove invalid joint!\n");
     }
-    assert(poseTree[nodeIdx].childJoints.size() == 1 && "Only joints with one child can be removed");
-    uint32_t parentIdx = poseTree[nodeIdx].parent;
-    uint32_t childIdx = poseTree[nodeIdx].childJoints[0];
 
     auto& node = poseTree[nodeIdx];
-    auto& parentNode = poseTree[parentIdx];
-    auto& childNode = poseTree[childIdx];
     std::string nodeName = node.name;
+    uint32_t parentIdx = poseTree[nodeIdx].parent;
+    auto& parentNode = poseTree[parentIdx];
 
+    uint32_t numChildren = poseTree[nodeIdx].childJoints.size();
+    assert(numChildren == 1 && "Only joints with one child can be removed");
+
+    uint32_t childIdx = poseTree[nodeIdx].childJoints[0];
     poseTree[childIdx].parent = parentIdx;
 
     for (uint32_t& i : parentNode.childJoints) {
@@ -479,15 +480,13 @@ void MotionClipData::removeJoint(uint32_t nodeIdx) {
             break;
         }
     }
-
     poseTree.numJoints--;
     poseTree.numNodes--;
-    poseTree.allNodes.erase(poseTree.allNodes.begin() + nodeIdx, poseTree.allNodes.begin() + nodeIdx+1);
+    poseTree.allNodes.erase(poseTree.allNodes.begin() + nodeIdx);
 
     for (auto& pose : poseStates) {
-        glm::quat q = pose.q[nodeIdx];
-        pose.q[childIdx] = q * pose.q[childIdx];
-        pose.q.erase(pose.q.begin() + nodeIdx, pose.q.begin() + nodeIdx+1);
+        pose.q[childIdx] = pose.q[nodeIdx] * pose.q[childIdx];
+        pose.q.erase(pose.q.begin() + nodeIdx);
     }
 
     for (auto& node : poseTree.allNodes) {

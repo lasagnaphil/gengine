@@ -32,11 +32,25 @@ namespace glmx {
         return glm::quat(glm::cos(theta/2), glm::sin(theta/2) * u);
     }
 
+    inline float extractXRot(glm::quat q) {
+        if (q.x * q.x + q.w * q.w <= glm::epsilon<float>()) {
+            return 0.0f;
+        }
+        return 2 * glm::atan(q.x, q.w);
+    }
+
     inline float extractYRot(glm::quat q) {
         if (q.y * q.y + q.w * q.w <= glm::epsilon<float>()) {
             return 0.0f;
         }
         return 2 * glm::atan(q.y, q.w);
+    }
+
+    inline float extractZRot(glm::quat q) {
+        if (q.z * q.z + q.w * q.w <= glm::epsilon<float>()) {
+            return 0.0f;
+        }
+        return 2 * glm::atan(q.z, q.w);
     }
 
     inline glm::mat4 rotMatrixBetweenVecs(glm::vec3 a, glm::vec3 b) {
