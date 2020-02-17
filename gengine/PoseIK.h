@@ -12,10 +12,6 @@
 #include "glmx/pose.h"
 #include "MotionClipData.h"
 
-glmx::transform calcFK(const PoseTree& poseTree, const glmx::pose& pose, uint32_t mIdx);
-
-std::vector<glmx::transform> calcFK(const PoseTree& poseTree, const glmx::pose& pose);
-
 enum class LeastSquareMethod {
     SVD, QR, Normal
 };

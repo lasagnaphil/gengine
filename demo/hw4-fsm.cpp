@@ -9,7 +9,7 @@
 #include "FlyCamera.h"
 #include "glmx/pose.h"
 #include "PoseRenderBody.h"
-#include "PoseKinematics.h"
+#include "PoseIK.h"
 #include "AnimStateMachine.h"
 
 #include <glmx/euler.h>

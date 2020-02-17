@@ -2,7 +2,8 @@
 // Created by lasagnaphil on 19. 10. 1..
 //
 
-#include "PoseKinematics.h"
+#include "PoseIK.h"
+#include "PoseFK.h"
 #include "glmx/pose.h"
 #include <glmx/quat.h>
 #include <glmx/eigen.h>
@@ -11,6 +12,33 @@
 #include "Eigen/Householder"
 
 using namespace Eigen;
+
+std::vector<glmx::transform> calcFK(const PoseTree& poseTree, glm::vec3 rootPos, const VectorXf& poseEuler) {
+    std::vector<glmx::transform> transforms(poseTree.numNodes);
+    std::stack<std::tuple<uint32_t, uint32_t>> recursionStack;
+
+    transforms[0] = glmx::transform{rootPos, glm::identity<glm::quat>()};
+    recursionStack.push({0, 0});
+
+    while (!recursionStack.empty()) {
+        auto[idx, parentIdx] = recursionStack.top();
+        recursionStack.pop();
+
+        auto& node = poseTree[idx];
+        if (poseTree[idx].isEndSite()) {
+            transforms[idx] = transforms[parentIdx] * glmx::transform(node.offset);
+        } else {
+            glm::quat q = glmx::eulerToQuat({poseEuler[3*idx], poseEuler[3*idx+1], poseEuler[3*idx+2]}, EulOrdXYZs);
+            transforms[idx] = transforms[parentIdx] * glmx::transform(node.offset, q);
+        }
+
+        for (uint32_t childIdx : node.childJoints) {
+            recursionStack.push({childIdx, idx});
+        }
+    }
+
+    return transforms;
+}
 
 glm::vec3 quatToTwist(glm::quat q) {
     float im_size = sqrtf(q.x*q.x + q.y*q.y + q.z*q.z);
@@ -55,85 +83,7 @@ MatrixXf calcEulerJacobian(
     return calcEulerJacobian(poseTree, Ts, mIdx, relevantJoints, jointStiffness);
 }
 
-glmx::transform calcFK(const PoseTree &poseTree, const glmx::pose &pose, uint32_t mIdx) {
-    uint32_t i = mIdx;
-    if (poseTree[i].isEndSite()) {
-        i = poseTree[i].parent;
-    }
 
-    glmx::transform t(glm::vec3(0.0f), glm::identity<glm::quat>());
-
-    while (true) {
-        auto& node = poseTree[i];
-        if (poseTree[i].isEndSite()) {
-            t = glmx::transform(node.offset) * t;
-        }
-        else {
-            t = glmx::transform(node.offset, pose.q[i]) * t;
-        }
-        if (i == 0) {
-            t = glmx::transform(pose.v) * t;
-            break;
-        }
-        else {
-            i = node.parent;
-        }
-    }
-    return t;
-}
-
-std::vector<glmx::transform> calcFK(const PoseTree& poseTree, const glmx::pose& pose) {
-    std::vector<glmx::transform> transforms(poseTree.numNodes);
-    std::stack<std::tuple<uint32_t, uint32_t>> recursionStack;
-
-    transforms[0] = glmx::transform{pose.v, glm::identity<glm::quat>()};
-    recursionStack.push({0, 0});
-
-    while (!recursionStack.empty()) {
-        auto[idx, parentIdx] = recursionStack.top();
-        recursionStack.pop();
-
-        auto& node = poseTree[idx];
-        if (poseTree[idx].isEndSite()) {
-            transforms[idx] = transforms[parentIdx] * glmx::transform(node.offset);
-        } else {
-            transforms[idx] = transforms[parentIdx] * glmx::transform(node.offset, pose.q[idx]);
-        }
-
-        for (uint32_t childIdx : node.childJoints) {
-            recursionStack.push({childIdx, idx});
-        }
-    }
-
-    return transforms;
-}
-
-std::vector<glmx::transform> calcFK(const PoseTree& poseTree, glm::vec3 rootPos, const VectorXf& poseEuler) {
-    std::vector<glmx::transform> transforms(poseTree.numNodes);
-    std::stack<std::tuple<uint32_t, uint32_t>> recursionStack;
-
-    transforms[0] = glmx::transform{rootPos, glm::identity<glm::quat>()};
-    recursionStack.push({0, 0});
-
-    while (!recursionStack.empty()) {
-        auto[idx, parentIdx] = recursionStack.top();
-        recursionStack.pop();
-
-        auto& node = poseTree[idx];
-        if (poseTree[idx].isEndSite()) {
-            transforms[idx] = transforms[parentIdx] * glmx::transform(node.offset);
-        } else {
-            glm::quat q = glmx::eulerToQuat({poseEuler[3*idx], poseEuler[3*idx+1], poseEuler[3*idx+2]}, EulOrdXYZs);
-            transforms[idx] = transforms[parentIdx] * glmx::transform(node.offset, q);
-        }
-
-        for (uint32_t childIdx : node.childJoints) {
-            recursionStack.push({childIdx, idx});
-        }
-    }
-
-    return transforms;
-}
 
 using Vector6f = Matrix<float, 6, -1>;
 

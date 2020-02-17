@@ -53,7 +53,7 @@ struct Mesh {
 
     void rotate(glm::quat rot);
 
-    static Ref<Mesh> fromOBJFile(const std::string& filename, bool onlyVertices = true);
+    static Ref<Mesh> fromOBJFile(const std::string& filename, bool onlyVertices = true, bool loadUVs = true);
     static Ref<Mesh> makeCube(const glm::vec3& scale = {1.0f, 1.0f, 1.0f});
     static Ref<Mesh> makePlane(float size = 1.0f, float uvSize = 1.0f);
     static Ref<Mesh> makeCylinder(unsigned int numQuads, float r, float h);

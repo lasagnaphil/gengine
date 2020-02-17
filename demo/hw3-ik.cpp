@@ -9,7 +9,7 @@
 #include "FlyCamera.h"
 #include "glmx/pose.h"
 #include "PoseRenderBody.h"
-#include "PoseKinematics.h"
+#include "PoseIK.h"
 
 #include <glm/ext/quaternion_common.hpp>
 #include <glm/ext/quaternion_float.hpp>

@@ -122,7 +122,7 @@ void Mesh::rotate(glm::quat rot) {
     }
 }
 
-Ref<Mesh> Mesh::fromOBJFile(const std::string& filename, bool onlyVertices) {
+Ref<Mesh> Mesh::fromOBJFile(const std::string& filename, bool onlyVertices, bool loadUVs) {
     using namespace tinyobj;
     ObjReader objReader;
     attrib_t attrib;
@@ -152,10 +152,12 @@ Ref<Mesh> Mesh::fromOBJFile(const std::string& filename, bool onlyVertices) {
                         attrib.normals[3 * index.normal_index + 1],
                         attrib.normals[3 * index.normal_index + 2]
                 };
-                vertex.uv = {
-                        attrib.texcoords[2 * index.texcoord_index + 0],
-                        attrib.texcoords[2 * index.texcoord_index + 1]
-                };
+                if (loadUVs) {
+                    vertex.uv = {
+                            attrib.texcoords[2 * index.texcoord_index + 0],
+                            attrib.texcoords[2 * index.texcoord_index + 1]
+                    };
+                }
                 mesh->vertices.push_back(vertex);
                 mesh->indices.push_back(mesh->indices.size());
             }

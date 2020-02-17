@@ -8,7 +8,8 @@
 #include "physx/PhysXDebugRenderer.h"
 #include "PoseRenderBody.h"
 #include "MotionClipData.h"
-#include "PoseKinematics.h"
+#include "PoseFK.h"
+#include "PoseIK.h"
 #include "AnimStateMachine.h"
 
 PxDefaultAllocator gAllocator = {};
@@ -84,7 +85,7 @@ public:
 
         // Prepare the box
         if (enableBox) {
-            box.mesh = Mesh::fromOBJFile("resources/box.obj");
+            box.mesh = Mesh::fromOBJFile("resources/box.obj", true, false);
             box.material = Resources::make<PBRMaterial>();
             box.material->texAlbedo = Texture::fromSingleColor(glm::vec3(0.4f));
             box.material->texAO = defaultAO;
@@ -533,7 +534,7 @@ private:
     std::vector<PhysicsObject> spheres;
 
     bool enableDebugRendering = true;
-    bool renderSimple = false;
+    bool renderSimple = true;
 
     bool enableRagdoll = false;
     bool enableManipulation = false;
@@ -544,7 +545,7 @@ private:
     bool enableObstacle = true;
 
     bool isHoldingBox = false;
-    bool isCameraFixed = true;
+    bool isCameraFixed = false;
 
     glm::vec3 boxLeftPos, boxRightPos;
 };

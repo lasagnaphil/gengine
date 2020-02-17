@@ -40,10 +40,8 @@ void PosePhysicsBody::init(PhysicsWorld& world, const PoseTree& poseTree, const 
         auto pxJoint = static_cast<PxArticulationJointReducedCoordinate*>(link->getInboundJoint());
         if (pxJoint) {
             glmx::transform origin;
-            // PxQuat rot = PxShortestRotation(PxVec3(1.0f, 0.0f, 0.0f), GLMToPx(glm::normalize(joint.jointTrans - parent.jointTrans)));
-            PxQuat rot = PxShortestRotation(PxVec3(1.0f, 0.0f, 0.0f), PxVec3(1.0f, 0.0f, 0.0f));
-            PxTransform pPose = PxTransform(GLMToPx(joint.jointTrans - parent.bodyTrans), rot);
-            PxTransform cPose = PxTransform(GLMToPx(joint.jointTrans - joint.bodyTrans), rot);
+            PxTransform pPose = PxTransform(GLMToPx(joint.jointTrans - parent.bodyTrans));
+            PxTransform cPose = PxTransform(GLMToPx(joint.jointTrans - joint.bodyTrans));
             pxJoint->setParentPose(pPose);
             pxJoint->setChildPose(cPose);
 
@@ -93,31 +91,35 @@ void PosePhysicsBody::init(PhysicsWorld& world, const PoseTree& poseTree, const 
 
 void PosePhysicsBody::setPose(const glmx::pose& pose, const PoseTree& poseTree) {
     PxArticulationCacheFlags flags = PxArticulationCache::eALL;
-    articulation->zeroCache(*cache);
+    articulation->copyInternalStateToCache(*cache, flags);
 
     cache->rootLinkData->transform = PxTransform(GLMToPx(pose.v), GLMToPx(pose.q[0]));
 
     for (uint32_t i = 1; i < pose.size(); i++) {
-        glm::quat q = pose.q[i];
-
-        glm::vec3 v = glmx::quatToEuler(pose.q[i], EulOrdZYXs);
+        glm::vec3 v = glmx::quatToEuler(pose.q[i], EulOrdXYZr);
         uint32_t li = nodeToLink[i]->getLinkIndex();
-        cache->jointPosition[dofStarts[li]] = -v.z;
-        cache->jointPosition[dofStarts[li] + 1] = -v.y;
-        cache->jointPosition[dofStarts[li] + 2] = -v.x;
+        cache->jointPosition[dofStarts[li]] = v.x;
+        cache->jointPosition[dofStarts[li] + 1] = v.y;
+        cache->jointPosition[dofStarts[li] + 2] = v.z;
     }
 
     articulation->applyCache(*cache, flags);
 }
 
 void PosePhysicsBody::getPose(glmx::pose& pose, const PoseTree& poseTree) {
+    PxArticulationCacheFlags flags = PxArticulationCache::eROOT | PxArticulationCache::ePOSITION;
+    articulation->copyInternalStateToCache(*cache, flags);
+
     pose.v = PxToGLM(nodeToLink[0]->getGlobalPose().p);
     pose.q[0] = PxToGLM(nodeToLink[0]->getGlobalPose().q);
 
     for (uint32_t i = 1; i < pose.size(); i++) {
-        PxArticulationLink* link = nodeToLink[i];
-        PxArticulationLink* parentLink = nodeToLink[poseTree[i].parent];
-        pose.q[i] = PxToGLM(parentLink->getGlobalPose().q.getConjugate() * link->getGlobalPose().q);
+        glm::vec3 v;
+        uint32_t li = nodeToLink[i]->getLinkIndex();
+        v.x = cache->jointPosition[dofStarts[li]];
+        v.y = cache->jointPosition[dofStarts[li]+1];
+        v.z = cache->jointPosition[dofStarts[li]+2];
+        pose.q[i] = glmx::eulerToQuat(v, EulOrdXYZr);
     }
 }
 
@@ -126,11 +128,11 @@ void PosePhysicsBody::setPoseVelocityFromTwoPoses(const glmx::pose& p1, const gl
     for (uint32_t i = 1; i < p1.size(); i++) {
         glm::quat q = glm::inverse(p1.q[i]) * p2.q[i];
 
-        glm::vec3 v = glmx::quatToEuler(q, EulOrdZYXs);
+        glm::vec3 v = glmx::quatToEuler(q, EulOrdXYZr);
         uint32_t li = nodeToLink[i]->getLinkIndex();
-        cache->jointVelocity[dofStarts[li]] = -v.z / dt;
-        cache->jointVelocity[dofStarts[li] + 1] = -v.y / dt;
-        cache->jointVelocity[dofStarts[li] + 2] = -v.x / dt;
+        cache->jointVelocity[dofStarts[li]] = v.x / dt;
+        cache->jointVelocity[dofStarts[li] + 1] = v.y / dt;
+        cache->jointVelocity[dofStarts[li] + 2] = v.z / dt;
     }
     articulation->applyCache(*cache, flags);
 }
@@ -152,9 +154,9 @@ void PosePhysicsBody::renderImGui() {
     bool edited = false;
     edited |= ImGui::DragFloat3("Root Position", (float*)&cache->rootLinkData->transform.p, 0.01f);
     glm::quat q = PxToGLM(cache->rootLinkData->transform.q);
-    glm::vec3 euler = glmx::quatToEuler(q, EulOrdXYZs);
+    glm::vec3 euler = glmx::quatToEuler(q, EulOrdXYZr);
     ImGui::DragFloat3("Root Rotation", (float*)&euler, 0.01f);
-    cache->rootLinkData->transform.q = GLMToPx(glmx::eulerToQuat(euler, EulOrdXYZs));
+    cache->rootLinkData->transform.q = GLMToPx(glmx::eulerToQuat(euler, EulOrdXYZr));
 
     for (auto [bvhIdx, link] : nodeToLink) {
         uint32_t li = link->getLinkIndex();
@@ -165,9 +167,9 @@ void PosePhysicsBody::renderImGui() {
         float pi = glm::pi<float>();
         bool linkEdited = ImGui::DragFloat3(link->getName(), (float*)&v, 0.01f);
         if (linkEdited) {
-            cache->jointPosition[dofStarts[li]] = v.z;
+            cache->jointPosition[dofStarts[li]] = v.x;
             cache->jointPosition[dofStarts[li] + 1] = v.y;
-            cache->jointPosition[dofStarts[li] + 2] = v.x;
+            cache->jointPosition[dofStarts[li] + 2] = v.z;
         }
         edited |= linkEdited;
     }
