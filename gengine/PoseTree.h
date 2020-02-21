@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <stack>
 #include <string>
+#include <unordered_map>
 #include <glm/vec3.hpp>
 
 struct PoseTreeNode {

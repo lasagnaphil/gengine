@@ -11,7 +11,7 @@ Ref<Animation> AnimStateMachine::addAnimation(const std::string& name, nonstd::s
     auto animRef = anims.make();
     auto anim = anims.get(animRef);
     anim->name = name;
-    anim->poses = std::vector(poses.data(), poses.data() + poses.size());
+    anim->poses = std::vector<glmx::pose>(poses.data(), poses.data() + poses.size());
     anim->fps = fps;
     return animRef;
 }
