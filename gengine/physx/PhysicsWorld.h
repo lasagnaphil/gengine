@@ -21,7 +21,7 @@
 using namespace physx;
 
 struct PhysicsWorld {
-    void init(PxFoundation* foundation, uint32_t numThreads);
+    void init(PxFoundation* foundation, uint32_t numThread = 1, bool enableGpu = false);
 
     bool advance(float dt);
 
