@@ -192,13 +192,15 @@ ImPlot2DResult ImPlot2DContext::show() {
         }
     }
 
-    if (ImGui::IsMouseDragging(1)) {
-        ImVec2 dm = ImGui::GetIO().MouseDelta;
-        float scaleX = 1.0f / viewMat[0][0];
-        float scaleY = 1.0f / viewMat[1][1];
-        bounds.min -= glm::vec2(scaleX * dm.x, -scaleY * dm.y);
-        bounds.max -= glm::vec2(scaleX * dm.x, -scaleY * dm.y);
-        autoscaleEnabled = false;
+    if (ImGui::GetIO().WantCaptureMouse) {
+        if (ImGui::IsMouseDragging(1)) {
+            ImVec2 dm = ImGui::GetIO().MouseDelta;
+            float scaleX = 1.0f / viewMat[0][0];
+            float scaleY = 1.0f / viewMat[1][1];
+            bounds.min -= glm::vec2(scaleX * dm.x, -scaleY * dm.y);
+            bounds.max -= glm::vec2(scaleX * dm.x, -scaleY * dm.y);
+            autoscaleEnabled = false;
+        }
     }
 
     if (ImGui::Button("Auto-scale")) {
