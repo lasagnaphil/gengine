@@ -22,7 +22,8 @@ void MotionClipPlayer::update(float dt) {
 }
 
 void MotionClipPlayer::renderImGui() {
-    ImGui::Begin("Motion Clip Player");
+    std::string windowName = fmt::format("Motion Clip Player ({})", getName());
+    ImGui::Begin(windowName.c_str());
 
     ImGui::Text("Current Frame: %d", currentFrameIdx);
     if (ImGui::ArrowButton("Left##PoseMesh", ImGuiDir_Left)) {
@@ -49,6 +50,8 @@ void MotionClipPlayer::renderImGui() {
 
     ImGui::End();
 }
+
+int BVHMotionClipPlayer::counter = 0;
 
 void BVHMotionClipPlayer::renderImGui() {
     MotionClipPlayer::renderImGui();
