@@ -65,6 +65,10 @@ struct MotionClipData {
 
     bool checkValidity();
 
+    void moveStartingRoot(glm::vec3 pos);
+
+    void moveStartingRoot(glmx::transform t);
+
 private:
     void printRecursive(uint32_t jointID, int depth) const;
     void saveToFileRecursive(uint32_t jointID, std::ostream& ofs, int depth, int eulerOrd);
