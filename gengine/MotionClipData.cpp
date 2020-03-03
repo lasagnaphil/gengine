@@ -556,3 +556,19 @@ bool MotionClipData::checkValidity() {
     return true;
 }
 
+glmx::pose MotionClipData::samplePose(float time) const {
+    glmx::pose pose;
+    uint32_t u = time / frameTime;
+    if (u <= 0) {
+        pose = poseStates[0];
+    }
+    else if (u >= numFrames-1) {
+        pose = poseStates[numFrames-1];
+    }
+    else {
+        float t = std::fmod(time, frameTime);
+        pose = glmx::slerp(poseStates[u], poseStates[u+1], t);
+    }
+    return pose;
+}
+
