@@ -38,6 +38,7 @@ void PhysicsWorld::init(PxFoundation* foundation, uint32_t numThreads, bool enab
     cpuDispatcher = PxDefaultCpuDispatcherCreate(numThreads);
     sceneDesc.cpuDispatcher = cpuDispatcher;
     sceneDesc.filterShader = PxDefaultSimulationFilterShader;
+    // sceneDesc.solverType = PxSolverType::eTGS;
 
     // enable CUDA
     if (enableGpu) {
@@ -54,7 +55,7 @@ void PhysicsWorld::init(PxFoundation* foundation, uint32_t numThreads, bool enab
     defaultMaterial = physics->createMaterial(0.5f, 0.5f, 0.6f);
 
     // create ground
-    PxRigidStatic* groundPlane = PxCreatePlane(*physics, PxPlane(0,1,0,0), *defaultMaterial);
+    groundPlane = PxCreatePlane(*physics, PxPlane(0,1,0,0), *defaultMaterial);
     scene->addActor(*groundPlane);
 }
 

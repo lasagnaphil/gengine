@@ -37,6 +37,16 @@ struct PhysicsWorld {
         scene->setGravity(GLMToPx(g));
     }
 
+    glm::vec3 getGroundPos() {
+        return PxToGLM(groundPlane->getGlobalPose().p);
+    }
+
+    void setGroundPos(glm::vec3 pos) {
+        PxTransform t = groundPlane->getGlobalPose();
+        t.p = GLMToPx(pos);
+        groundPlane->setGlobalPose(t);
+    }
+
     const PxRenderBuffer& getRenderBuffer() const {
         return scene->getRenderBuffer();
     }
@@ -48,6 +58,8 @@ struct PhysicsWorld {
     PxCpuDispatcher* cpuDispatcher;
     PxScene* scene;
     PxMaterial* defaultMaterial;
+
+    PxRigidStatic* groundPlane;
 };
 
 #endif //PHYSICS_BENCHMARKS_PHYSICSWORLD_H
