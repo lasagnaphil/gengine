@@ -55,7 +55,7 @@ void PhysicsWorld::init(PxFoundation* foundation, uint32_t numThreads, bool enab
     defaultMaterial = physics->createMaterial(0.5f, 0.5f, 0.6f);
 
     // create ground
-    groundPlane = PxCreatePlane(*physics, PxPlane(0,1,0,0), *defaultMaterial);
+    groundPlane = PxCreatePlane(*physics, PxPlane(0,1,0,0), *physics->createMaterial(0.9f, 0.5f, 0.1f));
     scene->addActor(*groundPlane);
 }
 
