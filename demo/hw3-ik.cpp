@@ -10,6 +10,7 @@
 #include "glmx/pose.h"
 #include "PoseRenderBody.h"
 #include "PoseIK.h"
+#include "PoseFK.h"
 
 #include <glm/ext/quaternion_common.hpp>
 #include <glm/ext/quaternion_float.hpp>
