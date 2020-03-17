@@ -518,6 +518,21 @@ void MotionClipData::removeJoint(const std::string& nodeName) {
     }
 }
 
+void MotionClipData::moveStartingRoot(glm::vec3 pos) {
+    glm::vec3 offset = pos - poseStates[0].v;
+    for (auto& pose : poseStates) {
+        pose.v += offset;
+    }
+}
+
+void MotionClipData::moveStartingRoot(glmx::transform t) {
+    glmx::transform offset = t / poseStates[0].getRoot();
+    for (auto& pose : poseStates) {
+        pose.v = offset.q * pose.v + offset.v;
+        pose.q[0] = offset.q * pose.q[0];
+    }
+}
+
 void MotionClipData::removeCMUPhantomJoints() {
     removeJoint("LHipJoint");
     removeJoint("RHipJoint");
@@ -540,3 +555,20 @@ bool MotionClipData::checkValidity() {
     }
     return true;
 }
+
+glmx::pose MotionClipData::samplePose(float time) const {
+    glmx::pose pose;
+    uint32_t u = time / frameTime;
+    if (u <= 0) {
+        pose = poseStates[0];
+    }
+    else if (u >= numFrames-1) {
+        pose = poseStates[numFrames-1];
+    }
+    else {
+        float t = std::fmod(time, frameTime);
+        pose = glmx::slerp(poseStates[u], poseStates[u+1], t);
+    }
+    return pose;
+}
+

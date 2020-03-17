@@ -5,6 +5,8 @@
 #ifndef PHYSICS_BENCHMARKS_MOTIONCLIPPLAYER_H
 #define PHYSICS_BENCHMARKS_MOTIONCLIPPLAYER_H
 
+#include <vector>
+
 #include "MotionClipData.h"
 #include "LineMesh.h"
 
@@ -18,6 +20,7 @@ protected:
 public:
     virtual uint32_t getNumFrames() = 0;
     virtual float getFrameTime() = 0;
+    virtual std::string getName() = 0;
 
     bool playing() {
         return isPlaying;
@@ -65,15 +68,25 @@ public:
 };
 
 struct BVHMotionClipPlayer : public MotionClipPlayer {
+    static int counter;
+
     MotionClipData* clip;
+    std::string name;
 
-    Ref<LineMesh> trajectoryMesh;
-    Ref<LineMaterial> trajectoryMat;
+    BVHMotionClipPlayer(MotionClipData* clip = nullptr)
+            : MotionClipPlayer(), clip(clip),
+              name(std::string("clip") + std::to_string(BVHMotionClipPlayer::counter)) {
 
-    BVHMotionClipPlayer(MotionClipData* clip = nullptr) : MotionClipPlayer(), clip(clip) {}
+        BVHMotionClipPlayer::counter++;
+    }
 
-    void setClip(MotionClipData* clip) {
+    void setClip(MotionClipData* clip, bool stop = true) {
         this->clip = clip;
+
+        if (stop) {
+            currentFrameIdx = 0;
+            isPlaying = false;
+        }
     }
 
     uint32_t getNumFrames() override {
@@ -84,6 +97,11 @@ struct BVHMotionClipPlayer : public MotionClipPlayer {
     float getFrameTime() override {
         assert(clip);
         return clip->frameTime;
+    }
+
+    std::string getName() override {
+        assert(clip);
+        return name;
     }
 
     const glmx::pose& getPoseState() const {

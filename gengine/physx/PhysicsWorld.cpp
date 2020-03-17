@@ -5,7 +5,13 @@
 #include "PhysicsWorld.h"
 #include <iostream>
 
-void PhysicsWorld::init(PxFoundation* foundation, uint32_t numThreads = 16) {
+class GpuLoadHook : public PxGpuLoadHook {
+    virtual const char* getPhysXGpuDllName() const {
+        return "/home/lasagnaphil/packages/PhysX/physx/bin/linux.clang/release/libPhysXGpu_64.so";
+    }
+} gGpuLoadHook;
+
+void PhysicsWorld::init(PxFoundation* foundation, uint32_t numThreads, bool enableGpu) {
     this->foundation = foundation;
 
     PxTolerancesScale scale;
@@ -32,22 +38,24 @@ void PhysicsWorld::init(PxFoundation* foundation, uint32_t numThreads = 16) {
     cpuDispatcher = PxDefaultCpuDispatcherCreate(numThreads);
     sceneDesc.cpuDispatcher = cpuDispatcher;
     sceneDesc.filterShader = PxDefaultSimulationFilterShader;
+    // sceneDesc.solverType = PxSolverType::eTGS;
 
     // enable CUDA
+    if (enableGpu) {
+        PxSetPhysXGpuLoadHook(&gGpuLoadHook);
 
-    /*
-    PxCudaContextManagerDesc cudaContextManagerDesc;
-    cudaContextManager = PxCreateCudaContextManager(*foundation, cudaContextManagerDesc, PxGetProfilerCallback());
-    sceneDesc.cudaContextManager = cudaContextManager;
-    sceneDesc.flags |= PxSceneFlag::eENABLE_GPU_DYNAMICS;
-    sceneDesc.broadPhaseType = PxBroadPhaseType::eGPU;
-     */
+        PxCudaContextManagerDesc cudaContextManagerDesc;
+        auto cudaContextManager = PxCreateCudaContextManager(*foundation, cudaContextManagerDesc, PxGetProfilerCallback());
+        sceneDesc.cudaContextManager = cudaContextManager;
+        sceneDesc.flags |= PxSceneFlag::eENABLE_GPU_DYNAMICS;
+        sceneDesc.broadPhaseType = PxBroadPhaseType::eGPU;
+    }
 
     scene = physics->createScene(sceneDesc);
     defaultMaterial = physics->createMaterial(0.5f, 0.5f, 0.6f);
 
     // create ground
-    PxRigidStatic* groundPlane = PxCreatePlane(*physics, PxPlane(0,1,0,0), *defaultMaterial);
+    groundPlane = PxCreatePlane(*physics, PxPlane(0,1,0,0), *physics->createMaterial(0.9f, 0.5f, 0.1f));
     scene->addActor(*groundPlane);
 }
 

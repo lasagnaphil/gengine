@@ -75,6 +75,10 @@ struct ImPlot2DContext {
         points2D.push_back(point);
     }
 
+    void plotPoint(glm::vec2 pos, glm::vec3 color, float size) {
+        points2D.push_back({pos, color, size});
+    }
+
     void plotPoints(nonstd::span<Point2D> points) {
         points2D.insert(points2D.begin(), points.begin(), points.end());
     }
