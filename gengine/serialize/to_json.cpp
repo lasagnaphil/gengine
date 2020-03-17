@@ -37,6 +37,7 @@
 #include <rapidjson/document.h>     // rapidjson's DOM-style API
 #include <rapidjson/ostreamwrapper.h>
 #include <rttr/type>
+#include <cmath>
 #include "to_json.h"
 
 
@@ -79,10 +80,13 @@ bool write_atomic_types_to_json(const type& t, const variant& var, PrettyWriter<
             writer.Uint(var.to_uint32());
         else if (t == type::get<uint64_t>())
             writer.Uint64(var.to_uint64());
-        else if (t == type::get<float>())
-            writer.Double(var.to_double());
-        else if (t == type::get<double>())
-            writer.Double(var.to_double());
+        else if (t == type::get<float>() || t == type::get<double>()) {
+            float v = var.to_double();
+            if (std::isnan(v))
+                writer.Null();
+            else
+                writer.Double(v);
+        }
 
         return true;
     }
