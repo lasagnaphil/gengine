@@ -10,6 +10,3 @@
 [submodule "gengine/deps/bitsery"]
 	path = gengine/deps/bitsery
 	url = https://github.com/fraillt/bitsery
-[submodule "gengine/deps/rttr"]
-	path = gengine/deps/rttr
-	url = https://github.com/rttrorg/rttr

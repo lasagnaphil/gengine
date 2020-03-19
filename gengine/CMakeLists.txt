@@ -57,22 +57,6 @@ add_subdirectory(${FMT_DIR} EXCLUDE_FROM_ALL)
 set(BITSERY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/bitsery)
 add_subdirectory(${BITSERY_DIR} EXCLUDE_FROM_ALL)
 
-# rttr
-set(BUILD_INSTALLER OFF CACHE BOOL "disable rttr installer" FORCE)
-set(BUILD_PACKAGE OFF CACHE BOOL "disable rttr installer" FORCE)
-set(BUILD_STATIC ON CACHE BOOL "build rttr as static lib" FORCE)
-set(BUILD_UNIT_TESTS OFF CACHE BOOL "disable rttr unit tests" FORCE)
-set(BUILD_BENCHMARKS OFF CACHE BOOL "disable rttr benchmarks" FORCE)
-set(BUILD_EXAMPLES OFF CACHE BOOL "disable rttr examples" FORCE)
-set(BUILD_DOCUMENTATION OFF CACHE BOOL "disable rttr docs" FORCE)
-set(RTTR_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/rttr)
-add_subdirectory(${RTTR_DIR} EXCLUDE_FROM_ALL)
-
-# rapidjson (inside rttr)
-set(RAPIDJSON_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/rttr/3rd_party/rapidjson-1.1.0)
-add_library(rapidjson INTERFACE)
-target_include_directories(rapidjson INTERFACE ${RAPIDJSON_DIR})
-
 # doctest
 set(DOCTEST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/doctest)
 add_library(doctest INTERFACE)
@@ -102,7 +86,7 @@ endif()
 target_include_directories(gengine
         PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(gengine
-        Threads::Threads SDL2::Main glad imgui stb glm eigen tinyxml2 rapidjson RTTR::Core_Lib
+        Threads::Threads SDL2::Main glad imgui stb glm eigen tinyxml2
         tinyobjloader span-lite fmt bitsery doctest)
 
 if (GENGINE_ENABLE_PHYSX)
