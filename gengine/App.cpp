@@ -110,16 +110,14 @@ void App::load() {
         exit(EXIT_FAILURE);
     }
 
-    mainContext = SDL_GL_CreateContext(window);
-    SDL_GL_SetSwapInterval(1); // Enable vsync
-
-    // SDL Settings
-    // SDL_SetRelativeMouseMode(isMouseRelative? SDL_TRUE : SDL_FALSE);
-
     // Create OpenGL Context
     mainContext = SDL_GL_CreateContext(window);
     if (mainContext == NULL)
         sdl_die("Failed to create OpenGL context");
+    SDL_GL_SetSwapInterval(1); // Enable vsync
+
+    // SDL Settings
+    // SDL_SetRelativeMouseMode(isMouseRelative? SDL_TRUE : SDL_FALSE);
 
     // Check OpenGL properties
     printf("OpenGL loaded\n");
