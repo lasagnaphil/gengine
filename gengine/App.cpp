@@ -170,7 +170,7 @@ void App::load() {
     rootTransform->update();
 
     if (settings.camera == AppSettings::Camera::FlyCamera) {
-        camera = std::make_unique<FlyCamera>(rootTransform);
+        camera = std::make_unique<FlyCamera>(rootTransform, glm::ivec2(w, h));
     }
     else if (settings.camera == AppSettings::Camera::TrackballCamera) {
         camera = std::make_unique<TrackballCamera>(rootTransform);

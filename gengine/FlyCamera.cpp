@@ -15,18 +15,13 @@
 #include "InputManager.h"
 #include "imgui_impl_sdl.h"
 
-FlyCamera::FlyCamera(Ref<Transform> parent)
+FlyCamera::FlyCamera(Ref<Transform> parent, glm::ivec2 windowSize)
 {
     transform = Resources::make<Transform>();
     transform->setPosition(glm::vec3(0.f, 0.f, distance));
     Transform::addChildToParent(transform, parent);
-    /*
-    trackballFocus = Resources::insert(Transform {});
-    Transform::addChildToParent(transform, trackballFocus);
-    Transform::addChildToParent(trackballFocus, parent);
-     */
 
-    viewport = {0, 0, (int)ImGui::GetIO().DisplaySize.x, (int)ImGui::GetIO().DisplaySize.y};
+    viewport = {0, 0, windowSize.x, windowSize.y};
     updateCameraVectors();
 }
 
@@ -128,7 +123,7 @@ void FlyCamera::processInput(SDL_Event& ev) {
 glm::mat4 FlyCamera::getPerspectiveMatrix() const {
     return glm::perspective(
             glm::radians(fov),
-            ImGui::GetIO().DisplaySize.x / ImGui::GetIO().DisplaySize.y,
+            (float)viewport.width / (float)viewport.height,
             near,
             far
     );

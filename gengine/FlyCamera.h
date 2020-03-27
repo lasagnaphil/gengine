@@ -17,7 +17,7 @@
 class FlyCamera : public Camera {
 public:
     FlyCamera() = default;
-    explicit FlyCamera(Ref<Transform> parent);
+    explicit FlyCamera(Ref<Transform> parent, glm::ivec2 windowSize);
 
     void update(float dt) override;
     void updateCameraVectors() override;
