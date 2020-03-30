@@ -11,8 +11,12 @@ class GpuLoadHook : public PxGpuLoadHook {
     }
 } gGpuLoadHook;
 
-void PhysicsWorld::init(PxFoundation* foundation, uint32_t numThreads, bool enableGpu) {
-    this->foundation = foundation;
+void PhysicsWorld::init(uint32_t numThreads, bool enableGpu) {
+    foundation = PxCreateFoundation(PX_PHYSICS_VERSION, allocator, errorCallback);
+    if (!foundation) {
+        std::cerr << "PxCreateFoundation failed!" << std::endl;
+        exit(EXIT_FAILURE);
+    }
 
     PxTolerancesScale scale;
     scale.length = 1.0f;
@@ -78,4 +82,5 @@ bool PhysicsWorld::fetchResults() {
 void PhysicsWorld::release() {
     cooking->release();
     physics->release();
+    foundation->release();
 }
