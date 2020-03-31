@@ -78,7 +78,7 @@ namespace glmx {
     inline pose_euler toEuler(const pose& p, int order) {
         pose_euler pe = pose_euler::empty(p.size());
         pe.v = p.v;
-        for (int i = 0; i < pe.size(); i++) {
+        for (size_t i = 0; i < pe.size(); i++) {
             pe.eulerAngles[i] = glmx::quatToEuler(p.q[i], order);
         }
         return pe;
@@ -87,7 +87,7 @@ namespace glmx {
     inline pose toQuat(const pose_euler& pe) {
         pose p = pose::empty(pe.size());
         p.v = pe.v;
-        for (int i = 0; i < p.size(); i++) {
+        for (size_t i = 0; i < p.size(); i++) {
             glm::vec3 e = pe.eulerAngles[i];
             p.q[i] = glmx::eulerToQuat(e);
         }
@@ -99,7 +99,7 @@ namespace glmx {
         pose p = pose::empty(p1.size());
 
         p.v = (1 - alpha) * p1.v + alpha * p2.v;
-        for (int i = 0; i < p.size(); i++) {
+        for (size_t i = 0; i < p.size(); i++) {
             p.q[i] = glm::slerp(p1.q[i], p2.q[i], alpha);
         }
 
@@ -133,7 +133,7 @@ namespace glmx {
         assert(p.size() == d.size());
 
         pRes.v = p.q[0] * p.v + d[0];
-        for (int i = 0; i < pRes.size(); i++) {
+        for (size_t i = 0; i < pRes.size(); i++) {
             pRes.q[i] = p.q[i] * glmx::exp(d[i + 1]);
         }
     }
@@ -147,14 +147,14 @@ namespace glmx {
         assert(p1.size() == p2.size());
 
         d.diff[0] = glm::conjugate(p2.q[0]) * (p1.v - p2.v);
-        for (int i = 0; i < d.size(); i++) {
+        for (size_t i = 0; i < d.size(); i++) {
             d.diff[i+1] = glmx::log(glm::conjugate(p2.q[i]) * p1.q[i]);
         }
     }
 
     inline void mult(pose_disp& pRes, const pose_disp& p, float alpha) {
         assert(pRes.size() == p.size());
-        for (int i = 0; i < p.size() + 1; i++) {
+        for (size_t i = 0; i < p.size() + 1; i++) {
             pRes.diff[i] = alpha * p.diff[i];
         }
     }
