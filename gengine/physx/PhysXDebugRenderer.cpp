@@ -22,13 +22,14 @@ void PhysXDebugRenderer::init(PhysicsWorld& world) {
     // world.scene->setVisualizationParameter(PxVisualizationParameter::eACTOR_AXES, 1.0f);
     // world.scene->setVisualizationParameter(PxVisualizationParameter::eCOLLISION_AABBS, 1.0f);
     world.scene->setVisualizationParameter(PxVisualizationParameter::eCOLLISION_SHAPES, 1.0f);
+    world.scene->setVisualizationParameter(PxVisualizationParameter::eCONTACT_FORCE, 1.0f);
     // world.scene->setVisualizationParameter(PxVisualizationParameter::eCOLLISION_AXES, 1.0f);
     // world.scene->setVisualizationParameter(PxVisualizationParameter::eCOLLISION_COMPOUNDS, 1.0f);
     // world.scene->setVisualizationParameter(PxVisualizationParameter::eCOLLISION_FNORMALS, 1.0f);
     // world.scene->setVisualizationParameter(PxVisualizationParameter::eCOLLISION_EDGES, 1.0f);
     // world.scene->setVisualizationParameter(PxVisualizationParameter::eCOLLISION_STATIC, 1.0f);
     // world.scene->setVisualizationParameter(PxVisualizationParameter::eCOLLISION_DYNAMIC, 1.0f);
-    world.scene->setVisualizationParameter(PxVisualizationParameter::eJOINT_LOCAL_FRAMES, 0.1f);
+    // world.scene->setVisualizationParameter(PxVisualizationParameter::eJOINT_LOCAL_FRAMES, 0.1f);
     // world.scene->setVisualizationParameter(PxVisualizationParameter::eJOINT_LIMITS, 1.0f);
     // world.scene->setVisualizationParameter(PxVisualizationParameter::eMBP_REGIONS, 1.0f);
 

@@ -21,8 +21,16 @@
 using namespace physx;
 
 struct PhysicsWorld {
+    static PxFoundation* foundation;
+    static int worldCount;
+
     PxDefaultAllocator allocator = {};
     PxDefaultErrorCallback errorCallback = {};
+
+    PhysicsWorld() = default;
+    ~PhysicsWorld() {
+        if (foundation) release();
+    }
 
     void init(uint32_t numThread = 1, bool enableGpu = false);
 
@@ -54,14 +62,13 @@ struct PhysicsWorld {
         return scene->getRenderBuffer();
     }
 
-    PxFoundation* foundation;
-    PxPhysics* physics;
+    PxPhysics* physics = nullptr;
     // PxCudaContextManager* cudaContextManager;
-    PxCooking* cooking;
-    PxCpuDispatcher* cpuDispatcher;
-    PxScene* scene;
-    PxMaterial* defaultMaterial;
+    PxCooking* cooking = nullptr;
+    PxCpuDispatcher* cpuDispatcher = nullptr;
+    PxScene* scene = nullptr;
 
+    PxMaterial* defaultMaterial;
     PxRigidStatic* groundPlane;
 };
 

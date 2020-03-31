@@ -11,11 +11,17 @@ class GpuLoadHook : public PxGpuLoadHook {
     }
 } gGpuLoadHook;
 
+PxFoundation* PhysicsWorld::foundation = nullptr;
+int PhysicsWorld::worldCount = 0;
+
 void PhysicsWorld::init(uint32_t numThreads, bool enableGpu) {
-    foundation = PxCreateFoundation(PX_PHYSICS_VERSION, allocator, errorCallback);
+    // Singleton pattern: only create foundation if it doesn't exist yet
     if (!foundation) {
-        std::cerr << "PxCreateFoundation failed!" << std::endl;
-        exit(EXIT_FAILURE);
+        foundation = PxCreateFoundation(PX_PHYSICS_VERSION, allocator, errorCallback);
+        if (!foundation) {
+            std::cerr << "PxCreateFoundation failed!" << std::endl;
+            exit(EXIT_FAILURE);
+        }
     }
 
     PxTolerancesScale scale;
@@ -61,6 +67,8 @@ void PhysicsWorld::init(uint32_t numThreads, bool enableGpu) {
     // create ground
     groundPlane = PxCreatePlane(*physics, PxPlane(0,1,0,0), *physics->createMaterial(0.9f, 0.5f, 0.1f));
     scene->addActor(*groundPlane);
+
+    worldCount++;
 }
 
 bool PhysicsWorld::advance(float dt) {
@@ -80,7 +88,12 @@ bool PhysicsWorld::fetchResults() {
 }
 
 void PhysicsWorld::release() {
+    scene->release();
     cooking->release();
     physics->release();
-    foundation->release();
+
+    worldCount--;
+    if (worldCount == 0) {
+        foundation->release();
+    }
 }
