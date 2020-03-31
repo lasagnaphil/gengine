@@ -50,7 +50,6 @@ public:
 private:
     float radius = 300.0f;
     float distance = 10.0f;
-    IntRect viewport;
 };
 
 

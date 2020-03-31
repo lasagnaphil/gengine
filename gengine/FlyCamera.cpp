@@ -21,7 +21,6 @@ FlyCamera::FlyCamera(Ref<Transform> parent, glm::ivec2 windowSize)
     transform->setPosition(glm::vec3(0.f, 0.f, distance));
     Transform::addChildToParent(transform, parent);
 
-    viewport = {0, 0, windowSize.x, windowSize.y};
     updateCameraVectors();
 }
 
@@ -121,9 +120,11 @@ void FlyCamera::processInput(SDL_Event& ev) {
 
 // TODO: cache the perspective and view matrices, to reduce repeating the same computation
 glm::mat4 FlyCamera::getPerspectiveMatrix() const {
+    GLint gl_viewport[4];
+    glGetIntegerv(GL_VIEWPORT, gl_viewport);
     return glm::perspective(
             glm::radians(fov),
-            (float)viewport.width / (float)viewport.height,
+            (float)gl_viewport[2] / (float)gl_viewport[3],
             near,
             far
     );
