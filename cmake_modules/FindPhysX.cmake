@@ -1,7 +1,4 @@
 # Locate the PhysX SDK
-
-
-
 if (NOT DEFINED PHYSX_HOME)
     set(PHYSX_HOME $ENV{PHYSX_HOME})
 endif()
@@ -41,14 +38,22 @@ macro(ADD_PHYSX_LIBRARY LIBNAME LIBTYPE)
     list(APPEND PhysX_LIBRARIES_${LIBTYPE_CAPS} ${PhysX_LIBRARY_${LIBNAME_CAPS}_${LIBTYPE_CAPS}})
 endmacro()
 
+macro(ADD_PHYSX_GPU_LIBRARY LIBTYPE)
+    string(TOUPPER ${LIBTYPE} LIBTYPE_CAPS)
+    find_library(PhysX_LIBRARY_GPU_${LIBTYPE_CAPS}
+            NAMES libPhysXGpu_${LIBFOLDERSUFFIX}.so
+            PATHS ${PhysX_LIBRARY_DIR}/${LIBTYPE})
+
+    list(APPEND PhysX_LIBRARIES_${LIBTYPE_CAPS} ${PhysX_LIBRARY_GPU_${LIBTYPE_CAPS}})
+endmacro()
+
 foreach(LIBTYPE debug profile checked release)
     string(TOUPPER ${LIBTYPE} LIBTYPE_CAPS)
-
     find_library(PhysX_LIBRARY_BASE_${LIBTYPE_CAPS}
             NAMES libPhysX_static_${LIBFOLDERSUFFIX}.a
             PATHS ${PhysX_LIBRARY_DIR}/${LIBTYPE})
-    list(APPEND PhysX_LIBRARIES_${LIBTYPE_CAPS} ${PhysX_LIBRARY_BASE_${LIBTYPE_CAPS}})
 
+    list(APPEND PhysX_LIBRARIES_${LIBTYPE_CAPS} ${PhysX_LIBRARY_BASE_${LIBTYPE_CAPS}})
 
     ADD_PHYSX_LIBRARY(CharacterKinematic ${LIBTYPE})
     ADD_PHYSX_LIBRARY(Common ${LIBTYPE})
@@ -57,6 +62,10 @@ foreach(LIBTYPE debug profile checked release)
     ADD_PHYSX_LIBRARY(Foundation ${LIBTYPE})
     ADD_PHYSX_LIBRARY(PvdSDK ${LIBTYPE})
     ADD_PHYSX_LIBRARY(Vehicle ${LIBTYPE})
+
+    # damn it, CMake cannot handle multiple versions of the same shared library
+    # will fix this later, for now just load the release version of GPU library regardless of target
+    ADD_PHYSX_GPU_LIBRARY(release)
 endforeach()
 
 set(PhysX_LIBRARIES debug ${PhysX_LIBRARIES_DEBUG})
@@ -69,11 +78,6 @@ else ()
     set(PhysX_LIBRARIES ${PhysX_LIBRARIES} optimized ${PhysX_LIBRARIES_RELEASE})
 endif()
 
-find_library(PhysX_LIBRARY_GPU
-        NAMES libPhysXGpu_64.so
-        PATHS ${PhysX_LIBRARY_DIR}/release)
-
-list(APPEND PhysX_LIBRARIES ${PhysX_LIBRARY_GPU})
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(PhysX  DEFAULT_MSG  PhysX_INCLUDE_DIR PxShared_INCLUDE_DIR PhysX_LIBRARIES)

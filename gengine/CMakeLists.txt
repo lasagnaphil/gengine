@@ -63,6 +63,7 @@ add_library(doctest INTERFACE)
 target_include_directories(doctest INTERFACE ${DOCTEST_DIR})
 
 option(GENGINE_ENABLE_PHYSX "Enable PhysX" OFF)
+option(GENGINE_ENABLE_PHYSX_GPU "Enable PhysX GPU" OFF)
 
 if (GENGINE_ENABLE_PHYSX)
     find_package(PhysX REQUIRED)
@@ -86,13 +87,20 @@ endif()
 target_include_directories(gengine
         PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(gengine
-        Threads::Threads SDL2::Main glad imgui stb glm eigen tinyxml2
+        ${CMAKE_DL_LIBS} Threads::Threads SDL2::Main glad imgui stb glm eigen tinyxml2
         tinyobjloader span-lite fmt bitsery doctest)
 
 if (GENGINE_ENABLE_PHYSX)
-    target_include_directories(gengine PUBLIC gengine ${PhysX_INCLUDE_DIR} ${PxShared_INCLUDE_DIR})
-    target_link_libraries(gengine debug ${PhysX_LIBRARIES_DEBUG})
-    target_link_libraries(gengine optimized ${PhysX_LIBRARIES_RELEASE})
+    target_include_directories(gengine PUBLIC ${PhysX_INCLUDE_DIR} ${PxShared_INCLUDE_DIR})
+
+    if (GENGINE_ENABLE_PHYSX_GPU)
+        target_link_directories(gengine PUBLIC /usr/local/cuda/lib64)
+        target_link_libraries(gengine debug ${PhysX_LIBRARIES_DEBUG} cuda)
+        target_link_libraries(gengine optimized ${PhysX_LIBRARIES_RELEASE} cuda)
+    else()
+        target_link_libraries(gengine debug ${PhysX_LIBRARIES_DEBUG})
+        target_link_libraries(gengine optimized ${PhysX_LIBRARIES_RELEASE})
+    endif()
 endif()
 
 # Compile shaders into header files
