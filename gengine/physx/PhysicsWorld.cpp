@@ -65,15 +65,14 @@ void PhysicsWorld::init(uint32_t numThreads, bool enableGpu) {
     defaultMaterial = physics->createMaterial(0.5f, 0.5f, 0.6f);
 
     // create ground
-    groundPlane = PxCreatePlane(*physics, PxPlane(0,1,0,0), *physics->createMaterial(0.9f, 0.5f, 0.1f));
+    groundPlane = PxCreatePlane(*physics, PxPlane(0,1,0,0), *physics->createMaterial(1.0f, 0.5f, 0.05f));
     scene->addActor(*groundPlane);
 
     worldCount++;
 }
 
-bool PhysicsWorld::advance(float dt) {
+bool PhysicsWorld::advance(float dt, float stepSize) {
     static float time = 0.0f;
-    constexpr float stepSize = 1.0f / 60.0f;
     time += dt;
     if (time < stepSize) {
         return false;
@@ -85,6 +84,11 @@ bool PhysicsWorld::advance(float dt) {
 
 bool PhysicsWorld::fetchResults() {
     return scene->fetchResults(true);
+}
+
+void PhysicsWorld::simulate(float dt) {
+    scene->simulate(dt);
+    scene->fetchResults(true);
 }
 
 void PhysicsWorld::release() {

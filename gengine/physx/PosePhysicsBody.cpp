@@ -96,7 +96,7 @@ void PosePhysicsBody::setPose(const glmx::pose& pose, const PoseTree& poseTree) 
     cache->rootLinkData->transform = PxTransform(GLMToPx(pose.v), GLMToPx(pose.q[0]));
 
     for (uint32_t i = 1; i < pose.size(); i++) {
-        glm::vec3 v = glmx::quatToEuler(pose.q[i], EulOrdXYZr);
+        glm::vec3 v = glmx::log(pose.q[i]);
         uint32_t li = nodeToLink[i]->getLinkIndex();
         cache->jointPosition[dofStarts[li]] = v.x;
         cache->jointPosition[dofStarts[li] + 1] = v.y;
@@ -119,7 +119,7 @@ void PosePhysicsBody::getPose(glmx::pose& pose, const PoseTree& poseTree) {
         v.x = cache->jointPosition[dofStarts[li]];
         v.y = cache->jointPosition[dofStarts[li]+1];
         v.z = cache->jointPosition[dofStarts[li]+2];
-        pose.q[i] = glmx::eulerToQuat(v, EulOrdXYZr);
+        pose.q[i] = glmx::exp(v);
     }
 }
 
@@ -164,7 +164,6 @@ void PosePhysicsBody::renderImGui() {
         v.x = cache->jointPosition[dofStarts[li]];
         v.y = cache->jointPosition[dofStarts[li] + 1];
         v.z = cache->jointPosition[dofStarts[li] + 2];
-        float pi = glm::pi<float>();
         bool linkEdited = ImGui::DragFloat3(link->getName(), (float*)&v, 0.01f);
         if (linkEdited) {
             cache->jointPosition[dofStarts[li]] = v.x;

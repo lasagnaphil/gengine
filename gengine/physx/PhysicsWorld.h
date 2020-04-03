@@ -34,9 +34,11 @@ struct PhysicsWorld {
 
     void init(uint32_t numThread = 1, bool enableGpu = false);
 
-    bool advance(float dt);
+    bool advance(float dt, float stepSize = 1.0f / 60.0f);
 
     bool fetchResults();
+
+    void simulate(float dt);
 
     void release();
 

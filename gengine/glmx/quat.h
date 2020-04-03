@@ -71,10 +71,17 @@ namespace glmx {
         }
     }
 
+    // https://math.stackexchange.com/questions/90081/quaternion-distance
     inline glm::quat quatBetweenVecs(glm::vec3 a, glm::vec3 b) {
         glm::vec3 w = glm::cross(a, b);
         glm::quat q = glm::quat(1.f + dot(a, b), w);
         return glm::normalize(q);
+    }
+
+    inline float angleBetweenQuats(glm::quat q1, glm::quat q2) {
+        float inner = glm::dot(q1, q2);
+        float angle = glm::acos(2*inner*inner - 1);
+        return inner;
     }
 
     inline glm::vec3 ex() { return glm::vec3(1, 0, 0); }

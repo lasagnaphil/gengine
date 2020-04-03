@@ -59,12 +59,7 @@ public:
          */
 
         // Initialize the PhysX Engine
-        pxFoundation = PxCreateFoundation(PX_PHYSICS_VERSION, gAllocator, gErrorCallback);
-        if (!pxFoundation) {
-            fprintf(stderr, "PxCreateFoundation Failed!\n");
-            exit(EXIT_FAILURE);
-        }
-        world.init(pxFoundation, 1);
+        world.init(1, false);
 
         pxDebugRenderer.init(world);
         pxDebugRenderer.setCamera(camera);
