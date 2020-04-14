@@ -5,12 +5,6 @@
 #include "PhysicsWorld.h"
 #include <iostream>
 
-class GpuLoadHook : public PxGpuLoadHook {
-    virtual const char* getPhysXGpuDllName() const {
-        return "/home/lasagnaphil/packages/PhysX/physx/bin/linux.clang/release/libPhysXGpu_64.so";
-    }
-} gGpuLoadHook;
-
 PxFoundation* PhysicsWorld::foundation = nullptr;
 int PhysicsWorld::worldCount = 0;
 
@@ -52,38 +46,32 @@ void PhysicsWorld::init(uint32_t numThreads, bool enableGpu) {
 
     // enable CUDA
     if (enableGpu) {
-        PxSetPhysXGpuLoadHook(&gGpuLoadHook);
-
         PxCudaContextManagerDesc cudaContextManagerDesc;
-        auto cudaContextManager = PxCreateCudaContextManager(*foundation, cudaContextManagerDesc, PxGetProfilerCallback());
-        sceneDesc.cudaContextManager = cudaContextManager;
-        sceneDesc.flags |= PxSceneFlag::eENABLE_GPU_DYNAMICS;
-        sceneDesc.broadPhaseType = PxBroadPhaseType::eGPU;
+        cudaContextManager = PxCreateCudaContextManager(*foundation, cudaContextManagerDesc, PxGetProfilerCallback());
+        if (cudaContextManager) {
+            if (cudaContextManager->contextIsValid()) {
+                sceneDesc.cudaContextManager = cudaContextManager;
+                sceneDesc.flags |= PxSceneFlag::eENABLE_GPU_DYNAMICS;
+                sceneDesc.broadPhaseType = PxBroadPhaseType::eGPU;
+                sceneDesc.gpuMaxNumPartitions = 32;
+            }
+            else {
+                std::cerr << "Failed to create PxCudaContextManager!" << std::endl;
+                cudaContextManager->release();
+                cudaContextManager = nullptr;
+            }
+        }
     }
 
     scene = physics->createScene(sceneDesc);
     defaultMaterial = physics->createMaterial(0.5f, 0.5f, 0.6f);
 
     // create ground
-    groundPlane = PxCreatePlane(*physics, PxPlane(0,1,0,0), *physics->createMaterial(1.0f, 0.5f, 0.05f));
+    groundPlane = PxCreatePlane(*physics, PxPlane(0,1,0,0), *physics->createMaterial(0.6f, 0.5f, 0.05f));
     scene->addActor(*groundPlane);
 
     worldCount++;
-}
-
-bool PhysicsWorld::advance(float dt, float stepSize) {
-    static float time = 0.0f;
-    time += dt;
-    if (time < stepSize) {
-        return false;
-    }
-    time -= stepSize;
-    scene->simulate(stepSize);
-    return true;
-}
-
-bool PhysicsWorld::fetchResults() {
-    return scene->fetchResults(true);
+    std::cout << "World " << worldCount << " created!" << std::endl;
 }
 
 void PhysicsWorld::simulate(float dt) {
