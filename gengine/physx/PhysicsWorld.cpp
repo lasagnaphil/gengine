@@ -64,10 +64,10 @@ void PhysicsWorld::init(uint32_t numThreads, bool enableGpu) {
     }
 
     scene = physics->createScene(sceneDesc);
-    defaultMaterial = physics->createMaterial(0.5f, 0.5f, 0.6f);
+    defaultMaterial = physics->createMaterial(1.0f, 1.0f, 0.0f);
 
     // create ground
-    groundPlane = PxCreatePlane(*physics, PxPlane(0,1,0,0), *physics->createMaterial(0.6f, 0.5f, 0.05f));
+    groundPlane = PxCreatePlane(*physics, PxPlane(0,1,0,0), *physics->createMaterial(1.0f, 1.0f, 0.0f));
     scene->addActor(*groundPlane);
 
     worldCount++;
