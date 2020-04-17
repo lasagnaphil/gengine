@@ -32,7 +32,8 @@ struct PhysicsWorld {
         if (foundation) release();
     }
 
-    void init(uint32_t numThread = 1, bool enableGpu = false);
+    void init(uint32_t numThread = 1, bool enableGpu = false,
+            PxSimulationFilterShader filterShader = PxDefaultSimulationFilterShader);
 
     void simulate(float dt);
 

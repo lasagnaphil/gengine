@@ -8,7 +8,7 @@
 PxFoundation* PhysicsWorld::foundation = nullptr;
 int PhysicsWorld::worldCount = 0;
 
-void PhysicsWorld::init(uint32_t numThreads, bool enableGpu) {
+void PhysicsWorld::init(uint32_t numThreads, bool enableGpu, PxSimulationFilterShader filterShader) {
     // Singleton pattern: only create foundation if it doesn't exist yet
     if (!foundation) {
         foundation = PxCreateFoundation(PX_PHYSICS_VERSION, allocator, errorCallback);
@@ -41,8 +41,8 @@ void PhysicsWorld::init(uint32_t numThreads, bool enableGpu) {
     sceneDesc.gravity = PxVec3(0.0f, -9.81f, 0.0f);
     cpuDispatcher = PxDefaultCpuDispatcherCreate(numThreads);
     sceneDesc.cpuDispatcher = cpuDispatcher;
-    sceneDesc.filterShader = PxDefaultSimulationFilterShader;
-    // sceneDesc.solverType = PxSolverType::eTGS;
+    sceneDesc.filterShader = filterShader;
+    sceneDesc.solverType = PxSolverType::ePGS;
 
     // enable CUDA
     if (enableGpu) {
