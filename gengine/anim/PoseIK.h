@@ -10,7 +10,7 @@
 #include <glmx/euler.h>
 
 #include "glmx/pose.h"
-#include "MotionClipData.h"
+#include "BVHData.h"
 
 enum class LeastSquareMethod {
     SVD, QR, Normal

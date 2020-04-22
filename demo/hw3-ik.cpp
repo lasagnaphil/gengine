@@ -9,8 +9,8 @@
 #include "FlyCamera.h"
 #include "glmx/pose.h"
 #include "PoseRenderBody.h"
-#include "PoseIK.h"
-#include "PoseFK.h"
+#include "anim/PoseIK.h"
+#include "anim/PoseFK.h"
 
 #include <glm/ext/quaternion_common.hpp>
 #include <glm/ext/quaternion_float.hpp>
@@ -75,8 +75,8 @@ public:
         groundMesh = Mesh::makePlane(1000.0f, 100.0f);
 
         // Load BVH file, only copy the tree structure of the human
-        MotionClipData tmpBvh;
-        tmpBvh = MotionClipData::loadFromFile("resources/cmu_07_02_1.bvh", 0.01f);
+        BVHData tmpBvh;
+        BVHData::loadFromFile("resources/cmu_07_02_1.bvh", tmpBvh, 0.01f);
         poseTree = tmpBvh.poseTree;
 
         // Create empty pose
@@ -215,7 +215,7 @@ public:
 
     void render() override {
         phongRenderer.queueRender({groundMesh, groundMat, rootTransform->getWorldTransform()});
-        renderMotionClip(phongRenderer, imRenderer, currentPose, poseTree, poseRenderBody);
+        renderMotionClip(phongRenderer, imRenderer, currentPose.getView(), poseTree, poseRenderBody);
 
         phongRenderer.render();
 

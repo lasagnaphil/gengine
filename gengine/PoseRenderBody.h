@@ -8,7 +8,7 @@
 #include "glmx/pose.h"
 #include "glmx/quat.h"
 #include "Mesh.h"
-#include "MotionClipData.h"
+#include "anim/BVHData.h"
 #include "PhongRenderer.h"
 #include "PBRenderer.h"
 #include "DebugRenderer.h"
@@ -23,7 +23,7 @@ struct PoseRenderBody {
 };
 
 void renderMotionClip(PhongRenderer& renderer, DebugRenderer& imRenderer,
-                             const glmx::pose& poseState, const PoseTree& poseTree, const PoseRenderBody& body,
+                             glmx::pose_view poseState, const PoseTree& poseTree, const PoseRenderBody& body,
                              const glm::mat4& globalTrans = glm::mat4(1.0f), bool debug = false);
 
 struct PoseRenderBodyPBR {
@@ -37,11 +37,11 @@ struct PoseRenderBodyPBR {
 };
 
 void renderMotionClip(PBRenderer& renderer, DebugRenderer& imRenderer,
-                             const glmx::pose& poseState, const PoseTree& poseTree, const PoseRenderBodyPBR& body,
+                             glmx::pose_view poseState, const PoseTree& poseTree, const PoseRenderBodyPBR& body,
                              const glm::mat4& globalTrans = glm::mat4(1.0f), bool debug = false);
 
 void renderMotionClipComplex(PBRenderer& renderer, DebugRenderer& imRenderer,
-        const glmx::pose& poseState, const PoseTree& poseTree,
+        glmx::pose_view poseState, const PoseTree& poseTree,
         const PoseRenderBodyPBR& body,
         const glm::mat4& globalTrans = glm::mat4(1.0f),
         bool debug = false);

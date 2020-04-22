@@ -9,7 +9,7 @@
 #include "FlyCamera.h"
 #include "glmx/pose.h"
 #include "PoseRenderBody.h"
-#include "MotionClipData.h"
+#include "anim/BVHData.h"
 #include "MotionClipPlayer.h"
 
 #include <map>
@@ -38,14 +38,12 @@ public:
         groundMesh = Mesh::makePlane(1000.0f, 100.0f);
 
         // Load BVH file, only copy the tree structure of the human
-        motionClipData = MotionClipData::loadFromFile("resources/cmu_07_02_1.bvh", 0.01f);
-        motionClipData.removeCMUPhantomJoints();
-
-        if (!motionClipData.valid)
-        {
+        if (!BVHData::loadFromFile("resources/cmu_07_02_1.bvh", motionClipData, 0.01f)) {
             std::cerr << "BVH Not Found!" << std::endl;
             exit(1);
         }
+        // motionClipData.removeCMUPhantomJoints();
+
         motionClipPlayer = BVHMotionClipPlayer(&motionClipData);
 
         // Material of human
@@ -89,7 +87,7 @@ public:
     }
 
 private:
-    MotionClipData motionClipData;
+    BVHData motionClipData;
     BVHMotionClipPlayer motionClipPlayer;
     PoseRenderBody poseRenderBody;
 

@@ -9,8 +9,8 @@
 #include "FlyCamera.h"
 #include "glmx/pose.h"
 #include "PoseRenderBody.h"
-#include "PoseIK.h"
-#include "AnimStateMachine.h"
+#include "anim/PoseIK.h"
+#include "anim/AnimStateMachine.h"
 
 #include <glmx/euler.h>
 
@@ -61,7 +61,11 @@ public:
         debugBodyMat2->texDiffuse = {};
         debugBodyMat2->texSpecular = {};
 
-        auto walkBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_15_walk.bvh", 0.01f);
+        BVHData walkBVH, runBVH, jumpBVH, forwardJumpBVH,
+            walkVeerLeftBVH, walkVeerRightBVH, walkTurnLeftBVH, walkTurnRightBVH,
+            runVeerLeftBVH, runVeerRightBVH, runTurnLeftBVH, runTurnRightBVH;
+
+        BVHData::loadFromFile("resources/motion/cmu/16_15_walk.bvh", walkBVH, 0.01f);
 
         poseTree = walkBVH.poseTree;
         currentPose = glmx::pose::empty(poseTree.numJoints);
@@ -71,39 +75,39 @@ public:
         debugPoseRenderBody1 = PoseRenderBody::createAsBoxes(poseTree, 0.05f, debugBodyMat1);
         debugPoseRenderBody2 = PoseRenderBody::createAsBoxes(poseTree, 0.05f, debugBodyMat2);
 
-        auto runBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_55_run.bvh", 0.01f);
-        auto jumpBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_03_high jump.bvh", 0.01f);
-        auto forwardJumpBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_05_forward jump.bvh", 0.01f);
-        auto walkVeerLeftBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_11_walk, veer left.bvh", 0.01f);
-        auto walkVeerRightBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_13_walk, veer right.bvh", 0.01f);
-        auto walkTurnLeftBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_17_walk, 90-degree left turn.bvh", 0.01f);
-        auto walkTurnRightBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_19_walk, 90-degree right turn.bvh", 0.01f);
-        auto runVeerLeftBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_48_run, veer left.bvh", 0.01f);
-        auto runVeerRightBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_49_run, veer right.bvh", 0.01f);
-        auto runTurnLeftBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_51_run, 90-degree left turn.bvh", 0.01f);
-        auto runTurnRightBVH = MotionClipData::loadFromFile("resources/motion/cmu/16_53_run, 90-degree right turn.bvh", 0.01f);
+        BVHData::loadFromFile("resources/motion/cmu/16_55_run.bvh", runBVH, 0.01f);
+        BVHData::loadFromFile("resources/motion/cmu/16_03_high jump.bvh", jumpBVH, 0.01f);
+        BVHData::loadFromFile("resources/motion/cmu/16_05_forward jump.bvh", forwardJumpBVH, 0.01f);
+        BVHData::loadFromFile("resources/motion/cmu/16_11_walk, veer left.bvh", walkVeerLeftBVH, 0.01f);
+        BVHData::loadFromFile("resources/motion/cmu/16_13_walk, veer right.bvh", walkVeerRightBVH, 0.01f);
+        BVHData::loadFromFile("resources/motion/cmu/16_17_walk, 90-degree left turn.bvh", walkTurnLeftBVH, 0.01f);
+        BVHData::loadFromFile("resources/motion/cmu/16_19_walk, 90-degree right turn.bvh", walkTurnRightBVH, 0.01f);
+        BVHData::loadFromFile("resources/motion/cmu/16_48_run, veer left.bvh", runVeerLeftBVH, 0.01f);
+        BVHData::loadFromFile("resources/motion/cmu/16_49_run, veer right.bvh", runVeerRightBVH, 0.01f);
+        BVHData::loadFromFile("resources/motion/cmu/16_51_run, 90-degree left turn.bvh", runTurnLeftBVH, 0.01f);
+        BVHData::loadFromFile("resources/motion/cmu/16_53_run, 90-degree right turn.bvh", runTurnRightBVH, 0.01f);
 
-        auto idlePoses = std::vector<glmx::pose>(30, jumpBVH.poseStates[0]);
-        auto walkPoses = nonstd::span<glmx::pose>(walkBVH.poseStates.data(), walkBVH.poseStates.size() - 10);
-        auto walkTurnLeftPoses = nonstd::span<glmx::pose>(walkTurnLeftBVH.poseStates.data() + 40, walkTurnLeftBVH.poseStates.size() - 60);
-        auto walkTurnRightPoses = nonstd::span<glmx::pose>(walkTurnRightBVH.poseStates.data() + 40, walkTurnRightBVH.poseStates.size() - 60);
-        auto runPoses = nonstd::span<glmx::pose>(runBVH.poseStates.data() + 24, runBVH.poseStates.size() - 24);
-        auto runTurnLeftPoses = nonstd::span<glmx::pose>(runTurnLeftBVH.poseStates.data() + 10, runTurnLeftBVH.poseStates.size() - 20);
-        auto runTurnRightPoses = nonstd::span<glmx::pose>(runTurnRightBVH.poseStates.data() + 10, runTurnRightBVH.poseStates.size() - 20);
+        auto idlePoses = MotionClip::fromSinglePose(jumpBVH.clip.getFrame(0), 30);
+        auto walkPoses = walkBVH.clip.slice(0, walkBVH.clip.numFrames - 10);
+        auto walkTurnLeftPoses = walkTurnLeftBVH.clip.slice(40, walkTurnLeftBVH.clip.numFrames - 20);
+        auto walkTurnRightPoses = walkTurnRightBVH.clip.slice(40, walkTurnRightBVH.clip.numFrames - 20);
+        auto runPoses = runBVH.clip.slice(24, runBVH.clip.numFrames);
+        auto runTurnLeftPoses = runTurnLeftBVH.clip.slice(10, runTurnLeftBVH.clip.numFrames - 10);
+        auto runTurnRightPoses = runTurnRightBVH.clip.slice(10, runTurnRightBVH.clip.numFrames - 10);
 
-        auto idleAnim = animFSM.addAnimation("idle", nonstd::span<glmx::pose>(idlePoses.data(), idlePoses.size()));
+        auto idleAnim = animFSM.addAnimation("idle", idlePoses.getView());
         auto walkAnim = animFSM.addAnimation("walk", walkPoses);
-        auto walkVeerLeftAnim = animFSM.addAnimation("walk_veer_left", walkVeerLeftBVH.poseStates);
-        auto walkVeerRightAnim = animFSM.addAnimation("walk_veer_right", walkVeerRightBVH.poseStates);
+        auto walkVeerLeftAnim = animFSM.addAnimation("walk_veer_left", walkVeerLeftBVH.clip.getView());
+        auto walkVeerRightAnim = animFSM.addAnimation("walk_veer_right", walkVeerRightBVH.clip.getView());
         auto walkTurnLeftAnim = animFSM.addAnimation("walk_turn_left", walkTurnLeftPoses);
         auto walkTurnRightAnim = animFSM.addAnimation("walk_turn_right", walkTurnRightPoses);
         auto runAnim = animFSM.addAnimation("run", runPoses);
-        auto runVeerLeftAnim = animFSM.addAnimation("run_veer_left", runVeerLeftBVH.poseStates);
-        auto runVeerRightAnim = animFSM.addAnimation("run_veer_right", runVeerRightBVH.poseStates);
-        auto runTurnLeftAnim = animFSM.addAnimation("run_turn_left", runTurnLeftBVH.poseStates);
-        auto runTurnRightAnim = animFSM.addAnimation("run_turn_right", runTurnRightBVH.poseStates);
-        auto jumpAnim = animFSM.addAnimation("jump", jumpBVH.poseStates);
-        auto forwardJumpAnim = animFSM.addAnimation("forward_jump", forwardJumpBVH.poseStates);
+        auto runVeerLeftAnim = animFSM.addAnimation("run_veer_left", runVeerLeftBVH.clip.getView());
+        auto runVeerRightAnim = animFSM.addAnimation("run_veer_right", runVeerRightBVH.clip.getView());
+        auto runTurnLeftAnim = animFSM.addAnimation("run_turn_left", runTurnLeftBVH.clip.getView());
+        auto runTurnRightAnim = animFSM.addAnimation("run_turn_right", runTurnRightBVH.clip.getView());
+        auto jumpAnim = animFSM.addAnimation("jump", jumpBVH.clip.getView());
+        auto forwardJumpAnim = animFSM.addAnimation("forward_jump", forwardJumpBVH.clip.getView());
 
         for (Ref<Animation> anim : {idleAnim, walkAnim, walkVeerLeftAnim, walkVeerRightAnim,
                                     walkTurnLeftAnim, walkTurnRightAnim,
@@ -310,7 +314,7 @@ public:
 
     void render() override {
         phongRenderer.queueRender({groundMesh, groundMat, rootTransform->getWorldTransform()});
-        renderMotionClip(phongRenderer, imRenderer, currentPose, poseTree, poseRenderBody);
+        renderMotionClip(phongRenderer, imRenderer, currentPose.getView(), poseTree, poseRenderBody);
 
         imRenderer.drawAxisTriad(glm::mat4(1.0f), 0.1f, 1.0f, false);
         /*

@@ -7,10 +7,10 @@
 #include "physx/PhysicsBody.h"
 #include "physx/PhysXDebugRenderer.h"
 #include "PoseRenderBody.h"
-#include "MotionClipData.h"
-#include "PoseFK.h"
-#include "PoseIK.h"
-#include "AnimStateMachine.h"
+#include "anim/BVHData.h"
+#include "anim/PoseFK.h"
+#include "anim/PoseIK.h"
+#include "anim/AnimStateMachine.h"
 
 PxDefaultAllocator gAllocator = {};
 PxDefaultErrorCallback gErrorCallback = {};
@@ -130,8 +130,8 @@ public:
         }
 
         // Prepare motion clip
-        pickupBVH = MotionClipData::loadFromFile("resources/pick_up.bvh", 0.01f);
-        auto walkBVH = MotionClipData::loadFromFile("resources/carry.bvh", 0.01f);
+        pickupBVH = BVHData::loadFromFile("resources/pick_up.bvh", 0.01f);
+        auto walkBVH = BVHData::loadFromFile("resources/carry.bvh", 0.01f);
 
         //bvh = walkBVH;
 
@@ -497,7 +497,7 @@ private:
 
     glmx::pose currentPose;
     PoseTree poseTree;
-    MotionClipData pickupBVH;
+    BVHData pickupBVH;
     AnimStateMachine animFSM;
     Ref<AnimState> pickupState;
 

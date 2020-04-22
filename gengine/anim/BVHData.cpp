@@ -2,7 +2,7 @@
 // Created by lasagnaphil on 2019-03-10.
 //
 
-#include "MotionClipData.h"
+#include "BVHData.h"
 
 #include <iomanip>
 #include <fstream>
@@ -14,29 +14,26 @@
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-std::optional<MotionClipData::ChannelType> stringToChannelType(const std::string& name) {
+std::optional<BVHData::ChannelType> stringToChannelType(const std::string& name) {
     switch (name[0]) {
         case 'X':
-            if (name == "Xposition") return MotionClipData::ChannelType::Xpos;
-            else if (name == "Xrotation") return MotionClipData::ChannelType::Xrot;
+            if (name == "Xposition") return BVHData::ChannelType::Xpos;
+            else if (name == "Xrotation") return BVHData::ChannelType::Xrot;
             else return {};
         case 'Y':
-            if (name == "Yposition") return MotionClipData::ChannelType::Ypos;
-            else if (name == "Yrotation") return MotionClipData::ChannelType::Yrot;
+            if (name == "Yposition") return BVHData::ChannelType::Ypos;
+            else if (name == "Yrotation") return BVHData::ChannelType::Yrot;
             else return {};
         case 'Z':
-            if (name == "Zposition") return MotionClipData::ChannelType::Zpos;
-            else if (name == "Zrotation") return MotionClipData::ChannelType::Zrot;
+            if (name == "Zposition") return BVHData::ChannelType::Zpos;
+            else if (name == "Zrotation") return BVHData::ChannelType::Zrot;
             else return {};
         default:
             return {};
     }
 }
 
-MotionClipData MotionClipData::loadFromFile(const std::string& filename, float scale) {
-    MotionClipData data;
-    data.valid = true;
-
+bool BVHData::loadFromFile(const std::string& filename, BVHData& data, float scale) {
     std::ifstream file(filename);
 
     std::string line;
@@ -62,6 +59,8 @@ MotionClipData MotionClipData::loadFromFile(const std::string& filename, float s
 
     // type of each channel
     std::vector<ChannelType> channelTypeData;
+
+    int numBVHChannels = 0;
 
     bool finished = false;
     bool error = false;
@@ -90,7 +89,7 @@ MotionClipData MotionClipData::loadFromFile(const std::string& filename, float s
                           >> channelNames[0] >> channelNames[1] >> channelNames[2]
                           >> channelNames[3] >> channelNames[4] >> channelNames[5];
                 if (channels != 6) {
-                    std::cerr << "Only root node with 6 channels supported!" << std::endl;
+                    fprintf(stderr, "Only root node with 6 channels supported!\n");
                     error = true;
                     break;
                 }
@@ -99,12 +98,12 @@ MotionClipData MotionClipData::loadFromFile(const std::string& filename, float s
                         channelTypeData.push_back(*channelType);
                     }
                     else {
-                        std::cerr << "Invalid channel type." << std::endl;
+                        fprintf(stderr, "Invalid channel type.\n");
                         error = true;
                         break;
                     }
                 }
-                data.numChannels += 6; data.poseTree.numJoints++; data.poseTree.numNodes++; // CHANNELS
+                numBVHChannels += 6; data.poseTree.numJoints++; data.poseTree.numNodes++; // CHANNELS
                 childJointID = curJointID;
 
                 newLine() >> keyword;
@@ -125,6 +124,7 @@ MotionClipData MotionClipData::loadFromFile(const std::string& filename, float s
                 iss >> childJoint.name;
                 newLine() >> keyword;
                 if (keyword != "{") {
+                    fprintf(stderr, "Error while parsing joint.\n");
                     error = true;
                     break;
                 }
@@ -139,7 +139,7 @@ MotionClipData MotionClipData::loadFromFile(const std::string& filename, float s
                     channelNames.resize(channels);
                 }
                 else {
-                    fprintf(stderr, "Invalid number of channels. (%d)", channels);
+                    fprintf(stderr, "Invalid number of channels. (%d)\n", channels);
                     error = true;
                     break;
                 }
@@ -151,13 +151,12 @@ MotionClipData MotionClipData::loadFromFile(const std::string& filename, float s
                         channelTypeData.push_back(*channelType);
                     }
                     else {
-                        fprintf(stderr, "Invalid channel type.");
+                        fprintf(stderr, "Invalid channel type %s.\n", channelNames[c].c_str());
                         error = true;
                         break;
                     }
                 }
-                if (error) break;
-                data.numChannels += channels; data.poseTree.numJoints++; data.poseTree.numNodes++; // CHANNELS
+                numBVHChannels += channels; data.poseTree.numJoints++; data.poseTree.numNodes++; // CHANNELS
                 curJoint.childJoints.push_back(childJointID);
                 childJoint.parent = curJointID;
                 curJointID = childJointID;
@@ -181,6 +180,7 @@ MotionClipData MotionClipData::loadFromFile(const std::string& filename, float s
                 childJoint.name = "End Site";
                 newLine() >> keyword;
                 if (keyword != "{") {
+                    fprintf(stderr, "Error while parsing end site.\n");
                     error = true;
                     break;
                 }
@@ -194,6 +194,7 @@ MotionClipData MotionClipData::loadFromFile(const std::string& filename, float s
 
                 newLine() >> keyword;
                 if (keyword != "}") {
+                    fprintf(stderr, "Error while parsing end site.\n");
                     error = true;
                     break;
                 }
@@ -214,25 +215,29 @@ MotionClipData MotionClipData::loadFromFile(const std::string& filename, float s
                 break;
             }
             case ParseState::Motion: {
-                newLine() >> keyword >> data.numFrames;
+                newLine() >> keyword >> data.clip.numFrames;
                 std::string _;
                 newLine() >> keyword >> _ >> data.frameTime;
 
-                data.poseStates.resize(data.numFrames);
+                data.clip.numChannels = 3 + 4 * data.poseTree.numJoints;
+                data.clip.data.resize(data.clip.numFrames * data.clip.numChannels);
                 float num;
-                glm::quat rot = glm::identity<glm::quat>();
-                int rotCount = 0;
-                for (int f = 0; f < data.numFrames; f++) {
-                    auto& poseState = data.poseStates[f];
+                int offset = 0;
+                float* dataPtr = data.clip.data.data();
+                for (int f = 0; f < data.clip.numFrames; f++) {
+                    int rotCount = 0;
                     newLine();
-                    for (int c = 0; c < data.numChannels; c++) {
+                    glm::quat rot = glm::identity<glm::quat>();
+                    for (int c = 0; c < numBVHChannels; c++) {
                         iss >> num;
                         if (!iss) {
+                            fprintf(stderr, "Error while parsing Motion segment.\n");
                             error = true;
                             break;
                         }
                         if (c < 3) {
-                            poseState.v[c] = num * scale;
+                            dataPtr[offset] = num * scale;
+                            offset++;
                         }
                         else {
                             switch (channelTypeData[c]) {
@@ -253,7 +258,11 @@ MotionClipData MotionClipData::loadFromFile(const std::string& filename, float s
                                     break;
                             }
                             if (rotCount == 3) {
-                                poseState.q.push_back(rot);
+                                dataPtr[offset] = rot.x;
+                                dataPtr[offset+1] = rot.y;
+                                dataPtr[offset+2] = rot.z;
+                                dataPtr[offset+3] = rot.w;
+                                offset += 4;
                                 rot = glm::identity<glm::quat>();
                                 rotCount = 0;
                             }
@@ -268,8 +277,7 @@ MotionClipData MotionClipData::loadFromFile(const std::string& filename, float s
     }
 
     if (error) {
-        data.valid = false;
-        return data;
+        return false;
     }
 
     // Now we combine the joint data and end site data into one std::vector.
@@ -290,14 +298,14 @@ MotionClipData MotionClipData::loadFromFile(const std::string& filename, float s
 
     data.poseTree.constructNodeNameMapping();
 
-    return data;
+    return true;
 }
 
-void MotionClipData::print() const {
+void BVHData::print() const {
     printRecursive(0 /* root joint id */, 0);
 }
 
-void MotionClipData::printRecursive(uint32_t jointID, int depth) const {
+void BVHData::printRecursive(uint32_t jointID, int depth) const {
     const PoseTreeNode& joint = poseTree.allNodes[jointID];
     if (!joint.isEndSite()) {
         for (int i = 0; i < depth; i++) { std::cout << "    "; }
@@ -314,7 +322,7 @@ void MotionClipData::printRecursive(uint32_t jointID, int depth) const {
     }
 }
 
-void MotionClipData::saveToFile(const std::string& filename, int eulerOrd) {
+void BVHData::saveToFile(const std::string& filename, int eulerOrd) {
     using std::endl;
     std::ofstream ofs(filename);
     ofs << std::fixed;
@@ -322,13 +330,13 @@ void MotionClipData::saveToFile(const std::string& filename, int eulerOrd) {
 
     saveToFileRecursive(0, ofs, 0, eulerOrd);
     ofs << "MOTION" << endl;
-    ofs << "Frames: " << numFrames << endl;
+    ofs << "Frames: " << clip.numFrames << endl;
     ofs << "Frame Time: " << frameTime << endl;
-    for (int f = 0; f < numFrames; f++) {
-        glmx::pose& pose = poseStates[f];
-        ofs << pose.v.x << " " << pose.v.y << " " << pose.v.z << " ";
-        for (int i = 0; i < pose.size(); i++) {
-            glm::vec3 e = glmx::quatToEuler(pose.q[i], eulerOrd);
+    for (int f = 0; f < clip.numFrames; f++) {
+        glmx::pose_view pose = clip.getFrame(f);
+        ofs << pose.v().x << " " << pose.v().y << " " << pose.v().z << " ";
+        for (int i = 0; i < pose.size; i++) {
+            glm::vec3 e = glmx::quatToEuler(pose.q(i), eulerOrd);
             switch (eulerOrd) {
                 case EulOrdXYZr:
                 case EulOrdXYXr:
@@ -362,7 +370,7 @@ void MotionClipData::saveToFile(const std::string& filename, int eulerOrd) {
     }
 }
 
-void MotionClipData::saveToFileRecursive(uint32_t jointIdx, std::ostream& ofs, int depth, int eulerOrd) {
+void BVHData::saveToFileRecursive(uint32_t jointIdx, std::ostream& ofs, int depth, int eulerOrd) {
     using std::endl;
     PoseTreeNode& node = poseTree[jointIdx];
 
@@ -446,11 +454,12 @@ void MotionClipData::saveToFileRecursive(uint32_t jointIdx, std::ostream& ofs, i
     ofs << tabs << "}" << endl;
 }
 
-void MotionClipData::switchZtoYup() {
-    for (auto& pose : poseStates) {
-        pose.v = glmx::Rx(-M_PI/2) * pose.v;
-        for (int i = 0; i < pose.q.size(); i++) {
-            pose.q[i] = glmx::Rx(-M_PI/2) * pose.q[i] * glmx::Rx(M_PI/2);
+void BVHData::switchZtoYup() {
+    for (int f = 0; f < clip.numFrames; f++) {
+        glmx::pose_view pose = clip.getFrame(f);
+        pose.v() = glmx::Rx(-M_PI/2) * pose.v();
+        for (int i = 0; i < pose.size; i++) {
+            pose.q(i) = glmx::Rx(-M_PI/2) * pose.q(i) * glmx::Rx(M_PI/2);
         }
     }
     for (auto& node : poseTree.allNodes) {
@@ -458,7 +467,7 @@ void MotionClipData::switchZtoYup() {
     }
 }
 
-void MotionClipData::removeJoint(uint32_t nodeIdx) {
+void BVHData::removeJoint(uint32_t nodeIdx) {
     if (nodeIdx == (uint32_t)-1) {
         fprintf(stderr, "Tring to remove invalid joint!\n");
     }
@@ -484,9 +493,17 @@ void MotionClipData::removeJoint(uint32_t nodeIdx) {
     poseTree.numNodes--;
     poseTree.allNodes.erase(poseTree.allNodes.begin() + nodeIdx);
 
-    for (auto& pose : poseStates) {
-        pose.q[childIdx] = pose.q[nodeIdx] * pose.q[childIdx];
-        pose.q.erase(pose.q.begin() + nodeIdx);
+    for (int f = 0; f < clip.numFrames; f++) {
+        glmx::pose_view pose = clip.getFrame(f);
+        pose.q(childIdx) = pose.q(nodeIdx) * pose.q(childIdx);
+    }
+
+    for (int f = 0; f < clip.numFrames; f++) {
+        for (int i = 0; i < clip.numChannels - 4; i++) {
+            // TODO
+            fprintf(stderr, "Unimplemented\n");
+            exit(EXIT_FAILURE);
+        }
     }
 
     for (auto& node : poseTree.allNodes) {
@@ -508,7 +525,7 @@ void MotionClipData::removeJoint(uint32_t nodeIdx) {
     }
 }
 
-void MotionClipData::removeJoint(const std::string& nodeName) {
+void BVHData::removeJoint(const std::string& nodeName) {
     uint32_t nodeIdx = poseTree.findIdx(nodeName);
     if (nodeIdx != (uint32_t)-1) {
         removeJoint(nodeIdx);
@@ -518,22 +535,23 @@ void MotionClipData::removeJoint(const std::string& nodeName) {
     }
 }
 
-void MotionClipData::moveStartingRoot(glm::vec3 pos) {
-    glm::vec3 offset = pos - poseStates[0].v;
-    for (auto& pose : poseStates) {
-        pose.v += offset;
+void BVHData::moveStartingRoot(glm::vec3 pos) {
+    glm::vec3 offset = pos - clip.rootPos(0);
+    for (int f = 0; f < clip.numFrames; f++) {
+        clip.rootPos(f) += offset;
     }
 }
 
-void MotionClipData::moveStartingRoot(glmx::transform t) {
-    glmx::transform offset = t / poseStates[0].getRoot();
-    for (auto& pose : poseStates) {
-        pose.v = offset.q * pose.v + offset.v;
-        pose.q[0] = offset.q * pose.q[0];
+void BVHData::moveStartingRoot(glmx::transform t) {
+    glmx::transform offset = t / clip.getFrame(0).getRoot();
+    for (int f = 0; f < clip.numFrames; f++) {
+        glmx::pose_view pose = clip.getFrame(f);
+        pose.v() = offset.q * pose.v() + offset.v;
+        pose.q(0) = offset.q * pose.q(0);
     }
 }
 
-void MotionClipData::removeCMUPhantomJoints() {
+void BVHData::removeCMUPhantomJoints() {
     removeJoint("LHipJoint");
     removeJoint("RHipJoint");
     removeJoint("LowerBack");
@@ -546,8 +564,7 @@ void MotionClipData::removeCMUPhantomJoints() {
     removeJoint("RThumb");
 }
 
-bool MotionClipData::checkValidity() {
-    if (!valid) return false;
+bool BVHData::checkValidity() {
     for (auto& node : poseTree.allNodes) {
         if (std::isnan(node.offset.x) || std::isnan(node.offset.y) || std::isnan(node.offset.z)) {
             return false;
@@ -556,18 +573,18 @@ bool MotionClipData::checkValidity() {
     return true;
 }
 
-glmx::pose MotionClipData::samplePose(float time) const {
-    glmx::pose pose;
+glmx::pose BVHData::samplePose(float time) {
+    glmx::pose pose = glmx::pose::empty(clip.getFrame(0).size);
     uint32_t u = time / frameTime;
     if (u <= 0) {
-        pose = poseStates[0];
+        pose = clip.getFrame(0);
     }
-    else if (u >= numFrames-1) {
-        pose = poseStates[numFrames-1];
+    else if (u >= clip.numFrames - 1) {
+        pose = clip.getFrame(clip.numFrames - 1);
     }
     else {
         float t = std::fmod(time, frameTime);
-        pose = glmx::slerp(poseStates[u], poseStates[u+1], t);
+        glmx::slerp(clip.getFrame(u), clip.getFrame(u + 1), t, pose.getView());
     }
     return pose;
 }

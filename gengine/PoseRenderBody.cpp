@@ -30,12 +30,12 @@ PoseRenderBody PoseRenderBody::createAsBoxes(const PoseTree& poseTree, float wid
     return body;
 }
 
-void renderMotionClip(PhongRenderer& renderer, DebugRenderer& imRenderer, const glmx::pose& poseState,
+void renderMotionClip(PhongRenderer& renderer, DebugRenderer& imRenderer, glmx::pose_view pose,
                       const PoseTree& poseTree, const PoseRenderBody& body, const glm::mat4& globalTrans, bool debug) {
 
     // Recursively render all nodes
     std::stack<std::tuple<uint32_t, glm::mat4>> recursionStack;
-    recursionStack.push({0, glm::translate(globalTrans, poseState.v)});
+    recursionStack.push({0, glm::translate(globalTrans, pose.v())});
     while (!recursionStack.empty()) {
         auto [nodeIdx, curTransform] = recursionStack.top();
         recursionStack.pop();
@@ -73,10 +73,10 @@ void renderMotionClip(PhongRenderer& renderer, DebugRenderer& imRenderer, const 
 
         if (!node.isEndSite()) {
             if (nodeIdx == 0) {
-                curTransform = curTransform * glm::mat4_cast(poseState.q[nodeIdx]);
+                curTransform = curTransform * glm::mat4_cast(pose.q(nodeIdx));
             }
             else {
-                curTransform = curTransform * glm::translate(node.offset) * glm::mat4_cast(poseState.q[nodeIdx]);
+                curTransform = curTransform * glm::translate(node.offset) * glm::mat4_cast(pose.q(nodeIdx));
             }
             for (auto childID : node.childJoints) {
                 recursionStack.push({childID, curTransform});
@@ -86,12 +86,12 @@ void renderMotionClip(PhongRenderer& renderer, DebugRenderer& imRenderer, const 
 }
 
 void
-renderMotionClip(PBRenderer& renderer, DebugRenderer& imRenderer, const glmx::pose& poseState, const PoseTree& poseTree,
+renderMotionClip(PBRenderer& renderer, DebugRenderer& imRenderer, glmx::pose_view pose, const PoseTree& poseTree,
                  const PoseRenderBodyPBR& body, const glm::mat4& globalTrans, bool debug) {
 
     // Recursively render all nodes
     std::stack<std::tuple<uint32_t, glm::mat4>> recursionStack;
-    recursionStack.push({0, glm::translate(globalTrans, poseState.v)});
+    recursionStack.push({0, glm::translate(globalTrans, pose.v())});
     while (!recursionStack.empty()) {
         auto [nodeIdx, curTransform] = recursionStack.top();
         recursionStack.pop();
@@ -129,10 +129,10 @@ renderMotionClip(PBRenderer& renderer, DebugRenderer& imRenderer, const glmx::po
 
         if (!node.isEndSite()) {
             if (nodeIdx == 0) {
-                curTransform = curTransform * glm::mat4_cast(poseState.q[nodeIdx]);
+                curTransform = curTransform * glm::mat4_cast(pose.q(nodeIdx));
             }
             else {
-                curTransform = curTransform * glm::translate(node.offset) * glm::mat4_cast(poseState.q[nodeIdx]);
+                curTransform = curTransform * glm::translate(node.offset) * glm::mat4_cast(pose.q(nodeIdx));
             }
             for (auto childID : node.childJoints) {
                 recursionStack.push({childID, curTransform});
@@ -141,13 +141,13 @@ renderMotionClip(PBRenderer& renderer, DebugRenderer& imRenderer, const glmx::po
     }
 }
 
-void renderMotionClipComplex(PBRenderer& renderer, DebugRenderer& imRenderer, const glmx::pose& poseState,
+void renderMotionClipComplex(PBRenderer& renderer, DebugRenderer& imRenderer, glmx::pose_view pose,
                              const PoseTree& poseTree, const PoseRenderBodyPBR& body, const glm::mat4& globalTrans,
                              bool debug) {
 
     // Recursively render all nodes
     std::stack<std::tuple<uint32_t, glm::mat4>> recursionStack;
-    recursionStack.push({0, glm::translate(globalTrans, poseState.v)});
+    recursionStack.push({0, glm::translate(globalTrans, pose.v())});
     while (!recursionStack.empty()) {
         auto [nodeIdx, curTransform] = recursionStack.top();
         recursionStack.pop();
@@ -177,10 +177,10 @@ void renderMotionClipComplex(PBRenderer& renderer, DebugRenderer& imRenderer, co
 
         if (!node.isEndSite()) {
             if (nodeIdx == 0) {
-                curTransform = curTransform * glm::mat4_cast(poseState.q[nodeIdx]);
+                curTransform = curTransform * glm::mat4_cast(pose.q(nodeIdx));
             }
             else {
-                curTransform = curTransform * glm::translate(node.offset) * glm::mat4_cast(poseState.q[nodeIdx]);
+                curTransform = curTransform * glm::translate(node.offset) * glm::mat4_cast(pose.q(nodeIdx));
             }
             for (auto childID : node.childJoints) {
                 recursionStack.push({childID, curTransform});

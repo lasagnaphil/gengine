@@ -7,7 +7,7 @@
 
 #include <vector>
 
-#include "MotionClipData.h"
+#include "anim/BVHData.h"
 #include "LineMesh.h"
 
 struct GizmosRenderer;
@@ -70,17 +70,17 @@ public:
 struct BVHMotionClipPlayer : public MotionClipPlayer {
     static int counter;
 
-    MotionClipData* clip;
+    BVHData* clip;
     std::string name;
 
-    BVHMotionClipPlayer(MotionClipData* clip = nullptr)
+    BVHMotionClipPlayer(BVHData* clip = nullptr)
             : MotionClipPlayer(), clip(clip),
               name(std::string("clip") + std::to_string(BVHMotionClipPlayer::counter)) {
 
         BVHMotionClipPlayer::counter++;
     }
 
-    void setClip(MotionClipData* clip, bool stop = true) {
+    void setClip(BVHData* clip, bool stop = true) {
         this->clip = clip;
 
         if (stop) {
@@ -91,7 +91,7 @@ struct BVHMotionClipPlayer : public MotionClipPlayer {
 
     uint32_t getNumFrames() override {
         assert(clip);
-        return clip->numFrames;
+        return clip->clip.numFrames;
     }
 
     float getFrameTime() override {
@@ -104,16 +104,10 @@ struct BVHMotionClipPlayer : public MotionClipPlayer {
         return name;
     }
 
-    const glmx::pose& getPoseState() const {
+    glmx::pose_view getPoseState() const {
         assert(clip);
-        assert(currentFrameIdx < clip->numFrames);
-        return clip->getFrameState(currentFrameIdx);
-    }
-
-    glmx::pose& getPoseState() {
-        assert(clip);
-        assert(currentFrameIdx < clip->numFrames);
-        return clip->getFrameState(currentFrameIdx);
+        assert(currentFrameIdx < clip->clip.numFrames);
+        return clip->clip.getFrame(currentFrameIdx);
     }
 
     void renderImGui() override;

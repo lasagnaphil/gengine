@@ -12,64 +12,69 @@
 #include <span.hpp>
 #include <unordered_map>
 
+#include "anim/MotionClip.h"
+
 struct Animation {
     std::string name;
-    std::vector<glmx::pose> poses;
+    MotionClip clip;
     int fps;
 
     float length() {
-        assert(poses.size() > 0);
+        assert(clip.numFrames > 0);
 
-        return (poses.size() - 1) * (1.0f / (float)fps);
+        return (clip.numFrames - 1) * (1.0f / (float)fps);
     }
 
     glmx::pose getFrame(float time) {
-        assert(poses.size() > 0);
+        assert(clip.numFrames > 0);
 
         time = glm::clamp<float>(time, 0, length());
         float dt = 1.0f / (float)fps;
         int f = (int)(time / dt);
-        int fp = (f + 1) % poses.size();
+        int fp = (f + 1) % clip.numFrames;
         float df = (time - (float)f * dt) / dt;
-        return glmx::slerp(poses[f], poses[fp], df);
+        glmx::pose newPose = glmx::pose::empty(clip.getFrame(f).size);
+        glmx::slerp(clip.getFrame(f), clip.getFrame(fp), df, newPose.getView());
+        return newPose;
     }
 
     glm::vec3 getStartingRootPos() {
-        assert(poses.size() > 0);
+        assert(clip.numFrames > 0);
 
-        return poses[0].v;
+        return clip.rootPos(0);
     }
 
     void setStartingRootPos(glm::vec3 pos) {
-        assert(poses.size() > 0);
+        assert(clip.numFrames > 0);
 
-        glm::vec3 offset = poses[0].v - pos;
-        poses[0].v = pos;
-        for (int f = 1; f < poses.size(); f++) {
-            poses[f].v -= offset;
+        glm::vec3 offset = clip.rootPos(0) - pos;
+        clip.rootPos(0) = pos;
+        for (int f = 1; f < clip.numFrames; f++) {
+            clip.rootPos(f) -= offset;
         }
     }
 
     void setStartingRootPos(float x, float z) {
-        assert(poses.size() > 0);
+        assert(clip.numFrames > 0);
 
-        glm::vec3 offset = poses[0].v - glm::vec3(x, 0, z);
+        glm::vec3 offset = clip.rootPos(0) - glm::vec3(x, 0, z);
         offset.y = 0;
-        poses[0].v.x = x;
-        poses[0].v.z = z;
-        for (int f = 1; f < poses.size(); f++) {
-            poses[f].v -= offset;
+        clip.rootPos(0).x = x;
+        clip.rootPos(0).z = z;
+        for (int f = 1; f < clip.numFrames; f++) {
+            clip.rootPos(f) -= offset;
         }
     }
 
     void setStartingRootTrans(float x, float z, float rot, float rotThreshold = 0.0f) {
-        assert(poses.size() > 0);
+        assert(clip.numFrames > 0);
+        glmx::pose_view startPose = clip.getFrame(0);
 
-        float originalRot = glmx::extractYRot(poses[0].q[0]);
+        float originalRot = glmx::extractYRot(startPose.q(0));
 
         glmx::transform offset;
-        offset.v.x = x - poses[0].v.x;
-        offset.v.z = z - poses[0].v.z;
+        offset.v.x = x - startPose.v().x;
+        offset.v.z = z - startPose.v().z;
         if (glm::abs(rot - originalRot) < rotThreshold) {
             offset.q = glm::identity<glm::quat>();
         }
@@ -77,19 +82,19 @@ struct Animation {
             offset.q = glm::angleAxis(rot - originalRot, glm::vec3(0, 1, 0));
         }
 
-        for (int f = 1; f < poses.size(); f++) {
-            glm::vec3 dv = poses[f].v - poses[0].v;
+        for (int f = 1; f < clip.numFrames; f++) {
+            glmx::pose_view curPose = clip.getFrame(f);
+            glm::vec3 dv = curPose.v() - startPose.v();
             dv.y = 0;
             dv = offset.q * dv;
-            poses[f].v.x = poses[0].v.x + dv.x + offset.v.x;
-            poses[f].v.z = poses[0].v.z + dv.z + offset.v.z;
-            poses[f].q[0] = offset.q * poses[f].q[0];
+            curPose.v().x = startPose.v().x + dv.x + offset.v.x;
+            curPose.v().z = startPose.v().z + dv.z + offset.v.z;
+            curPose.q(0) = offset.q * curPose.q(0);
         }
 
-        poses[0].v.x = x;
-        poses[0].v.z = z;
-        poses[0].q[0] = offset.q * poses[0].q[0];
-
+        startPose.v().x = x;
+        startPose.v().z = z;
+        startPose.q(0) = offset.q * startPose.q(0);
     }
 };
 
@@ -161,7 +166,7 @@ public:
     template <class T>
     T* get(Ref<T> ref);
 
-    Ref<Animation> addAnimation(const std::string& name, nonstd::span<glmx::pose> poses, int fps=30);
+    Ref<Animation> addAnimation(const std::string& name, MotionClipView clip, int fps=30);
     Ref<AnimState> addState(const std::string& name, Ref<Animation> anim);
 
     Ref<AnimTransition> addTransition(const std::string& name,
@@ -188,7 +193,7 @@ public:
         currentState = state;
         currentTransition = {};
         currentAnim = *anims.get(states.get(state)->animation);
-        currentPose = currentAnim.poses[0];
+        currentPose = currentAnim.getFrame(0);
         stateTime = 0.0f;
         transitionTime = 0.0f;
     }
@@ -200,8 +205,8 @@ public:
     const Animation& getCurrentAnim() const { return currentAnim; }
 
     void moveCurrentAnim(glm::vec3 offset) {
-        for (auto& pose : currentAnim.poses) {
-            pose.v += offset;
+        for (int f = 0; f < currentAnim.clip.numFrames; f++) {
+            currentAnim.clip.rootPos(f) += offset;
         }
     }
 

@@ -34,7 +34,9 @@ struct PoseAnimation {
                     glmx::pose p1 = it->second;
                     glmx::pose p2 = std::next(it)->second;
                     float t = (float)(frameIdx - i1) / (float)(i2 - i1);
-                    return slerp(p1, p2, t);
+                    glmx::pose p = p1;
+                    slerp(p1, p2, t, p);
+                    return p;
                 }
             }
             return glmx::pose::empty(poseKeyframes.begin()->second.size());
@@ -70,7 +72,11 @@ public:
         groundMesh = Mesh::makePlane(1000.0f, 100.0f);
 
         // Load BVH file, only copy the tree structure of the human
-        MotionClipData tmpBvh = MotionClipData::loadFromFile("resources/cmu_07_02_1.bvh", 0.01f);
+        BVHData tmpBvh;
+        if (!BVHData::loadFromFile("resources/cmu_07_02_1.bvh", tmpBvh, 0.01f)) {
+            fprintf(stderr, "Cannot load BVH!\n");
+            exit(EXIT_FAILURE);
+        }
         poseTree = tmpBvh.poseTree;
 
         // Create empty pose
@@ -107,16 +113,15 @@ public:
 
         p4 = p2;
 
-        glmx::pose p15 = glmx::slerp(p1, p2, 0.5f);
+        glmx::pose p15 = p1, p25 = p1, p35 = p1, p45 = p1;
+
+        glmx::slerp(p1, p2, 0.5f, p15);
         p15.v.y += 0.3f;
-
-        glmx::pose p25 = glmx::slerp(p2, p3, 0.5f);
+        glmx::slerp(p2, p3, 0.5f, p25);
         p25.v.y += 0.3f;
-
-        glmx::pose p35 = glmx::slerp(p3, p4, 0.5f);
+        glmx::slerp(p3, p4, 0.5f, p35);
         p35.v.y += 0.3f;
-
-        glmx::pose p45 = glmx::slerp(p4, p1, 0.5f);
+        glmx::slerp(p4, p1, 0.5f, p45);
         p45.v.y += 0.3f;
 
         poseAnim.insertFrame(0*12, p1);
@@ -165,7 +170,7 @@ public:
 
     void render() override {
         phongRenderer.queueRender({groundMesh, groundMat, rootTransform->getWorldTransform()});
-        renderMotionClip(phongRenderer, imRenderer, currentPose, poseTree, poseRenderBody);
+        renderMotionClip(phongRenderer, imRenderer, currentPose.getView(), poseTree, poseRenderBody);
 
         phongRenderer.render();
         gizmosRenderer.render();

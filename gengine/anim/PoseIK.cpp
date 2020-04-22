@@ -93,7 +93,11 @@ solveIKSimple(const PoseTree &poseTree, glmx::pose &pose, uint32_t mIdx,
               nonstd::span <uint32_t> relevantJoints,
               nonstd::span<float> jointStiffness,
               glmx::transform mT, LeastSquareMethod lsqMethod) {
-    glmx::pose_euler poseEuler = toEuler(pose, EulOrdXYZs);
+
+    std::vector<glm::vec3> eulerAngles(pose.size());
+    for (int i = 0; i < pose.size(); i++) {
+        eulerAngles[i] = glmx::quatToEuler(pose.q[i], EulOrdXYZs);
+    }
     MatrixXf J = calcEulerJacobian(poseTree, pose, mIdx, relevantJoints, jointStiffness);
     glmx::transform T = calcFK(poseTree, pose, mIdx);
     VectorXf dp(6);
@@ -112,22 +116,27 @@ solveIKSimple(const PoseTree &poseTree, glmx::pose &pose, uint32_t mIdx,
     }
     int c = 0;
     for (uint32_t i : relevantJoints) {
-        assert(i < poseEuler.eulerAngles.size());
-        poseEuler.eulerAngles[i].x += dq[3*c+0] * jointStiffness[c];
-        poseEuler.eulerAngles[i].y += dq[3*c+1] * jointStiffness[c];
-        poseEuler.eulerAngles[i].z += dq[3*c+2] * jointStiffness[c];
+        assert(i < eulerAngles.size());
+        eulerAngles[i].x += dq[3*c+0] * jointStiffness[c];
+        eulerAngles[i].y += dq[3*c+1] * jointStiffness[c];
+        eulerAngles[i].z += dq[3*c+2] * jointStiffness[c];
         c++;
     }
-
-    pose = toQuat(poseEuler);
+    for (int i = 0; i < pose.size(); i++) {
+        pose.q[i] = glmx::eulerToQuat(eulerAngles[i], EulOrdXYZs);
+    }
 }
+
 void
 solveIKSimple(const PoseTree &poseTree, glmx::pose &pose, uint32_t mIdx,
               nonstd::span <uint32_t> relevantJoints,
               nonstd::span<float> jointStiffness,
               glm::vec3 mPos, LeastSquareMethod lsqMethod) {
 
-    glmx::pose_euler poseEuler = toEuler(pose, EulOrdXYZs);
+    std::vector<glm::vec3> eulerAngles(pose.size());
+    for (int i = 0; i < pose.size(); i++) {
+        eulerAngles[i] = glmx::quatToEuler(pose.q[i], EulOrdXYZs);
+    }
     MatrixXf J = calcEulerJacobian(poseTree, pose, mIdx, relevantJoints, jointStiffness)
             .block(0, 0, 3, 3*relevantJoints.size());
     glmx::transform T = calcFK(poseTree, pose, mIdx);
@@ -146,14 +155,16 @@ solveIKSimple(const PoseTree &poseTree, glmx::pose &pose, uint32_t mIdx,
     }
     int c = 0;
     for (uint32_t i : relevantJoints) {
-        assert(i < poseEuler.eulerAngles.size());
-        poseEuler.eulerAngles[i].x += dq[3*c+0] * jointStiffness[c];
-        poseEuler.eulerAngles[i].y += dq[3*c+1] * jointStiffness[c];
-        poseEuler.eulerAngles[i].z += dq[3*c+2] * jointStiffness[c];
+        assert(i < eulerAngles.size());
+        eulerAngles[i].x += dq[3*c+0] * jointStiffness[c];
+        eulerAngles[i].y += dq[3*c+1] * jointStiffness[c];
+        eulerAngles[i].z += dq[3*c+2] * jointStiffness[c];
         c++;
     }
 
-    pose = toQuat(poseEuler);
+    for (int i = 0; i < pose.size(); i++) {
+        pose.q[i] = glmx::eulerToQuat(eulerAngles[i], EulOrdXYZs);
+    }
 }
 
 void

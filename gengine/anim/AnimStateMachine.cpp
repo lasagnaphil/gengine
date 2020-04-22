@@ -7,11 +7,11 @@
 #include <imgui.h>
 #include <iostream>
 
-Ref<Animation> AnimStateMachine::addAnimation(const std::string& name, nonstd::span<glmx::pose> poses, int fps) {
+Ref<Animation> AnimStateMachine::addAnimation(const std::string& name, MotionClipView clip, int fps) {
     auto animRef = anims.make();
     auto anim = anims.get(animRef);
     anim->name = name;
-    anim->poses = std::vector<glmx::pose>(poses.data(), poses.data() + poses.size());
+    anim->clip = MotionClip(clip);
     anim->fps = fps;
     return animRef;
 }
@@ -127,7 +127,7 @@ void AnimStateMachine::stateUpdate(float dt) {
     auto& state = *states.get(currentState);
 
     float frameDt = 1.0f / (float)currentAnim.fps;
-    int animSize = currentAnim.poses.size();
+    int animSize = currentAnim.clip.numFrames;
     float animTime = animSize * frameDt;
 
     auto [nextTransRef, timeSinceTransStart] = selectNextTransition();
@@ -196,7 +196,7 @@ void AnimStateMachine::transitionUpdate(float dt) {
     float u = easeFunc(transitionTime / curTrans.transitionTime);
     p1 = blendAnim1.getFrame(stateTime + transitionTime);
     p2 = blendAnim2.getFrame(transitionTime);
-    currentPose = glmx::slerp(p1, p2, u);
+    glmx::slerp(p1.getView(), p2.getView(), u, currentPose.getView());
 }
 
 void AnimStateMachine::update(float dt) {
