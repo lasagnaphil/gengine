@@ -268,6 +268,7 @@ bool BVHData::loadFromFile(const std::string& filename, BVHData& data, float sca
                             }
                         }
                     }
+                    if (error) break;
                 }
                 finished = true;
                 break;
