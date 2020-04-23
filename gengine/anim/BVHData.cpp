@@ -336,7 +336,7 @@ void BVHData::saveToFile(const std::string& filename, int eulerOrd) {
     for (int f = 0; f < clip.numFrames; f++) {
         glmx::pose_view pose = clip.getFrame(f);
         ofs << pose.v().x << " " << pose.v().y << " " << pose.v().z << " ";
-        for (int i = 0; i < pose.size; i++) {
+        for (int i = 0; i < pose.size(); i++) {
             glm::vec3 e = glmx::quatToEuler(pose.q(i), eulerOrd);
             switch (eulerOrd) {
                 case EulOrdXYZr:
@@ -459,7 +459,7 @@ void BVHData::switchZtoYup() {
     for (int f = 0; f < clip.numFrames; f++) {
         glmx::pose_view pose = clip.getFrame(f);
         pose.v() = glmx::Rx(-M_PI/2) * pose.v();
-        for (int i = 0; i < pose.size; i++) {
+        for (int i = 0; i < pose.size(); i++) {
             pose.q(i) = glmx::Rx(-M_PI/2) * pose.q(i) * glmx::Rx(M_PI/2);
         }
     }
@@ -575,13 +575,13 @@ bool BVHData::checkValidity() {
 }
 
 glmx::pose BVHData::samplePose(float time) {
-    glmx::pose pose = glmx::pose::empty(clip.getFrame(0).size);
+    glmx::pose pose = glmx::pose::empty(clip.getFrame(0).size());
     uint32_t u = time / frameTime;
     if (u <= 0) {
-        pose = clip.getFrame(0);
+        pose = glmx::pose(clip.getFrame(0));
     }
     else if (u >= clip.numFrames - 1) {
-        pose = clip.getFrame(clip.numFrames - 1);
+        pose = glmx::pose(clip.getFrame(clip.numFrames - 1));
     }
     else {
         float t = std::fmod(time, frameTime);

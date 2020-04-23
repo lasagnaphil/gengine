@@ -33,7 +33,7 @@ struct Animation {
         int f = (int)(time / dt);
         int fp = (f + 1) % clip.numFrames;
         float df = (time - (float)f * dt) / dt;
-        glmx::pose newPose = glmx::pose::empty(clip.getFrame(f).size);
+        glmx::pose newPose = glmx::pose::empty(clip.getFrame(f).size());
         glmx::slerp(clip.getFrame(f), clip.getFrame(fp), df, newPose.getView());
         return newPose;
     }

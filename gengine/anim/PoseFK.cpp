@@ -4,7 +4,7 @@
 
 #include "PoseFK.h"
 
-glmx::transform calcFK(const PoseTree &poseTree, const glmx::pose &pose, uint32_t mIdx) {
+glmx::transform calcFK(const PoseTree &poseTree, glmx::const_pose_view pose, uint32_t mIdx) {
     uint32_t i = mIdx;
     if (poseTree[i].isEndSite()) {
         i = poseTree[i].parent;
@@ -18,10 +18,10 @@ glmx::transform calcFK(const PoseTree &poseTree, const glmx::pose &pose, uint32_
             t = glmx::transform(node.offset) * t;
         }
         else {
-            t = glmx::transform(node.offset, pose.q[i]) * t;
+            t = glmx::transform(node.offset, pose.q(i)) * t;
         }
         if (i == 0) {
-            t = glmx::transform(pose.v) * t;
+            t = glmx::transform(pose.v()) * t;
             break;
         }
         else {
@@ -31,11 +31,11 @@ glmx::transform calcFK(const PoseTree &poseTree, const glmx::pose &pose, uint32_
     return t;
 }
 
-std::vector<glmx::transform> calcFK(const PoseTree& poseTree, const glmx::pose& pose) {
+std::vector<glmx::transform> calcFK(const PoseTree& poseTree, glmx::const_pose_view pose) {
     std::vector<glmx::transform> transforms(poseTree.numNodes);
     std::stack<std::tuple<uint32_t, uint32_t>> recursionStack;
 
-    transforms[0] = glmx::transform{pose.v, glm::identity<glm::quat>()};
+    transforms[0] = glmx::transform{pose.v(), glm::identity<glm::quat>()};
     recursionStack.push({0, 0});
 
     while (!recursionStack.empty()) {
@@ -46,7 +46,7 @@ std::vector<glmx::transform> calcFK(const PoseTree& poseTree, const glmx::pose& 
         if (poseTree[idx].isEndSite()) {
             transforms[idx] = transforms[parentIdx] * glmx::transform(node.offset);
         } else {
-            transforms[idx] = transforms[parentIdx] * glmx::transform(node.offset, pose.q[idx]);
+            transforms[idx] = transforms[parentIdx] * glmx::transform(node.offset, pose.q(idx));
         }
 
         for (uint32_t childIdx : node.childJoints) {

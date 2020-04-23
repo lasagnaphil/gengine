@@ -81,7 +81,7 @@ public:
 
         // Create empty pose
         currentPose = glmx::pose::empty(poseTree.numJoints);
-        currentPose.v.y = 1.05f;
+        currentPose.v().y = 1.05f;
 
         // Material of human
         Ref<PhongMaterial> bodyMat = Resources::make<PhongMaterial>();
@@ -103,7 +103,7 @@ public:
     }
 
     void loadHandIKExample(bool addStiffness) {
-        currentPose = glmx::pose(currentPose.v, std::vector<glm::quat>(currentPose.size()));
+        currentPose = glmx::pose(currentPose.v(), std::vector<glm::quat>(currentPose.size()));
         uint32_t leftHandIdx = poseTree.findIdx("LeftHandIndex1");
         uint32_t spine1Idx = poseTree.findIdx("Spine1");
         rootEnabled = false;
@@ -134,7 +134,7 @@ public:
     }
 
     void loadFeetIKExample(bool addStiffness) {
-        currentPose = glmx::pose(currentPose.v, std::vector<glm::quat>(currentPose.size()));
+        currentPose = glmx::pose(currentPose.v(), std::vector<glm::quat>(currentPose.size()));
         uint32_t leftToeBaseIdx = poseTree.findIdx("LeftToeBase");
         rootEnabled = false;
         std::fill_n(jointEnabled.begin(), currentPose.size(), false);
@@ -179,7 +179,7 @@ public:
             }
             if (ray.intersectWithPlane(ikTargetPlane, ikTarget)) {
                 if (ikSettings.type == IKSettings::Jacobian) {
-                    solveIKSimple(poseTree, currentPose, endEffectorJointIdx,
+                    solveIKSimple(poseTree, currentPose.getView(), endEffectorJointIdx,
                             relevantIndices,
                             jointStiffness,
                             ikTarget);
@@ -197,7 +197,7 @@ public:
                     }
                     IKProblem ik = {};
                     ik.targetPos = ikTarget;
-                    ik.targetRot = currentPose.q[leftHandIdx];
+                    ik.targetRot = currentPose.q(leftHandIdx);
                     ik.targetIdx = endEffectorJointIdx;
                     ik.relevantJoints = relevantIndices;
                     ik.jointLimits = jointLimits;
@@ -208,7 +208,7 @@ public:
 
                     solveIK(poseTree, currentPose, ik);
                 }
-                handPos = calcFK(poseTree, currentPose, endEffectorJointIdx).v;
+                handPos = calcFK(poseTree, currentPose.getView(), endEffectorJointIdx).v;
             }
         }
     }
@@ -219,8 +219,8 @@ public:
 
         phongRenderer.render();
 
-        glm::mat4 rootTransMat = glm::translate(currentPose.v) * glm::mat4_cast(currentPose.q[0]);
-        glmx::transform endEffectorTrans = calcFK(poseTree, currentPose, endEffectorJointIdx);
+        glm::mat4 rootTransMat = glm::translate(currentPose.v()) * glm::mat4_cast(currentPose.q(0));
+        glmx::transform endEffectorTrans = calcFK(poseTree, currentPose.getView(), endEffectorJointIdx);
         glm::mat4 endEffectorTransMat = glm::translate(endEffectorTrans.v) * glm::mat4_cast(endEffectorTrans.q);
 
         imRenderer.drawAxisTriad(rootTransMat, 0.05f, 0.5f, false);
@@ -258,11 +258,11 @@ public:
         else if (ikSettings.type == IKSettings::Gradient) {
         }
         if (ImGui::Button("Reset")) {
-            currentPose = glmx::pose(currentPose.v, std::vector<glm::quat>(currentPose.size()));
+            currentPose = glmx::pose(currentPose.v(), std::vector<glm::quat>(currentPose.size()));
         }
 
         static int placeholder = 0;
-        ImGui::SliderFloat3("Hip Position", (float*) &currentPose.v, -1.0f, 1.0f);
+        ImGui::SliderFloat3("Hip Position", (float*) &currentPose.v(), -1.0f, 1.0f);
         ImGui::Text(" Stiffness  Free EE                   Rotation");
         for (uint32_t i = 0; i < poseTree.numJoints; i++) {
             char buff[100];
@@ -283,11 +283,11 @@ public:
 
             ImGui::SameLine();
             auto& node = poseTree[i];
-            glm::vec3 v = glmx::quatToEuler(currentPose.q[i], EulOrdXYZs);
+            glm::vec3 v = glmx::quatToEuler(currentPose.q(i), EulOrdXYZs);
             ImGui::PushItemWidth(ImGui::GetFontSize() * 24);
             ImGui::SliderFloat3(node.name.c_str(), (float*)&v, -M_PI/2, M_PI/2);
             ImGui::PopItemWidth();
-            currentPose.q[i] = glmx::eulerToQuat(v);
+            currentPose.q(i) = glmx::eulerToQuat(v);
         }
         ImGui::End();
 

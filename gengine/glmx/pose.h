@@ -29,19 +29,23 @@
  */
 
 namespace glmx {
-    struct pose_disp;
+    struct pose;
 
     struct pose_view {
         float* v_ptr = nullptr;
         float* q_ptr = nullptr;
-        size_t size = 0;
+        size_t _size = 0;
 
         pose_view() = default;
         pose_view(float* v_ptr, float* q_ptr, size_t size) :
-            v_ptr(v_ptr), q_ptr(q_ptr), size(size) {}
+            v_ptr(v_ptr), q_ptr(q_ptr), _size(size) {}
         pose_view(glm::vec3* v_ptr, glm::quat* q_ptr, size_t size) :
-                v_ptr((float*)v_ptr), q_ptr((float*)q_ptr), size(size) {}
+                v_ptr((float*)v_ptr), q_ptr((float*)q_ptr), _size(size) {}
+        inline pose_view(pose& pose);
 
+        size_t size() const {
+            return _size;
+        }
         glm::vec3& v() {
             return *((glm::vec3*)v_ptr);
         }
@@ -65,18 +69,66 @@ namespace glmx {
         }
     };
 
+    struct const_pose_view {
+        const float* v_ptr = nullptr;
+        const float* q_ptr = nullptr;
+        size_t _size = 0;
+
+        const_pose_view(float* v_ptr, float* q_ptr, size_t size) :
+                v_ptr(v_ptr), q_ptr(q_ptr), _size(size) {}
+        const_pose_view(const glm::vec3* v_ptr, const glm::quat* q_ptr, size_t size) :
+                v_ptr((float*)v_ptr), q_ptr((float*)q_ptr), _size(size) {}
+
+        inline const_pose_view(pose_view view) :
+                v_ptr(view.v_ptr), q_ptr(view.q_ptr), _size(view._size) {}
+
+        inline const_pose_view(const pose& pose);
+
+        size_t size() const {
+            return _size;
+        }
+        glm::vec3& v() {
+            return *((glm::vec3*)v_ptr);
+        }
+
+        const glm::vec3& v() const {
+            return *((glm::vec3*)v_ptr);
+        }
+
+        glm::quat& q(size_t i) {
+            assert(i < size);
+            return ((glm::quat*)q_ptr)[i];
+        }
+
+        const glm::quat& q(size_t i) const {
+            assert(i < size);
+            return ((glm::quat*)q_ptr)[i];
+        }
+
+        glmx::transform getRoot() {
+            return {v(), q(0)};
+        }
+    };
+
+
     struct pose {
-        glm::vec3 v;
-        std::vector<glm::quat> q;
+        glm::vec3 _v;
+        std::vector<glm::quat> _q;
 
         pose() = default;
 
         pose(glm::vec3 rootPos, std::vector<glm::quat> jointRot) :
-                v(rootPos), q(std::move(jointRot)) {}
-        pose(pose_view view) {
-            v = view.v();
+                _v(rootPos), _q(std::move(jointRot)) {}
+
+        explicit pose(pose_view view) {
+            _v = view.v();
             glm::quat* q_ptr = (glm::quat*)view.q_ptr;
-            q = std::vector<glm::quat>(q_ptr, q_ptr + view.size);
+            _q = std::vector<glm::quat>(q_ptr, q_ptr + view.size());
+        }
+        explicit pose(const_pose_view view) {
+            _v = view.v();
+            glm::quat* q_ptr = (glm::quat*)view.q_ptr;
+            _q = std::vector<glm::quat>(q_ptr, q_ptr + view.size());
         }
 
         static pose empty(std::size_t n) {
@@ -84,48 +136,68 @@ namespace glmx {
             return {glm::vec3(0.0f), q};
         }
 
-        size_t size() const { return q.size(); }
+        glm::vec3& v() { return _v; }
+
+        const glm::vec3& v() const { return _v; }
+
+        glm::quat& q(size_t i) {
+            assert(i < size);
+            return _q[i];
+        }
+
+        const glm::quat& q(size_t i) const {
+            assert(i < size);
+            return _q[i];
+        }
+
+        size_t size() const { return _q.size(); }
 
         pose_view getView() {
-            return pose_view(&v, q.data(), q.size());
+            return pose_view(&_v, _q.data(), _q.size());
+        }
+        const_pose_view getConstView() const {
+            return const_pose_view(&_v, _q.data(), _q.size());
         }
 
         glmx::transform getRoot() {
-            return {v, q[0]};
+            return {_v, _q[0]};
         }
     };
 
+    pose_view::pose_view(pose& pose) : pose_view(&pose._v, pose._q.data(), pose._q.size()) {}
+    const_pose_view::const_pose_view(const pose& pose) : const_pose_view(&pose._v, pose._q.data(), pose._q.size()) {}
+
     inline void slerp(pose_view p1, pose_view p2, float alpha, pose_view p3) {
-        assert(p1.size == p2.size && p1.size == p3.size);
+        assert(p1.size() == p2.size() && p1.size() == p3.size());
         p3.v() = (1 - alpha) * p1.v() + alpha * p2.v();
-        for (size_t i = 0; i < p3.size; i++) {
+        for (size_t i = 0; i < p3.size(); i++) {
             p3.q(i) = glm::slerp(p1.q(i), p2.q(i), alpha);
         }
     }
 
     inline void lerp(pose_view p1, pose_view p2, float alpha, pose_view p3) {
-        assert(p1.size == p2.size && p1.size == p3.size);
+        assert(p1.size() == p2.size() && p1.size() == p3.size());
         p3.v() = (1 - alpha) * p1.v() + alpha * p2.v();
-        for (size_t i = 0; i < p3.size; i++) {
+        for (size_t i = 0; i < p3.size(); i++) {
             p3.q(i) = glm::normalize(glm::lerp(p1.q(i), p2.q(i), alpha));
         }
     }
 
     inline void slerp(const pose& p1, const pose& p2, float alpha, pose& p3) {
-        p3.q.resize(p1.size());
+        p3._q.resize(p1.size());
         assert(p1.size() == p2.size());
-        p3.v = (1 - alpha) * p1.v + alpha * p2.v;
+        p3._v = (1 - alpha) * p1._v + alpha * p2._v;
         for (size_t i = 0; i < p3.size(); i++) {
-            p3.q[i] = glm::slerp(p1.q[i], p2.q[i], alpha);
+            p3._q[i] = glm::slerp(p1._q[i], p2._q[i], alpha);
         }
     }
 
     inline void lerp(const pose& p1, const pose& p2, float alpha, pose& p3) {
-        p3.q.resize(p1.size());
+        p3._q.resize(p1.size());
         assert(p1.size() == p2.size());
-        p3.v = (1 - alpha) * p1.v + alpha * p2.v;
+        p3._v = (1 - alpha) * p1._v + alpha * p2._v;
         for (size_t i = 0; i < p3.size(); i++) {
-            p3.q[i] = glm::normalize(glm::lerp(p1.q[i], p2.q[i], alpha));
+            p3._q[i] = glm::normalize(glm::lerp(p1._q[i], p2._q[i], alpha));
         }
     }
 }

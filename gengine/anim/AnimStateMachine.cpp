@@ -244,12 +244,12 @@ void AnimStateMachine::renderImGui(const PoseTree& poseTree) {
     offset.q = glmx::eulerToQuat(v, EulOrdZYXs);
      */
 
-    ImGui::InputFloat3((poseTree[0].name + "_pos").c_str(), (float*)&currentPose.v);
+    ImGui::InputFloat3((poseTree[0].name + "_pos").c_str(), (float*)&currentPose.v());
     for (uint32_t i = 0; i < currentPose.size(); i++) {
         auto& node = poseTree[i];
-        glm::vec3 v = glmx::quatToEuler(currentPose.q[i], EulOrdZYXs);
+        glm::vec3 v = glmx::quatToEuler(currentPose.q(i), EulOrdZYXs);
         ImGui::SliderFloat3(node.name.c_str(), (float*)&v, -M_PI, M_PI);
-        currentPose.q[i] = glmx::eulerToQuat(v, EulOrdZYXs);
+        currentPose.q(i) = glmx::eulerToQuat(v, EulOrdZYXs);
     }
 
     ImGui::End();

@@ -26,7 +26,7 @@ struct MotionClipView {
         float* v_ptr = data + frameIdx * numChannels;
         float* q_ptr = v_ptr + 3;
         std::memcpy(v_ptr, pose.v_ptr, 3*sizeof(float));
-        std::memcpy(q_ptr, pose.q_ptr, 4*pose.size*sizeof(float));
+        std::memcpy(q_ptr, pose.q_ptr, 4*pose.size()*sizeof(float));
     }
 
     glm::vec3& rootPos(uint32_t frameIdx) {
@@ -86,11 +86,11 @@ struct MotionClip {
     static MotionClip fromSinglePose(glmx::pose_view pose_view, uint32_t numFrames) {
         MotionClip clip;
         clip.numFrames = numFrames;
-        clip.numChannels = 3 + 4*pose_view.size;
+        clip.numChannels = 3 + 4*pose_view.size();
         clip.data.resize(clip.numFrames*clip.numChannels);
         for (int f = 0; f < numFrames; f++) {
             clip.getFrame(f).v() = pose_view.v();
-            for (int i = 0; i < pose_view.size; i++) {
+            for (int i = 0; i < pose_view.size(); i++) {
                 clip.getFrame(f).q(i) = pose_view.q(i);
             }
         }
@@ -119,7 +119,7 @@ struct MotionClip {
         float* v_ptr = data.data() + frameIdx * numChannels;
         float* q_ptr = v_ptr + 3;
         std::memcpy(v_ptr, pose.v_ptr, 3*sizeof(float));
-        std::memcpy(q_ptr, pose.q_ptr, 4*pose.size*sizeof(float));
+        std::memcpy(q_ptr, pose.q_ptr, 4*pose.size()*sizeof(float));
     }
 
     glm::vec3& rootPos(uint32_t frameIdx) {

@@ -9,8 +9,8 @@
 #include "glmx/transform.h"
 #include "PoseTree.h"
 
-glmx::transform calcFK(const PoseTree& poseTree, const glmx::pose& pose, uint32_t mIdx);
+glmx::transform calcFK(const PoseTree& poseTree, glmx::const_pose_view pose, uint32_t mIdx);
 
-std::vector<glmx::transform> calcFK(const PoseTree& poseTree, const glmx::pose& pose);
+std::vector<glmx::transform> calcFK(const PoseTree& poseTree, glmx::const_pose_view pose);
 
 #endif //DEEPMIMIC_POSEFK_H

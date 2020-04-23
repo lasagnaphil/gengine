@@ -16,13 +16,13 @@ enum class LeastSquareMethod {
     SVD, QR, Normal
 };
 
-void solveIKSimple(const PoseTree& poseTree, glmx::pose& pose, uint32_t mIdx,
+void solveIKSimple(const PoseTree& poseTree, glmx::pose_view pose, uint32_t mIdx,
                    nonstd::span<uint32_t> relevantJoints,
                    nonstd::span<float> jointStiffness,
                    glm::vec3 mPos,
                    LeastSquareMethod lsqMethod = LeastSquareMethod::SVD);
 
-void solveIKSimple(const PoseTree& poseTree, glmx::pose& pose, uint32_t mIdx,
+void solveIKSimple(const PoseTree& poseTree, glmx::pose_view pose, uint32_t mIdx,
                    nonstd::span<uint32_t> relevantJoints,
                    nonstd::span<float> jointStiffness,
                    glmx::transform mT,
@@ -34,7 +34,7 @@ void solveTwoJointIK(
         glm::vec3 target,
         glm::quat a_gr, glm::quat b_gr, glm::quat& a_lr, glm::quat& b_lr, float eps = 0.01f);
 
-void solveTwoJointIK(const PoseTree& poseTree, glmx::pose& pose,
+void solveTwoJointIK(const PoseTree& poseTree, glmx::pose_view pose,
         uint32_t aIdx, uint32_t bIdx, uint32_t cIdx, glm::vec3 target, float eps = 0.01f);
 
 

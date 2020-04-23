@@ -81,7 +81,7 @@ public:
 
         // Create empty pose
         glmx::pose basePose = glmx::pose::empty(poseTree.numJoints);
-        basePose.v.y = 1.05f;
+        basePose.v().y = 1.05f;
 
         glmx::pose p1 = basePose, p2 = basePose, p3 = basePose, p4 = basePose;
 
@@ -96,33 +96,33 @@ public:
             return glm::rotate(glm::identity<glm::quat>(), glm::radians(z), {0, 0, 1});
         };
 
-        p1.q[LHipJointIdx] = Zrot(-5.0f);
-        p1.q[RHipJointIdx] = Zrot(5.0f);
+        p1.q(LHipJointIdx) = Zrot(-5.0f);
+        p1.q(RHipJointIdx) = Zrot(5.0f);
 
-        p2.q[LeftShoulderIdx] = Zrot(-40.0f);
-        p2.q[RightShoulderIdx] = Zrot(40.0f);
-        p2.q[LeftArmIdx] = Zrot(-40.0f);
-        p2.q[RightArmIdx] = Zrot(40.0f);
-        p2.q[LHipJointIdx] = Zrot(-15.0f);
-        p2.q[RHipJointIdx] = Zrot(15.0f);
+        p2.q(LeftShoulderIdx) = Zrot(-40.0f);
+        p2.q(RightShoulderIdx) = Zrot(40.0f);
+        p2.q(LeftArmIdx) = Zrot(-40.0f);
+        p2.q(RightArmIdx) = Zrot(40.0f);
+        p2.q(LHipJointIdx) = Zrot(-15.0f);
+        p2.q(RHipJointIdx) = Zrot(15.0f);
 
-        p3.q[LeftShoulderIdx] = Zrot(20.0f);
-        p3.q[RightShoulderIdx] = Zrot(-20.0f);
-        p3.q[LeftArmIdx] = Zrot(90.0f);
-        p3.q[RightArmIdx] = Zrot(-90.0f);
+        p3.q(LeftShoulderIdx) = Zrot(20.0f);
+        p3.q(RightShoulderIdx) = Zrot(-20.0f);
+        p3.q(LeftArmIdx) = Zrot(90.0f);
+        p3.q(RightArmIdx) = Zrot(-90.0f);
 
         p4 = p2;
 
         glmx::pose p15 = p1, p25 = p1, p35 = p1, p45 = p1;
 
         glmx::slerp(p1, p2, 0.5f, p15);
-        p15.v.y += 0.3f;
+        p15.v().y += 0.3f;
         glmx::slerp(p2, p3, 0.5f, p25);
-        p25.v.y += 0.3f;
+        p25.v().y += 0.3f;
         glmx::slerp(p3, p4, 0.5f, p35);
-        p35.v.y += 0.3f;
+        p35.v().y += 0.3f;
         glmx::slerp(p4, p1, 0.5f, p45);
-        p45.v.y += 0.3f;
+        p45.v().y += 0.3f;
 
         poseAnim.insertFrame(0*12, p1);
         poseAnim.insertFrame(1*12, p15);
@@ -188,9 +188,9 @@ public:
         glmx::pose pose = poseAnim.getPoseAtFrame(frameIdx);
         for (uint32_t i = 0; i < poseTree.numJoints; i++) {
             auto& node = poseTree[i];
-            glm::vec3 v = glm::eulerAngles(currentPose.q[i]);
+            glm::vec3 v = glm::eulerAngles(currentPose.q(i));
             ImGui::SliderFloat3(node.name.c_str(), (float*)&v, -M_PI, M_PI);
-            currentPose.q[i] = glm::rotate(glm::rotate(glm::rotate(
+            currentPose.q(i) = glm::rotate(glm::rotate(glm::rotate(
                     glm::identity<glm::quat>(), v.x, {1, 0, 0}), v.y, {0, 1, 0}), v.z, {0, 0, 1});
         }
         ImGui::End();

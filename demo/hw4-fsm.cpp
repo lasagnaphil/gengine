@@ -69,7 +69,7 @@ public:
 
         poseTree = walkBVH.poseTree;
         currentPose = glmx::pose::empty(poseTree.numJoints);
-        currentPose.v.y = 1.05f;
+        currentPose.v().y = 1.05f;
 
         poseRenderBody = PoseRenderBody::createAsBoxes(poseTree, 0.05f, bodyMat);
         debugPoseRenderBody1 = PoseRenderBody::createAsBoxes(poseTree, 0.05f, debugBodyMat1);
@@ -237,7 +237,7 @@ public:
 
     void update(float dt) override {
         if (fixCamera) {
-            glm::vec3 cameraPos = currentPose.v;
+            glm::vec3 cameraPos = currentPose.v();
             cameraPos.z += 5.f;
             cameraPos.y += 1.f;
             FlyCamera* camera = dynamic_cast<FlyCamera*>(this->camera.get());
@@ -326,7 +326,7 @@ public:
 
         phongRenderer.render();
 
-        glm::mat4 rootTransMat = glm::translate(currentPose.v) * glm::mat4_cast(currentPose.q[0]);
+        glm::mat4 rootTransMat = glm::translate(currentPose.v()) * glm::mat4_cast(currentPose.q(0));
         imRenderer.drawAxisTriad(rootTransMat, 0.05f, 0.5f, false);
 
         imRenderer.render();

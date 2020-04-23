@@ -217,7 +217,7 @@ public:
             glmx::transform boxTrans;
             boxTrans.v.x = 0.5f * (leftHandTrans.v.x + rightHandTrans.v.x);
             boxTrans.v.y = 0.0f;
-            boxTrans.v.z = pickupPose.v.z - 0.4f;
+            boxTrans.v.z = pickupPose.v().z - 0.4f;
             float theta = atan2(rightHandTrans.v.z - leftHandTrans.v.z, rightHandTrans.v.x - leftHandTrans.v.x);
             boxTrans.q = glm::rotate(-theta, glm::vec3(0, 1, 0));
             box.body.setTransform(boxTrans);
@@ -321,7 +321,7 @@ public:
                 boxTrans.v.x = 0.5f * (leftHandTrans.v.x + rightHandTrans.v.x);
                 boxTrans.v.y = 0.5f * (leftHandTrans.v.y + rightHandTrans.v.y) - 2 * boxSize.y;
                 if (boxTrans.v.y < 0.0f) boxTrans.v.y = 0.0f;
-                boxTrans.v.z = currentPose.v.z - 0.4f;
+                boxTrans.v.z = currentPose.v().z - 0.4f;
                 float theta = atan2(rightHandTrans.v.z - leftHandTrans.v.z, rightHandTrans.v.x - leftHandTrans.v.x);
                 boxTrans.q = glm::rotate(-theta, glm::vec3(0, 1, 0));
                 boxLeftPos = boxTrans.v - boxTrans.q * glm::vec3(boxSize.x + 0.02f, 0, 0);
@@ -383,7 +383,7 @@ public:
         // Update the camera
         if (isCameraFixed && !enableRagdoll) {
             FlyCamera* flyCamera = dynamic_cast<FlyCamera*>(camera.get());
-            glm::vec3 cameraPos = currentPose.v;
+            glm::vec3 cameraPos = currentPose.v();
             cameraPos.y += 0.7f;
             cameraPos.x += 2.5f;
             flyCamera->transform->setPosition(cameraPos);
@@ -461,12 +461,12 @@ public:
         }
 
         if (ImGui::TreeNode("Kinematics")) {
-            ImGui::DragFloat3((poseTree[0].name + " pos").c_str(), (float*)&currentPose.v, 0.01f);
+            ImGui::DragFloat3((poseTree[0].name + " pos").c_str(), (float*)&currentPose.v(), 0.01f);
             for (uint32_t i = 0; i < poseTree.numJoints; i++) {
                 auto& node = poseTree[i];
-                glm::vec3 v = glmx::quatToEuler(currentPose.q[i], EulOrdZYXs);
+                glm::vec3 v = glmx::quatToEuler(currentPose.q(i), EulOrdZYXs);
                 if (ImGui::DragFloat3(node.name.c_str(), (float*)&v, 0.01f)) {
-                    currentPose.q[i] = glmx::eulerToQuat(v);
+                    currentPose.q(i) = glmx::eulerToQuat(v);
                 }
             }
             ImGui::TreePop();
