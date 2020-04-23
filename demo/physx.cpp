@@ -130,21 +130,22 @@ public:
         }
 
         // Prepare motion clip
-        pickupBVH = BVHData::loadFromFile("resources/pick_up.bvh", 0.01f);
-        auto walkBVH = BVHData::loadFromFile("resources/carry.bvh", 0.01f);
+        BVHData::loadFromFile("resources/pick_up.bvh", pickupBVH, 0.01f);
+        BVHData walkBVH;
+        BVHData::loadFromFile("resources/carry.bvh", walkBVH, 0.01f);
 
         //bvh = walkBVH;
 
         poseTree = pickupBVH.poseTree;
         currentPose = glmx::pose::empty(poseTree.numJoints);
 
-        auto pickupPoses = pickupBVH.slice(1, pickupBVH.numFrames);
-        auto idlePoses = std::vector<glmx::pose>(120, pickupBVH.poseStates[pickupBVH.numFrames - 1]);
+        auto pickupPoses = pickupBVH.clip.slice(1, pickupBVH.clip.numFrames-1);
+        auto idlePoses = MotionClip::fromSinglePose(pickupBVH.clip.getFrame(pickupBVH.clip.numFrames - 1), 120);
         // auto walkPoses = walkBVH.slice(240, walkBVH.numFrames);
-        auto walkPoses = walkBVH.slice(1063, 1201);
+        auto walkPoses = walkBVH.clip.slice(1063, 1201);
 
         auto pickupAnim = animFSM.addAnimation("pickup", pickupPoses, 120);
-        auto idleAnim = animFSM.addAnimation("idle", idlePoses, 120);
+        auto idleAnim = animFSM.addAnimation("idle", idlePoses.getView(), 120);
         auto walkAnim = animFSM.addAnimation("walk", walkPoses, 120);
 
         for (Ref<Animation> anim : { pickupAnim, idleAnim, walkAnim })
@@ -361,29 +362,20 @@ public:
             if (enableManipulation) {
                 posePhysicsBody.setPose(currentPose, poseTree);
                 if (enablePhysics) {
-                    bool advanced = world.advance(physicsDt);
-                    if (advanced) {
-                        world.fetchResults();
-                    }
+                    world.simulate(physicsDt);
                 }
                 // posePhysicsBody.getPose(convertedPose, poseTree);
             }
             else if (enableRagdoll) {
                 if (enablePhysics) {
-                    bool advanced = world.advance(physicsDt);
-                    if (advanced) {
-                        world.fetchResults();
-                    }
+                    world.simulate(physicsDt);
                 }
                 posePhysicsBody.getPose(currentPose, poseTree);
             }
             else {
                 posePhysicsBody.setPose(currentPose, poseTree);
                 if (enablePhysics) {
-                    bool advanced = world.advance(physicsDt);
-                    if (advanced) {
-                        world.fetchResults();
-                    }
+                    world.simulate(physicsDt);
                 }
             }
         }
@@ -406,10 +398,10 @@ public:
 
         pbRenderer.queueRender({groundMesh, groundMat, rootTransform->getWorldTransform()});
         if (renderSimple) {
-            renderMotionClip(pbRenderer, imRenderer, currentPose, poseTree, poseRenderBodySimple);
+            renderMotionClip(pbRenderer, imRenderer, currentPose.getView(), poseTree, poseRenderBodySimple);
         }
         else {
-            renderMotionClipComplex(pbRenderer, imRenderer, currentPose, poseTree, poseRenderBody);
+            renderMotionClipComplex(pbRenderer, imRenderer, currentPose.getView(), poseTree, poseRenderBody);
         }
 
         if (enableBox) {
