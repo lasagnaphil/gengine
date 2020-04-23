@@ -12,12 +12,21 @@ struct MotionClipView {
 
     MotionClipView() = default;
 
-    glmx::pose_view getFrameState(uint32_t frameIdx) {
+    glmx::pose_view getFrame(uint32_t frameIdx) {
         assert(frameIdx >= 0);
         assert(frameIdx < numFrames);
         float* v_ptr = data + frameIdx * numChannels;
         float* q_ptr = v_ptr + 3;
         return glmx::pose_view(v_ptr, q_ptr, (numChannels-3)/4);
+    }
+
+    void setFrame(uint32_t frameIdx, glmx::pose_view pose) {
+        assert(frameIdx >= 0);
+        assert(frameIdx < numFrames);
+        float* v_ptr = data + frameIdx * numChannels;
+        float* q_ptr = v_ptr + 3;
+        std::memcpy(v_ptr, pose.v_ptr, 3*sizeof(float));
+        std::memcpy(q_ptr, pose.q_ptr, 4*pose.size*sizeof(float));
     }
 
     glm::vec3& rootPos(uint32_t frameIdx) {
@@ -88,12 +97,29 @@ struct MotionClip {
         return clip;
     }
 
+    static MotionClip empty(uint32_t numChannels, uint32_t numFrames) {
+        MotionClip clip;
+        clip.numChannels = numChannels;
+        clip.numFrames = numFrames;
+        clip.data.resize(clip.numFrames*clip.numChannels);
+        return clip;
+    }
+
     glmx::pose_view getFrame(uint32_t frameIdx) {
         assert(frameIdx >= 0);
         assert(frameIdx < numFrames);
         float* v_ptr = data.data() + frameIdx * numChannels;
         float* q_ptr = v_ptr + 3;
         return glmx::pose_view(v_ptr, q_ptr, (numChannels-3)/4);
+    }
+
+    void setFrame(uint32_t frameIdx, glmx::pose_view pose) {
+        assert(frameIdx >= 0);
+        assert(frameIdx < numFrames);
+        float* v_ptr = data.data() + frameIdx * numChannels;
+        float* q_ptr = v_ptr + 3;
+        std::memcpy(v_ptr, pose.v_ptr, 3*sizeof(float));
+        std::memcpy(q_ptr, pose.q_ptr, 4*pose.size*sizeof(float));
     }
 
     glm::vec3& rootPos(uint32_t frameIdx) {
