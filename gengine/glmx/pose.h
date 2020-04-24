@@ -55,12 +55,12 @@ namespace glmx {
         }
 
         glm::quat& q(size_t i) {
-            assert(i < size);
+            assert(i < _size);
             return ((glm::quat*)q_ptr)[i];
         }
 
         const glm::quat& q(size_t i) const {
-            assert(i < size);
+            assert(i < _size);
             return ((glm::quat*)q_ptr)[i];
         }
 
@@ -96,12 +96,12 @@ namespace glmx {
         }
 
         glm::quat& q(size_t i) {
-            assert(i < size);
+            assert(i < _size);
             return ((glm::quat*)q_ptr)[i];
         }
 
         const glm::quat& q(size_t i) const {
-            assert(i < size);
+            assert(i < _size);
             return ((glm::quat*)q_ptr)[i];
         }
 
@@ -141,12 +141,12 @@ namespace glmx {
         const glm::vec3& v() const { return _v; }
 
         glm::quat& q(size_t i) {
-            assert(i < size);
+            assert(i < _q.size());
             return _q[i];
         }
 
         const glm::quat& q(size_t i) const {
-            assert(i < size);
+            assert(i < _q.size());
             return _q[i];
         }
 
