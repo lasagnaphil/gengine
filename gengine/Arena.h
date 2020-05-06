@@ -85,10 +85,6 @@ struct Ref {
 template <typename T>
 struct Arena {
 
-#if __cplusplus >= 201703L && defined(_GLIBCXX_HAVE_ALIGNED_ALLOC)
-    using ::aligned_alloc;
-#endif
-
 private:
     struct Indices {
         uint32_t nextIndex;
