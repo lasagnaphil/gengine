@@ -7,6 +7,7 @@
 
 #include <glm/vec3.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/transform.hpp>
 
 namespace glmx {
     struct transform {
@@ -28,7 +29,7 @@ namespace glmx {
     };
 
     inline glm::mat4 mat4_cast(const transform& t) {
-        return translate(mat4_cast(t.q), t.v);
+        return glm::translate(t.v) * mat4_cast(t.q);
     }
 
     inline transform operator*(const transform& t1, const transform& t2) {
