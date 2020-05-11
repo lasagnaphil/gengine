@@ -105,7 +105,7 @@ public:
     Arena(uint32_t capacity = 0) :
             _size(0), _capacity(capacity), data(nullptr), indices(capacity), firstAvailable(0)
     {
-        data = (T*)std::aligned_alloc(alignof(T), capacity * sizeof(T));
+        data = (T*)aligned_alloc(alignof(T), capacity * sizeof(T));
         for (uint32_t i = 0; i < capacity; ++i) {
             indices[i].nextIndex = i + 1;
             indices[i].generation = 0;
@@ -127,7 +127,7 @@ public:
         assert (newCapacity >= _capacity);
 
         T* oldData = data;
-        data = (T*)std::aligned_alloc(alignof(T), newCapacity * sizeof(T));
+        data = (T*)aligned_alloc(alignof(T), newCapacity * sizeof(T));
         indices.resize(newCapacity);
 
         // invoke move constructor for filled items

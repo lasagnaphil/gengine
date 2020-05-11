@@ -5,8 +5,10 @@ find_package(Threads REQUIRED)
 find_package(SDL2 REQUIRED)
 
 # GLM
-set(GLM_TEST_ENABLE OFF CACHE BOOL "Turn off GLM tests")
-add_subdirectory(deps/glm)
+if (NOT TARGET glm)
+    set(GLM_TEST_ENABLE OFF CACHE BOOL "Turn off GLM tests")
+    add_subdirectory(deps/glm)
+endif()
 
 # Eigen
 set(EIGEN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/Eigen-3.3.7)
