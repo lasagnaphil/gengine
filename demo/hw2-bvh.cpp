@@ -42,7 +42,7 @@ public:
             std::cerr << "BVH Not Found!" << std::endl;
             exit(1);
         }
-        // motionClipData.removeCMUPhantomJoints();
+        motionClipData.removeCMUPhantomJoints();
 
         motionClipPlayer = BVHMotionClipPlayer(&motionClipData);
 

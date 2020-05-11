@@ -202,6 +202,10 @@ PoseRenderBodyPBR PoseRenderBodyPBR::createAsBoxes(const PoseTree& poseTree, flo
     body.directions[0] = {};
 
     for (int i = 1; i < poseTree.numNodes; i++) {
+        if (poseTree[i].name.find("RIGMESH") != std::string::npos) {
+            body.meshes[i] = {};
+            continue;
+        }
         float offsetLength = glm::length(poseTree[i].offset);
         if (offsetLength > 0) {
             body.meshes[i] = Mesh::makeCube({width, offsetLength, width});

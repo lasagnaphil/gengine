@@ -77,6 +77,15 @@ public:
             fprintf(stderr, "Cannot load BVH!\n");
             exit(EXIT_FAILURE);
         }
+        tmpBvh.removeJoint("LHipJoint");
+        tmpBvh.removeJoint("RHipJoint");
+        tmpBvh.removeJoint("LowerBack");
+        tmpBvh.removeJoint("Neck");
+        tmpBvh.removeJoint("LeftFingerBase");
+        tmpBvh.removeJoint("LThumb");
+        tmpBvh.removeJoint("RightFingerBase");
+        tmpBvh.removeJoint("RThumb");
+
         poseTree = tmpBvh.poseTree;
 
         // Create empty pose

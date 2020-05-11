@@ -215,16 +215,16 @@ bool BVHData::loadFromFile(const std::string& filename, BVHData& data, float sca
                 break;
             }
             case ParseState::Motion: {
-                newLine() >> keyword >> data.clip.numFrames;
+                uint32_t numFrames;
+                newLine() >> keyword >> numFrames;
                 std::string _;
                 newLine() >> keyword >> _ >> data.frameTime;
 
-                data.clip.numChannels = 3 + 4 * data.poseTree.numJoints;
-                data.clip.data.resize(data.clip.numFrames * data.clip.numChannels);
+                data.clip = MotionClip::empty(data.poseTree.numJoints, numFrames);
                 float num;
                 int offset = 0;
                 float* dataPtr = data.clip.data.data();
-                for (int f = 0; f < data.clip.numFrames; f++) {
+                for (int f = 0; f < numFrames; f++) {
                     int rotCount = 0;
                     newLine();
                     glm::quat rot = glm::identity<glm::quat>();
@@ -495,17 +495,13 @@ void BVHData::removeJoint(uint32_t nodeIdx) {
     poseTree.allNodes.erase(poseTree.allNodes.begin() + nodeIdx);
 
     for (int f = 0; f < clip.numFrames; f++) {
-        glmx::pose_view pose = clip.getFrame(f);
-        pose.q(childIdx) = pose.q(nodeIdx) * pose.q(childIdx);
-    }
-
-    for (int f = 0; f < clip.numFrames; f++) {
-        for (int i = 0; i < clip.numChannels - 4; i++) {
-            // TODO
-            fprintf(stderr, "Unimplemented\n");
-            exit(EXIT_FAILURE);
+        if (childIdx < poseTree.numJoints) {
+            glmx::pose_view pose = clip.getFrame(f);
+            pose.q(childIdx) = pose.q(nodeIdx) * pose.q(childIdx);
         }
     }
+
+    clip.removeJoint(nodeIdx);
 
     for (auto& node : poseTree.allNodes) {
         if (node.parent > nodeIdx) {
