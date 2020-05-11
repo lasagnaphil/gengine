@@ -19,15 +19,15 @@ struct MotionClipView {
         assert(frameIdx >= 0);
         assert(frameIdx < numFrames);
         float* v_ptr = data + frameIdx * numChannels;
-        float* q_ptr = v_ptr + 3;
-        return glmx::pose_view(v_ptr, q_ptr, (numChannels-3)/4);
+        float* q_ptr = v_ptr + 4;
+        return glmx::pose_view(v_ptr, q_ptr, numJoints);
     }
 
     void setFrame(uint32_t frameIdx, glmx::pose_view pose) {
         assert(frameIdx >= 0);
         assert(frameIdx < numFrames);
         float* v_ptr = data + frameIdx * numChannels;
-        float* q_ptr = v_ptr + 3;
+        float* q_ptr = v_ptr + 4;
         std::memcpy(v_ptr, pose.v_ptr, 3*sizeof(float));
         std::memcpy(q_ptr, pose.q_ptr, 4*pose.size()*sizeof(float));
     }
@@ -50,8 +50,8 @@ struct MotionClipView {
         assert(frameIdx >= 0);
         assert(frameIdx < numFrames);
         assert(jointIdx >= 0);
-        assert(jointIdx < (numChannels-3)/4);
-        float* q_ptr = data + frameIdx * numChannels + 3 + 4*jointIdx;
+        assert(jointIdx < numJoints);
+        float* q_ptr = data + frameIdx * numChannels + 4 + 4*jointIdx;
         return *((glm::quat*)q_ptr);
     }
 
@@ -59,8 +59,8 @@ struct MotionClipView {
         assert(frameIdx > 0);
         assert(frameIdx < numFrames);
         assert(jointIdx >= 0);
-        assert(jointIdx < (numChannels-3)/4);
-        const float* q_ptr = data + frameIdx * numChannels + 3 + 4*jointIdx;
+        assert(jointIdx < numJoints);
+        const float* q_ptr = data + frameIdx * numChannels + 4 + 4*jointIdx;
         return *((const glm::quat*)q_ptr);
     };
 
@@ -93,7 +93,7 @@ struct MotionClip {
         MotionClip clip;
         clip.numFrames = numFrames;
         clip.numJoints = pose_view.size();
-        clip.numChannels = 3 + 4*pose_view.size();
+        clip.numChannels = 4 + 4*pose_view.size();
         clip.data.resize(clip.numFrames*clip.numChannels);
         for (int f = 0; f < numFrames; f++) {
             clip.getFrame(f).v() = pose_view.v();
@@ -108,7 +108,7 @@ struct MotionClip {
         MotionClip clip;
         clip.numFrames = numFrames;
         clip.numJoints = numJoints;
-        clip.numChannels = 3 + 4*numJoints;
+        clip.numChannels = 4 + 4*numJoints;
         clip.data.resize(clip.numFrames*clip.numChannels);
         return clip;
     }
@@ -117,7 +117,7 @@ struct MotionClip {
         assert(frameIdx >= 0);
         assert(frameIdx < numFrames);
         float* v_ptr = data.data() + frameIdx * numChannels;
-        float* q_ptr = v_ptr + 3;
+        float* q_ptr = v_ptr + 4;
         return glmx::pose_view(v_ptr, q_ptr, numJoints);
     }
 
@@ -126,7 +126,7 @@ struct MotionClip {
         assert(frameIdx < numFrames);
         assert(pose.size() == numJoints);
         float* v_ptr = data.data() + frameIdx * numChannels;
-        float* q_ptr = v_ptr + 3;
+        float* q_ptr = v_ptr + 4;
         std::memcpy(v_ptr, pose.v_ptr, 3*sizeof(float));
         std::memcpy(q_ptr, pose.q_ptr, 4*numJoints*sizeof(float));
     }
@@ -150,7 +150,7 @@ struct MotionClip {
         assert(frameIdx < numFrames);
         assert(jointIdx >= 0);
         assert(jointIdx < numJoints);
-        float* q_ptr = data.data() + frameIdx * numChannels + 3 + 4*jointIdx;
+        float* q_ptr = data.data() + frameIdx * numChannels + 4 + 4*jointIdx;
         return *((glm::quat*)q_ptr);
     }
 
@@ -159,7 +159,7 @@ struct MotionClip {
         assert(frameIdx < numFrames);
         assert(jointIdx >= 0);
         assert(jointIdx < numJoints);
-        const float* q_ptr = data.data() + frameIdx * numChannels + 3 + 4*jointIdx;
+        const float* q_ptr = data.data() + frameIdx * numChannels + 4 + 4*jointIdx;
         return *((const glm::quat*)q_ptr);
     };
 
@@ -184,14 +184,14 @@ struct MotionClip {
             v_ptr[2] = p.v().z;
             int jp = 0;
             for (int j = 0; j < jointIdx; j++) {
-                float* q_ptr = data.data() + f * (numChannels-4) + 3 + 4*j;
+                float* q_ptr = data.data() + f * (numChannels-4) + 4 + 4*j;
                 q_ptr[0] = p.q(j).x;
                 q_ptr[1] = p.q(j).y;
                 q_ptr[2] = p.q(j).z;
                 q_ptr[3] = p.q(j).w;
             }
             for (int j = jointIdx+1; j < numJoints; j++) {
-                float* q_ptr = data.data() + f * (numChannels-4) + 3 + 4*(j-1);
+                float* q_ptr = data.data() + f * (numChannels-4) + 4 + 4*(j-1);
                 q_ptr[0] = p.q(j).x;
                 q_ptr[1] = p.q(j).y;
                 q_ptr[2] = p.q(j).z;

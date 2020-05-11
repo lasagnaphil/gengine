@@ -235,9 +235,13 @@ bool BVHData::loadFromFile(const std::string& filename, BVHData& data, float sca
                             error = true;
                             break;
                         }
-                        if (c < 3) {
+                        if (c < 2) {
                             dataPtr[offset] = num * scale;
                             offset++;
+                        }
+                        else if (c == 2) {
+                            dataPtr[offset] = num * scale;
+                            offset += 2;
                         }
                         else {
                             switch (channelTypeData[c]) {
