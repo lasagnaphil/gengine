@@ -472,9 +472,10 @@ void BVHData::switchZtoYup() {
     }
 }
 
-void BVHData::removeJoint(uint32_t nodeIdx) {
+bool BVHData::removeJoint(uint32_t nodeIdx) {
     if (nodeIdx == (uint32_t)-1) {
         fprintf(stderr, "Tring to remove invalid joint!\n");
+        return false;
     }
 
     auto& node = poseTree[nodeIdx];
@@ -483,7 +484,10 @@ void BVHData::removeJoint(uint32_t nodeIdx) {
     auto& parentNode = poseTree[parentIdx];
 
     uint32_t numChildren = poseTree[nodeIdx].childJoints.size();
-    assert(numChildren == 1 && "Only joints with one child can be removed");
+    if (numChildren != 1) {
+        fprintf(stderr, "Only joints with one child can be removed!\n");
+        return false;
+    }
 
     uint32_t childIdx = poseTree[nodeIdx].childJoints[0];
     poseTree[childIdx].parent = parentIdx;
@@ -524,15 +528,18 @@ void BVHData::removeJoint(uint32_t nodeIdx) {
             i--;
         }
     }
+
+    return true;
 }
 
-void BVHData::removeJoint(const std::string& nodeName) {
+bool BVHData::removeJoint(const std::string& nodeName) {
     uint32_t nodeIdx = poseTree.findIdx(nodeName);
     if (nodeIdx != (uint32_t)-1) {
-        removeJoint(nodeIdx);
+        return removeJoint(nodeIdx);
     }
     else {
         fprintf(stderr, "Trying to remove invalid joint %s!\n", nodeName.c_str());
+        return false;
     }
 }
 
@@ -552,17 +559,19 @@ void BVHData::moveStartingRoot(glmx::transform t) {
     }
 }
 
-void BVHData::removeCMUPhantomJoints() {
-    removeJoint("LHipJoint");
-    removeJoint("RHipJoint");
-    removeJoint("LowerBack");
-    removeJoint("Neck");
-    removeJoint("LeftShoulder");
-    removeJoint("LeftFingerBase");
-    removeJoint("LThumb");
-    removeJoint("RightShoulder");
-    removeJoint("RightFingerBase");
-    removeJoint("RThumb");
+bool BVHData::removeCMUPhantomJoints() {
+    bool success = true;
+    success &= removeJoint("LHipJoint");
+    success &= removeJoint("RHipJoint");
+    success &= removeJoint("LowerBack");
+    success &= removeJoint("Neck");
+    success &= removeJoint("LeftShoulder");
+    success &= removeJoint("LeftFingerBase");
+    success &= removeJoint("LThumb");
+    success &= removeJoint("RightShoulder");
+    success &= removeJoint("RightFingerBase");
+    success &= removeJoint("RThumb");
+    return success;
 }
 
 bool BVHData::checkValidity() {

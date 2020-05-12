@@ -38,11 +38,11 @@ struct BVHData {
 
     void switchZtoYup();
 
-    void removeJoint(uint32_t nodeIdx);
+    bool removeJoint(uint32_t nodeIdx);
 
-    void removeJoint(const std::string& nodeName);
+    bool removeJoint(const std::string& nodeName);
 
-    void removeCMUPhantomJoints();
+    bool removeCMUPhantomJoints();
 
     bool checkValidity();
 
