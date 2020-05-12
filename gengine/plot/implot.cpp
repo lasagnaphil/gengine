@@ -20,7 +20,7 @@
 
 using namespace plt;
 
-ImPlot2DContext ImPlot2DContext::create(float sizeX, float sizeY) {
+ImPlot2DContext ImPlot2DContext::create(float sizeX, float sizeY, ImPlot2DOptions options) {
     ImPlot2DContext ctx;
     ctx.sizeX = sizeX;
     ctx.sizeY = sizeY;
@@ -59,7 +59,7 @@ ImPlot2DContext ImPlot2DContext::create(float sizeX, float sizeY) {
 
     glGenBuffers(1, &ctx.pointVBO);
     glBindBuffer(GL_ARRAY_BUFFER, ctx.pointVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Point2D) * 32768, nullptr, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Point2D) * options.maxPoints, nullptr, GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Point2D), (void*)0);
     glEnableVertexAttribArray(1);
@@ -72,7 +72,7 @@ ImPlot2DContext ImPlot2DContext::create(float sizeX, float sizeY) {
 
     glGenBuffers(1, &ctx.lineVBO);
     glBindBuffer(GL_ARRAY_BUFFER, ctx.lineVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * 32678, nullptr, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * options.maxLines, nullptr, GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), (void*)0);
 

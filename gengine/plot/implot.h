@@ -37,6 +37,11 @@ struct ImPlot2DResult {
     std::optional<uint32_t> clickedLineIdx = {};
 };
 
+struct ImPlot2DOptions {
+    uint32_t maxPoints = 32768;
+    uint32_t maxLines = 32768;
+};
+
 struct ImPlot2DContext {
     std::vector<Point2D> points2D;
     std::vector<Line2D> lines2D;
@@ -69,7 +74,7 @@ struct ImPlot2DContext {
 
     bool autoscaleEnabled = true;
 
-    static ImPlot2DContext create(float sizeX, float sizeY);
+    static ImPlot2DContext create(float sizeX, float sizeY, ImPlot2DOptions options = ImPlot2DOptions());
 
     void plotPoint(const Point2D& point) {
         points2D.push_back(point);
