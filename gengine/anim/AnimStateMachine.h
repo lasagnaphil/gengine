@@ -6,7 +6,7 @@
 #define GENGINE_ANIMSTATEMACHINE_H
 
 #include "gengine/Arena.h"
-#include "gengine/glmx/pose.h"
+#include "glmx/pose.h"
 
 #include <span.hpp>
 #include <unordered_map>

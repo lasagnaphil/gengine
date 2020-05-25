@@ -6,7 +6,7 @@
 #define MOTION_EDITING_POSEDATA_H
 
 #include "gengine/Arena.h"
-#include "gengine/glmx/pose.h"
+#include "glmx/pose.h"
 #include "gengine/anim/PoseTree.h"
 #include "gengine/anim/MotionClip.h"
 

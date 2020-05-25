@@ -11,7 +11,7 @@
 #include <glm/vec3.hpp>
 #include <glm/mat4x4.hpp>
 
-#include "gengine/glmx/rect.h"
+#include "glmx/rect.h"
 #include "gengine/Colors.h"
 #include "gengine/Shader.h"
 

@@ -6,7 +6,7 @@
 #include "gengine/App.h"
 #include "gengine/PhongRenderer.h"
 #include "gengine/FlyCamera.h"
-#include "gengine/glmx/pose.h"
+#include "glmx/pose.h"
 #include "gengine/PoseRenderBody.h"
 #include "gengine/anim/BVHData.h"
 #include "gengine/MotionClipPlayer.h"

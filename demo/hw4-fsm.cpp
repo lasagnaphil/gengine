@@ -7,12 +7,12 @@
 #include "gengine/PhongRenderer.h"
 #include "gengine/DebugRenderer.h"
 #include "gengine/FlyCamera.h"
-#include "gengine/glmx/pose.h"
+#include "glmx/pose.h"
 #include "gengine/PoseRenderBody.h"
 #include "gengine/anim/PoseIK.h"
 #include "gengine/anim/AnimStateMachine.h"
 
-#include "gengine/glmx/euler.h"
+#include "glmx/euler.h"
 
 class MyApp : public App {
 public:

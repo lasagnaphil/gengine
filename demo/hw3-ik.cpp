@@ -7,7 +7,7 @@
 #include "gengine/PhongRenderer.h"
 #include "gengine/DebugRenderer.h"
 #include "gengine/FlyCamera.h"
-#include "gengine/glmx/pose.h"
+#include "glmx/pose.h"
 #include "gengine/PoseRenderBody.h"
 #include "gengine/anim/PoseIK.h"
 #include "gengine/anim/PoseFK.h"
@@ -16,7 +16,7 @@
 #include <glm/ext/quaternion_float.hpp>
 #include <glm/ext/quaternion_trigonometric.hpp>
 
-#include "gengine/glmx/euler.h"
+#include "glmx/euler.h"
 
 class MyApp : public App {
 public:

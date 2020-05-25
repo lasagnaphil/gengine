@@ -5,11 +5,11 @@
 #ifndef GENGINE_INVERSEKINEMATICS_H
 #define GENGINE_INVERSEKINEMATICS_H
 
-#include "gengine/glmx/transform.h"
-#include "gengine/glmx/eigen.h"
-#include "gengine/glmx/euler.h"
+#include "glmx/transform.h"
+#include "glmx/eigen.h"
+#include "glmx/euler.h"
 
-#include "gengine/glmx/pose.h"
+#include "glmx/pose.h"
 #include "BVHData.h"
 
 enum class LeastSquareMethod {

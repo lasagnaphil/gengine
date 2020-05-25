@@ -6,7 +6,7 @@
 #define GENGINE_POSERENDERBODY_H
 
 #include "glmx/pose.h"
-#include "glmx/quat.h"
+#include "glmx/common.h"
 #include "Mesh.h"
 #include "anim/BVHData.h"
 #include "PhongRenderer.h"

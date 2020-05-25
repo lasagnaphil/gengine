@@ -10,3 +10,6 @@
 [submodule "gengine/deps/bitsery"]
 	path = gengine/deps/bitsery
 	url = https://github.com/fraillt/bitsery
+[submodule "gengine/deps/glmx"]
+	path = gengine/deps/glmx
+	url = https://github.com/lasagnaphil/glmx.git

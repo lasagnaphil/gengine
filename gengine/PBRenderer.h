@@ -14,7 +14,7 @@
 #include "Colors.h"
 
 #include <array>
-#include "gengine/glmx/rect.h"
+#include "glmx/rect.h"
 
 // TODO: Add normal texture (needed for normal mapping)
 struct PBRMaterial {

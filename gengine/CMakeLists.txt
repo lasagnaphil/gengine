@@ -10,6 +10,8 @@ if (NOT TARGET glm)
     add_subdirectory(deps/glm)
 endif()
 
+add_subdirectory(deps/glmx)
+
 # Eigen
 set(EIGEN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/Eigen-3.3.7)
 add_library(eigen INTERFACE)
@@ -90,7 +92,7 @@ endif()
 target_include_directories(gengine
         PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../)
 target_link_libraries(gengine
-        ${CMAKE_DL_LIBS} Threads::Threads SDL2::Main glad imgui stb glm eigen tinyxml2
+        ${CMAKE_DL_LIBS} Threads::Threads SDL2::Main glad imgui stb glm glmx eigen tinyxml2
         tinyobjloader span-lite fmt bitsery doctest)
 
 if (GENGINE_ENABLE_PHYSX)
