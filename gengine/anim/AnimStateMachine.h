@@ -5,14 +5,14 @@
 #ifndef GENGINE_ANIMSTATEMACHINE_H
 #define GENGINE_ANIMSTATEMACHINE_H
 
-#include "glmx/pose.h"
-#include "Arena.h"
-#include "PoseTree.h"
+#include "gengine/Arena.h"
+#include "gengine/glmx/pose.h"
 
 #include <span.hpp>
 #include <unordered_map>
 
-#include "anim/MotionClip.h"
+#include "gengine/anim/PoseTree.h"
+#include "gengine/anim/MotionClip.h"
 
 struct Animation {
     std::string name;

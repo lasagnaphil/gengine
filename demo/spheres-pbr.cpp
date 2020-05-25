@@ -1,7 +1,7 @@
-#include <InputManager.h>
-#include "App.h"
-#include "PBRenderer.h"
-#include "FlyCamera.h"
+#include "gengine/InputManager.h"
+#include "gengine/App.h"
+#include "gengine/PBRenderer.h"
+#include "gengine/FlyCamera.h"
 
 class MyApp : public App {
 public:

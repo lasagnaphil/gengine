@@ -2,21 +2,21 @@
 // Created by lasagnaphil on 19. 9. 23..
 //
 
-#include <InputManager.h>
-#include "App.h"
-#include "PhongRenderer.h"
-#include "DebugRenderer.h"
-#include "FlyCamera.h"
-#include "glmx/pose.h"
-#include "PoseRenderBody.h"
-#include "anim/PoseIK.h"
-#include "anim/PoseFK.h"
+#include "gengine/InputManager.h"
+#include "gengine/App.h"
+#include "gengine/PhongRenderer.h"
+#include "gengine/DebugRenderer.h"
+#include "gengine/FlyCamera.h"
+#include "gengine/glmx/pose.h"
+#include "gengine/PoseRenderBody.h"
+#include "gengine/anim/PoseIK.h"
+#include "gengine/anim/PoseFK.h"
 
 #include <glm/ext/quaternion_common.hpp>
 #include <glm/ext/quaternion_float.hpp>
 #include <glm/ext/quaternion_trigonometric.hpp>
 
-#include <glmx/euler.h>
+#include "gengine/glmx/euler.h"
 
 class MyApp : public App {
 public:

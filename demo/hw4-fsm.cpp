@@ -2,17 +2,17 @@
 // Created by lasagnaphil on 19. 11. 6..
 //
 
-#include <InputManager.h>
-#include "App.h"
-#include "PhongRenderer.h"
-#include "DebugRenderer.h"
-#include "FlyCamera.h"
-#include "glmx/pose.h"
-#include "PoseRenderBody.h"
-#include "anim/PoseIK.h"
-#include "anim/AnimStateMachine.h"
+#include "gengine/InputManager.h"
+#include "gengine/App.h"
+#include "gengine/PhongRenderer.h"
+#include "gengine/DebugRenderer.h"
+#include "gengine/FlyCamera.h"
+#include "gengine/glmx/pose.h"
+#include "gengine/PoseRenderBody.h"
+#include "gengine/anim/PoseIK.h"
+#include "gengine/anim/AnimStateMachine.h"
 
-#include <glmx/euler.h>
+#include "gengine/glmx/euler.h"
 
 class MyApp : public App {
 public:

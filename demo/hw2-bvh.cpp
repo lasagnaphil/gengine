@@ -2,15 +2,14 @@
 // Created by lasagnaphil on 19. 9. 23..
 //
 
-#include <InputManager.h>
-#include "App.h"
-#include "PhongRenderer.h"
-#include "GizmosRenderer.h"
-#include "FlyCamera.h"
-#include "glmx/pose.h"
-#include "PoseRenderBody.h"
-#include "anim/BVHData.h"
-#include "MotionClipPlayer.h"
+#include "gengine/InputManager.h"
+#include "gengine/App.h"
+#include "gengine/PhongRenderer.h"
+#include "gengine/FlyCamera.h"
+#include "gengine/glmx/pose.h"
+#include "gengine/PoseRenderBody.h"
+#include "gengine/anim/BVHData.h"
+#include "gengine/MotionClipPlayer.h"
 
 #include <map>
 #include <glm/gtx/euler_angles.hpp>

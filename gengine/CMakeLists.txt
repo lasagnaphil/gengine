@@ -88,7 +88,7 @@ endif()
 
 # include/linking
 target_include_directories(gengine
-        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../)
 target_link_libraries(gengine
         ${CMAKE_DL_LIBS} Threads::Threads SDL2::Main glad imgui stb glm eigen tinyxml2
         tinyobjloader span-lite fmt bitsery doctest)

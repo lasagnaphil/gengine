@@ -6,12 +6,12 @@
 
 #include <glad/glad.h>
 #include <fmt/core.h>
-#include <Shader.h>
 #include <glm/gtc/matrix_transform.hpp>
-#include "shaders/plot_point2d.vert.h"
-#include "shaders/plot_point2d.frag.h"
-#include "shaders/plot_line2d.vert.h"
-#include "shaders/plot_line2d.frag.h"
+#include "gengine/Shader.h"
+#include "gengine/shaders/plot_point2d.vert.h"
+#include "gengine/shaders/plot_point2d.frag.h"
+#include "gengine/shaders/plot_line2d.vert.h"
+#include "gengine/shaders/plot_line2d.frag.h"
 #include <imgui.h>
 #include <SDL2/SDL_mouse.h>
 

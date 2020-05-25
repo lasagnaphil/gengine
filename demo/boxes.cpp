@@ -5,11 +5,11 @@
 #define _DEBUG
 
 #include <iostream>
-#include <InputManager.h>
-#include "App.h"
-#include "PhongRenderer.h"
-#include "GizmosRenderer.h"
-#include "FlyCamera.h"
+#include "gengine/InputManager.h"
+#include "gengine/App.h"
+#include "gengine/PhongRenderer.h"
+#include "gengine/GizmosRenderer.h"
+#include "gengine/FlyCamera.h"
 
 class MyApp : public App {
 public:

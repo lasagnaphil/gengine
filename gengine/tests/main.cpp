@@ -5,7 +5,7 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
 
-#include "Arena.h"
+#include "gengine/Arena.h"
 
 struct alignas(16) Obj {
     int a, b, c, d;

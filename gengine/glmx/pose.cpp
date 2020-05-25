@@ -2,9 +2,8 @@
 // Created by lasagnaphil on 19. 6. 19.
 //
 
-#include "pose.h"
-#include "anim/BVHData.h"
-#include "Utils.h"
+#include "gengine/glmx/pose.h"
+#include "gengine/anim/BVHData.h"
 #include <imgui.h>
 
 namespace glmx {

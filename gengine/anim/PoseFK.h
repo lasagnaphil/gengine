@@ -5,9 +5,9 @@
 #ifndef DEEPMIMIC_POSEFK_H
 #define DEEPMIMIC_POSEFK_H
 
-#include "glmx/pose.h"
-#include "glmx/transform.h"
-#include "PoseTree.h"
+#include "gengine/glmx/pose.h"
+#include "gengine/glmx/transform.h"
+#include "gengine/anim/PoseTree.h"
 
 glmx::transform calcFK(const PoseTree& poseTree, glmx::const_pose_view pose, uint32_t mIdx);
 

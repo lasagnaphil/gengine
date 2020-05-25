@@ -2,8 +2,8 @@
 // Created by lasagnaphil on 19. 11. 6..
 //
 
-#include <glmx/transform.h>
-#include "AnimStateMachine.h"
+#include "gengine/glmx/transform.h"
+#include "gengine/anim/AnimStateMachine.h"
 #include <imgui.h>
 #include <iostream>
 

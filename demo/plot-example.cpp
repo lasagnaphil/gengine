@@ -2,8 +2,8 @@
 // Created by lasagnaphil on 20. 1. 1..
 //
 
-#include "App.h"
-#include "plot/implot.h"
+#include "gengine/App.h"
+#include "gengine/plot/implot.h"
 #include <fmt/core.h>
 
 struct ExamplePlotApp : public App {

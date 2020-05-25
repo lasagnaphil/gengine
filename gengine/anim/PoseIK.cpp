@@ -4,9 +4,9 @@
 
 #include "PoseIK.h"
 #include "PoseFK.h"
-#include "glmx/pose.h"
-#include <glmx/quat.h>
-#include <glmx/eigen.h>
+#include "gengine/glmx/pose.h"
+#include "gengine/glmx/quat.h"
+#include "gengine/glmx/eigen.h"
 
 #include "Eigen/Dense"
 #include "Eigen/Householder"
