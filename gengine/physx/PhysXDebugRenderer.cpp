@@ -4,10 +4,10 @@
 
 #include "PhysXDebugRenderer.h"
 #include "PhysicsWorld.h"
-#include "Shader.h"
+#include "gengine/Shader.h"
 
-#include "shaders/physx_debug.vert.h"
-#include "shaders/physx_debug.frag.h"
+#include "gengine/shaders/physx_debug.vert.h"
+#include "gengine/shaders/physx_debug.frag.h"
 
 using namespace physx;
 

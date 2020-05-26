@@ -14,8 +14,8 @@
 #include <glad/glad.h>
 #include <span.hpp>
 #include <common/PxRenderBuffer.h>
-#include "Camera.h"
-#include "Shader.h"
+#include "gengine/Camera.h"
+#include "gengine/Shader.h"
 #include "PhysicsWorld.h"
 
 struct PhysXDebugRenderer {

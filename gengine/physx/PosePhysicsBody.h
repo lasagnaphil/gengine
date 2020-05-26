@@ -5,7 +5,7 @@
 #ifndef ANIMATION_PROJECT_POSEPHYSICSBODY_H
 #define ANIMATION_PROJECT_POSEPHYSICSBODY_H
 
-#include "anim/PoseTree.h"
+#include "gengine/anim/PoseTree.h"
 #include "glmx/pose.h"
 #include "PosePhysicsBodySkel.h"
 #include "PhysicsBody.h"

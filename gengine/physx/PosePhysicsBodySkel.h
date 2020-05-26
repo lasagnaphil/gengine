@@ -8,7 +8,7 @@
 #include <tinyxml2.h>
 
 #include <unordered_map>
-#include <PoseRenderBody.h>
+#include "gengine/PoseRenderBody.h"
 
 static glm::vec3 stringToVec3(const char* str) {
     glm::vec3 v;
