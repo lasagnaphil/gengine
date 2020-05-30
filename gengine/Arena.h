@@ -127,7 +127,13 @@ public:
         assert (newCapacity >= _capacity);
 
         T* oldData = data;
+        // For some strange reason, aligned_alloc sometimes returns NULL on MacOS.
+        // malloc() in MacOS is always 16-byte aligned, so let's just use it instead.
+#ifdef __APPLE__
+        data = (T*)malloc(newCapacity * sizeof(T));
+#else
         data = (T*)aligned_alloc(alignof(T), newCapacity * sizeof(T));
+#endif
         indices.resize(newCapacity);
 
         // invoke move constructor for filled items
@@ -144,7 +150,7 @@ public:
 
         _capacity = newCapacity;
 
-        std::free(oldData);
+        free(oldData);
     }
 
     template <class ...Args>
