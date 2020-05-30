@@ -10,7 +10,9 @@ if (NOT TARGET glm)
     add_subdirectory(deps/glm)
 endif()
 
-add_subdirectory(deps/glmx)
+if (NOT TARGET glmx)
+    add_subdirectory(deps/glmx)
+endif()
 
 # Eigen
 set(EIGEN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/Eigen-3.3.7)
