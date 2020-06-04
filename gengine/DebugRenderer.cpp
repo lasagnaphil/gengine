@@ -14,6 +14,8 @@
 #include "shaders/colorline3d.vert.h"
 #include "shaders/colorline3d.frag.h"
 
+#include <tuple>
+
 void DebugRenderer::init() {
     if (camera == nullptr) {
         fmt::print(stderr, "Camera not attached to PhongRenderer!\n");
