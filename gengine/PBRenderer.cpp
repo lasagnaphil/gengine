@@ -110,6 +110,9 @@ void PBRenderer::render() {
     depthShader->use();
     depthShader->setMat4("dirLightSpaceMatrix", dirLightSpaceMatrix);
 
+    GLint origViewport[4];
+    glGetIntegerv(GL_VIEWPORT, origViewport);
+
     glViewport(0, 0, shadowFramebufferSize.x, shadowFramebufferSize.y);
     glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
     {
@@ -120,8 +123,7 @@ void PBRenderer::render() {
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glViewport(origViewport[0], origViewport[1], origViewport[2], origViewport[3]);
 
     pbrShader->use();
 
