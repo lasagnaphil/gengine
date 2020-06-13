@@ -47,6 +47,8 @@ public:
     bool enableZoom = false;
     bool enableMiddleScroll = false;
 
+    bool enableHideMouse = false;
+
 private:
     float radius = 300.0f;
     float distance = 10.0f;

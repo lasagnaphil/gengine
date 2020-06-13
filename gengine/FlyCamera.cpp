@@ -29,7 +29,9 @@ void FlyCamera::update(float dt) {
 
     bool pressStart = false;
     if (inputMgr->isMouseEntered(SDL_BUTTON_RIGHT)) {
-        SDL_SetRelativeMouseMode(SDL_TRUE);
+        if (enableHideMouse) {
+            SDL_SetRelativeMouseMode(SDL_TRUE);
+        }
         pressStart = true;
     }
     if (inputMgr->isMousePressed(SDL_BUTTON_RIGHT)) {
@@ -71,7 +73,9 @@ void FlyCamera::update(float dt) {
         }
     }
     else if (inputMgr->isMouseExited(SDL_BUTTON_RIGHT)) {
-        SDL_SetRelativeMouseMode(SDL_FALSE);
+        if (enableHideMouse) {
+            SDL_SetRelativeMouseMode(SDL_FALSE);
+        }
     }
 }
 
