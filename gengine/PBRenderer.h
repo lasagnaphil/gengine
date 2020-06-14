@@ -92,7 +92,7 @@ public:
     std::array<PBRSpotLight, NUM_PBR_SPOT_LIGHTS> spotLights;
 
     glmx::box dirLightProjVolume = {
-            {-10.f, -10.f, 0.f}, {10.f, 10.f, 1000.f}
+            {-10.f, -10.f, 0.f}, {10.f, 10.f, 100.f}
     };
     glm::ivec2 shadowFramebufferSize = {2048, 2048};
 
