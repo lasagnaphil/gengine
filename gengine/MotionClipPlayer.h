@@ -13,6 +13,7 @@
 struct GizmosRenderer;
 
 struct MotionClipPlayer {
+    virtual ~MotionClipPlayer() = default;
 protected:
     int currentFrameIdx = 0;
     bool isPlaying = false;

@@ -33,15 +33,14 @@ GLuint compileShader(GLenum type, const GLchar *source) {
     glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
 
     if (status == GL_TRUE) {
-        std::cout << "Shader (type " << type << ") is compiled successfully!" << std::endl;
+        // std::cout << "Shader (type " << type << ") is compiled successfully!" << std::endl;
     } else {
         std::cout << "Shader (type " << type << ") compile failed!" << std::endl;
+        std::cout << "Compile log: " << std::endl;
+        char compileInfo[512];
+        glGetShaderInfoLog(shader, 512, NULL, compileInfo);
+        std::cout << compileInfo << std::endl;
     }
-
-    std::cout << "Compile log: " << std::endl;
-    char compileInfo[512];
-    glGetShaderInfoLog(shader, 512, NULL, compileInfo);
-    std::cout << compileInfo << std::endl;
 
     return shader;
 }
