@@ -9,56 +9,54 @@ http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/n4820.pdf
 //    (See accompanying file ../../LICENSE_1_0.txt or copy at
 //          https://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef TCB_SPAN_HPP_INCLUDED
-#define TCB_SPAN_HPP_INCLUDED
+#ifndef GENGINE_TCB_SPAN_HPP_INCLUDED
+#define GENGINE_TCB_SPAN_HPP_INCLUDED
 
 #include <array>
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
 
-#ifndef TCB_SPAN_NO_EXCEPTIONS
+#ifndef GENGINE_TCB_SPAN_NO_EXCEPTIONS
 // Attempt to discover whether we're being compiled with exception support
 #if !(defined(__cpp_exceptions) || defined(__EXCEPTIONS) || defined(_CPPUNWIND))
-#define TCB_SPAN_NO_EXCEPTIONS
+#define GENGINE_TCB_SPAN_NO_EXCEPTIONS
 #endif
 #endif
 
-#ifndef TCB_SPAN_NO_EXCEPTIONS
+#ifndef GENGINE_TCB_SPAN_NO_EXCEPTIONS
 #include <cstdio>
 #include <stdexcept>
 #endif
 
 // Various feature test macros
 
-#define TCB_SPAN_NAMESPACE_NAME nonstd
-
-#ifndef TCB_SPAN_NAMESPACE_NAME
-#define TCB_SPAN_NAMESPACE_NAME tcb
+#ifndef GENGINE_TCB_SPAN_NAMESPACE_NAME
+#define GENGINE_TCB_SPAN_NAMESPACE_NAME nonstd
 #endif
 
 #if __cplusplus >= 201703L || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)
-#define TCB_SPAN_HAVE_CPP17
+#define GENGINE_TCB_SPAN_HAVE_CPP17
 #endif
 
 #if __cplusplus >= 201402L || (defined(_MSVC_LANG) && _MSVC_LANG >= 201402L)
-#define TCB_SPAN_HAVE_CPP14
+#define GENGINE_TCB_SPAN_HAVE_CPP14
 #endif
 
-namespace TCB_SPAN_NAMESPACE_NAME {
+namespace GENGINE_TCB_SPAN_NAMESPACE_NAME {
 
 // Establish default contract checking behavior
-#if !defined(TCB_SPAN_THROW_ON_CONTRACT_VIOLATION) &&                          \
-    !defined(TCB_SPAN_TERMINATE_ON_CONTRACT_VIOLATION) &&                      \
-    !defined(TCB_SPAN_NO_CONTRACT_CHECKING)
-#if defined(NDEBUG) || !defined(TCB_SPAN_HAVE_CPP14)
-#define TCB_SPAN_NO_CONTRACT_CHECKING
+#if !defined(GENGINE_TCB_SPAN_THROW_ON_CONTRACT_VIOLATION) &&                          \
+    !defined(GENGINE_TCB_SPAN_TERMINATE_ON_CONTRACT_VIOLATION) &&                      \
+    !defined(GENGINE_TCB_SPAN_NO_CONTRACT_CHECKING)
+#if defined(NDEBUG) || !defined(GENGINE_TCB_SPAN_HAVE_CPP14)
+#define GENGINE_TCB_SPAN_NO_CONTRACT_CHECKING
 #else
-#define TCB_SPAN_TERMINATE_ON_CONTRACT_VIOLATION
+#define GENGINE_TCB_SPAN_TERMINATE_ON_CONTRACT_VIOLATION
 #endif
 #endif
 
-#if defined(TCB_SPAN_THROW_ON_CONTRACT_VIOLATION)
+#if defined(GENGINE_TCB_SPAN_THROW_ON_CONTRACT_VIOLATION)
 struct contract_violation_error : std::logic_error {
     explicit contract_violation_error(const char* msg) : std::logic_error(msg)
     {}
@@ -69,82 +67,82 @@ inline void contract_violation(const char* msg)
     throw contract_violation_error(msg);
 }
 
-#elif defined(TCB_SPAN_TERMINATE_ON_CONTRACT_VIOLATION)
+#elif defined(GENGINE_TCB_SPAN_TERMINATE_ON_CONTRACT_VIOLATION)
 [[noreturn]] inline void contract_violation(const char* /*unused*/)
 {
     std::terminate();
 }
 #endif
 
-#if !defined(TCB_SPAN_NO_CONTRACT_CHECKING)
-#define TCB_SPAN_STRINGIFY(cond) #cond
-#define TCB_SPAN_EXPECT(cond)                                                  \
-    cond ? (void) 0 : contract_violation("Expected " TCB_SPAN_STRINGIFY(cond))
+#if !defined(GENGINE_TCB_SPAN_NO_CONTRACT_CHECKING)
+#define GENGINE_TCB_SPAN_STRINGIFY(cond) #cond
+#define GENGINE_TCB_SPAN_EXPECT(cond)                                                  \
+    cond ? (void) 0 : contract_violation("Expected " GENGINE_TCB_SPAN_STRINGIFY(cond))
 #else
-#define TCB_SPAN_EXPECT(cond)
+#define GENGINE_TCB_SPAN_EXPECT(cond)
 #endif
 
-#if defined(TCB_SPAN_HAVE_CPP17) || defined(__cpp_inline_variables)
-#define TCB_SPAN_INLINE_VAR inline
+#if defined(GENGINE_TCB_SPAN_HAVE_CPP17) || defined(__cpp_inline_variables)
+#define GENGINE_TCB_SPAN_INLINE_VAR inline
 #else
-#define TCB_SPAN_INLINE_VAR
+#define GENGINE_TCB_SPAN_INLINE_VAR
 #endif
 
-#if defined(TCB_SPAN_HAVE_CPP14) ||                                            \
+#if defined(GENGINE_TCB_SPAN_HAVE_CPP14) ||                                            \
     (defined(__cpp_constexpr) && __cpp_constexpr >= 201304)
-#define TCB_SPAN_HAVE_CPP14_CONSTEXPR
+#define GENGINE_TCB_SPAN_HAVE_CPP14_CONSTEXPR
 #endif
 
-#if defined(TCB_SPAN_HAVE_CPP14_CONSTEXPR)
-#define TCB_SPAN_CONSTEXPR14 constexpr
+#if defined(GENGINE_TCB_SPAN_HAVE_CPP14_CONSTEXPR)
+#define GENGINE_TCB_SPAN_CONSTEXPR14 constexpr
 #else
-#define TCB_SPAN_CONSTEXPR14
+#define GENGINE_TCB_SPAN_CONSTEXPR14
 #endif
 
-#if defined(TCB_SPAN_HAVE_CPP14_CONSTEXPR) &&                                  \
+#if defined(GENGINE_TCB_SPAN_HAVE_CPP14_CONSTEXPR) &&                                  \
     (!defined(_MSC_VER) || _MSC_VER > 1900)
-#define TCB_SPAN_CONSTEXPR_ASSIGN constexpr
+#define GENGINE_TCB_SPAN_CONSTEXPR_ASSIGN constexpr
 #else
-#define TCB_SPAN_CONSTEXPR_ASSIGN
+#define GENGINE_TCB_SPAN_CONSTEXPR_ASSIGN
 #endif
 
-#if defined(TCB_SPAN_NO_CONTRACT_CHECKING)
-#define TCB_SPAN_CONSTEXPR11 constexpr
+#if defined(GENGINE_TCB_SPAN_NO_CONTRACT_CHECKING)
+#define GENGINE_TCB_SPAN_CONSTEXPR11 constexpr
 #else
-#define TCB_SPAN_CONSTEXPR11 TCB_SPAN_CONSTEXPR14
+#define GENGINE_TCB_SPAN_CONSTEXPR11 GENGINE_TCB_SPAN_CONSTEXPR14
 #endif
 
-#if defined(TCB_SPAN_HAVE_CPP17) || defined(__cpp_deduction_guides)
-#define TCB_SPAN_HAVE_DEDUCTION_GUIDES
+#if defined(GENGINE_TCB_SPAN_HAVE_CPP17) || defined(__cpp_deduction_guides)
+#define GENGINE_TCB_SPAN_HAVE_DEDUCTION_GUIDES
 #endif
 
-#if defined(TCB_SPAN_HAVE_CPP17) || defined(__cpp_lib_byte)
-#define TCB_SPAN_HAVE_STD_BYTE
+#if defined(GENGINE_TCB_SPAN_HAVE_CPP17) || defined(__cpp_lib_byte)
+#define GENGINE_TCB_SPAN_HAVE_STD_BYTE
 #endif
 
-#if defined(TCB_SPAN_HAVE_CPP17) || defined(__cpp_lib_array_constexpr)
-#define TCB_SPAN_HAVE_CONSTEXPR_STD_ARRAY_ETC
+#if defined(GENGINE_TCB_SPAN_HAVE_CPP17) || defined(__cpp_lib_array_constexpr)
+#define GENGINE_TCB_SPAN_HAVE_CONSTEXPR_STD_ARRAY_ETC
 #endif
 
-#if defined(TCB_SPAN_HAVE_CONSTEXPR_STD_ARRAY_ETC)
-#define TCB_SPAN_ARRAY_CONSTEXPR constexpr
+#if defined(GENGINE_TCB_SPAN_HAVE_CONSTEXPR_STD_ARRAY_ETC)
+#define GENGINE_TCB_SPAN_ARRAY_CONSTEXPR constexpr
 #else
-#define TCB_SPAN_ARRAY_CONSTEXPR
+#define GENGINE_TCB_SPAN_ARRAY_CONSTEXPR
 #endif
 
-#ifdef TCB_SPAN_HAVE_STD_BYTE
+#ifdef GENGINE_TCB_SPAN_HAVE_STD_BYTE
 using byte = std::byte;
 #else
 using byte = unsigned char;
 #endif
 
-#if defined(TCB_SPAN_HAVE_CPP17)
-#define TCB_SPAN_NODISCARD [[nodiscard]]
+#if defined(GENGINE_TCB_SPAN_HAVE_CPP17)
+#define GENGINE_TCB_SPAN_NODISCARD [[nodiscard]]
 #else
-#define TCB_SPAN_NODISCARD
+#define GENGINE_TCB_SPAN_NODISCARD
 #endif
 
-TCB_SPAN_INLINE_VAR constexpr std::size_t dynamic_extent = SIZE_MAX;
+GENGINE_TCB_SPAN_INLINE_VAR constexpr std::size_t dynamic_extent = SIZE_MAX;
 
 template <typename ElementType, std::size_t Extent = dynamic_extent>
 class span;
@@ -176,7 +174,7 @@ struct span_storage<E, dynamic_extent> {
 };
 
 // Reimplementation of C++17 std::size() and std::data()
-#if defined(TCB_SPAN_HAVE_CPP17) ||                                            \
+#if defined(GENGINE_TCB_SPAN_HAVE_CPP17) ||                                            \
     defined(__cpp_lib_nonmember_container_access)
 using std::data;
 using std::size;
@@ -216,9 +214,9 @@ constexpr const E* data(std::initializer_list<E> il) noexcept
 {
     return il.begin();
 }
-#endif // TCB_SPAN_HAVE_CPP17
+#endif // GENGINE_TCB_SPAN_HAVE_CPP17
 
-#if defined(TCB_SPAN_HAVE_CPP17) || defined(__cpp_lib_void_t)
+#if defined(GENGINE_TCB_SPAN_HAVE_CPP17) || defined(__cpp_lib_void_t)
 using std::void_t;
 #else
 template <typename...>
@@ -317,16 +315,16 @@ public:
     constexpr span() noexcept
     {}
 
-    TCB_SPAN_CONSTEXPR11 span(pointer ptr, size_type count)
+    GENGINE_TCB_SPAN_CONSTEXPR11 span(pointer ptr, size_type count)
         : storage_(ptr, count)
     {
-        TCB_SPAN_EXPECT(extent == dynamic_extent || count == extent);
+        GENGINE_TCB_SPAN_EXPECT(extent == dynamic_extent || count == extent);
     }
 
-    TCB_SPAN_CONSTEXPR11 span(pointer first_elem, pointer last_elem)
+    GENGINE_TCB_SPAN_CONSTEXPR11 span(pointer first_elem, pointer last_elem)
         : storage_(first_elem, last_elem - first_elem)
     {
-        TCB_SPAN_EXPECT(extent == dynamic_extent ||
+        GENGINE_TCB_SPAN_EXPECT(extent == dynamic_extent ||
                         last_elem - first_elem ==
                             static_cast<std::ptrdiff_t>(extent));
     }
@@ -346,7 +344,7 @@ public:
                       detail::is_container_element_type_compatible<
                           std::array<value_type, N>&, ElementType>::value,
                   int>::type = 0>
-    TCB_SPAN_ARRAY_CONSTEXPR span(std::array<value_type, N>& arr) noexcept
+    GENGINE_TCB_SPAN_ARRAY_CONSTEXPR span(std::array<value_type, N>& arr) noexcept
         : storage_(arr.data(), N)
     {}
 
@@ -356,7 +354,7 @@ public:
                       detail::is_container_element_type_compatible<
                           const std::array<value_type, N>&, ElementType>::value,
                   int>::type = 0>
-    TCB_SPAN_ARRAY_CONSTEXPR span(const std::array<value_type, N>& arr) noexcept
+    GENGINE_TCB_SPAN_ARRAY_CONSTEXPR span(const std::array<value_type, N>& arr) noexcept
         : storage_(arr.data(), N)
     {}
 
@@ -396,21 +394,21 @@ public:
 
     ~span() noexcept = default;
 
-    TCB_SPAN_CONSTEXPR_ASSIGN span&
+    GENGINE_TCB_SPAN_CONSTEXPR_ASSIGN span&
     operator=(const span& other) noexcept = default;
 
     // [span.sub], span subviews
     template <std::size_t Count>
-    TCB_SPAN_CONSTEXPR11 span<element_type, Count> first() const
+    GENGINE_TCB_SPAN_CONSTEXPR11 span<element_type, Count> first() const
     {
-        TCB_SPAN_EXPECT(Count <= size());
+        GENGINE_TCB_SPAN_EXPECT(Count <= size());
         return {data(), Count};
     }
 
     template <std::size_t Count>
-    TCB_SPAN_CONSTEXPR11 span<element_type, Count> last() const
+    GENGINE_TCB_SPAN_CONSTEXPR11 span<element_type, Count> last() const
     {
-        TCB_SPAN_EXPECT(Count <= size());
+        GENGINE_TCB_SPAN_EXPECT(Count <= size());
         return {data() + (size() - Count), Count};
     }
 
@@ -422,32 +420,32 @@ public:
                                                           : dynamic_extent)>;
 
     template <std::size_t Offset, std::size_t Count = dynamic_extent>
-    TCB_SPAN_CONSTEXPR11 subspan_return_t<Offset, Count> subspan() const
+    GENGINE_TCB_SPAN_CONSTEXPR11 subspan_return_t<Offset, Count> subspan() const
     {
-        TCB_SPAN_EXPECT(Offset <= size() &&
+        GENGINE_TCB_SPAN_EXPECT(Offset <= size() &&
                         (Count == dynamic_extent || Offset + Count <= size()));
         return {data() + Offset,
                 Count != dynamic_extent ? Count : size() - Offset};
     }
 
-    TCB_SPAN_CONSTEXPR11 span<element_type, dynamic_extent>
+    GENGINE_TCB_SPAN_CONSTEXPR11 span<element_type, dynamic_extent>
     first(size_type count) const
     {
-        TCB_SPAN_EXPECT(count <= size());
+        GENGINE_TCB_SPAN_EXPECT(count <= size());
         return {data(), count};
     }
 
-    TCB_SPAN_CONSTEXPR11 span<element_type, dynamic_extent>
+    GENGINE_TCB_SPAN_CONSTEXPR11 span<element_type, dynamic_extent>
     last(size_type count) const
     {
-        TCB_SPAN_EXPECT(count <= size());
+        GENGINE_TCB_SPAN_EXPECT(count <= size());
         return {data() + (size() - count), count};
     }
 
-    TCB_SPAN_CONSTEXPR11 span<element_type, dynamic_extent>
+    GENGINE_TCB_SPAN_CONSTEXPR11 span<element_type, dynamic_extent>
     subspan(size_type offset, size_type count = dynamic_extent) const
     {
-        TCB_SPAN_EXPECT(offset <= size() &&
+        GENGINE_TCB_SPAN_EXPECT(offset <= size() &&
                         (count == dynamic_extent || offset + count <= size()));
         return {data() + offset,
                 count == dynamic_extent ? size() - offset : count};
@@ -461,27 +459,27 @@ public:
         return size() * sizeof(element_type);
     }
 
-    TCB_SPAN_NODISCARD constexpr bool empty() const noexcept
+    GENGINE_TCB_SPAN_NODISCARD constexpr bool empty() const noexcept
     {
         return size() == 0;
     }
 
     // [span.elem], span element access
-    TCB_SPAN_CONSTEXPR11 reference operator[](size_type idx) const
+    GENGINE_TCB_SPAN_CONSTEXPR11 reference operator[](size_type idx) const
     {
-        TCB_SPAN_EXPECT(idx < size());
+        GENGINE_TCB_SPAN_EXPECT(idx < size());
         return *(data() + idx);
     }
 
-    TCB_SPAN_CONSTEXPR11 reference front() const
+    GENGINE_TCB_SPAN_CONSTEXPR11 reference front() const
     {
-        TCB_SPAN_EXPECT(!empty());
+        GENGINE_TCB_SPAN_EXPECT(!empty());
         return *data();
     }
 
-    TCB_SPAN_CONSTEXPR11 reference back() const
+    GENGINE_TCB_SPAN_CONSTEXPR11 reference back() const
     {
-        TCB_SPAN_EXPECT(!empty());
+        GENGINE_TCB_SPAN_EXPECT(!empty());
         return *(data() + (size() - 1));
     }
 
@@ -496,22 +494,22 @@ public:
 
     constexpr const_iterator cend() const noexcept { return end(); }
 
-    TCB_SPAN_ARRAY_CONSTEXPR reverse_iterator rbegin() const noexcept
+    GENGINE_TCB_SPAN_ARRAY_CONSTEXPR reverse_iterator rbegin() const noexcept
     {
         return reverse_iterator(end());
     }
 
-    TCB_SPAN_ARRAY_CONSTEXPR reverse_iterator rend() const noexcept
+    GENGINE_TCB_SPAN_ARRAY_CONSTEXPR reverse_iterator rend() const noexcept
     {
         return reverse_iterator(begin());
     }
 
-    TCB_SPAN_ARRAY_CONSTEXPR const_reverse_iterator crbegin() const noexcept
+    GENGINE_TCB_SPAN_ARRAY_CONSTEXPR const_reverse_iterator crbegin() const noexcept
     {
         return const_reverse_iterator(cend());
     }
 
-    TCB_SPAN_ARRAY_CONSTEXPR const_reverse_iterator crend() const noexcept
+    GENGINE_TCB_SPAN_ARRAY_CONSTEXPR const_reverse_iterator crend() const noexcept
     {
         return const_reverse_iterator(cbegin());
     }
@@ -524,7 +522,7 @@ private:
     storage_type storage_{};
 };
 
-#ifdef TCB_SPAN_HAVE_DEDUCTION_GUIDES
+#ifdef GENGINE_TCB_SPAN_HAVE_DEDUCTION_GUIDES
 
 /* Deduction Guides */
 template <class T, size_t N>
@@ -558,13 +556,13 @@ constexpr span<T, N> make_span(T (&arr)[N]) noexcept
 }
 
 template <typename T, std::size_t N>
-TCB_SPAN_ARRAY_CONSTEXPR span<T, N> make_span(std::array<T, N>& arr) noexcept
+GENGINE_TCB_SPAN_ARRAY_CONSTEXPR span<T, N> make_span(std::array<T, N>& arr) noexcept
 {
     return {arr};
 }
 
 template <typename T, std::size_t N>
-TCB_SPAN_ARRAY_CONSTEXPR span<const T, N>
+GENGINE_TCB_SPAN_ARRAY_CONSTEXPR span<const T, N>
 make_span(const std::array<T, N>& arr) noexcept
 {
     return {arr};
@@ -607,22 +605,22 @@ constexpr auto get(span<E, S> s) -> decltype(s[N])
     return s[N];
 }
 
-} // namespace TCB_SPAN_NAMESPACE_NAME
+} // namespace GENGINE_TCB_SPAN_NAMESPACE_NAME
 
 namespace std {
 
 template <typename ElementType, size_t Extent>
-class tuple_size<TCB_SPAN_NAMESPACE_NAME::span<ElementType, Extent>>
+class tuple_size<GENGINE_TCB_SPAN_NAMESPACE_NAME::span<ElementType, Extent>>
     : public integral_constant<size_t, Extent> {};
 
 template <typename ElementType>
-class tuple_size<TCB_SPAN_NAMESPACE_NAME::span<
-    ElementType, TCB_SPAN_NAMESPACE_NAME::dynamic_extent>>; // not defined
+class tuple_size<GENGINE_TCB_SPAN_NAMESPACE_NAME::span<
+    ElementType, GENGINE_TCB_SPAN_NAMESPACE_NAME::dynamic_extent>>; // not defined
 
 template <size_t I, typename ElementType, size_t Extent>
-class tuple_element<I, TCB_SPAN_NAMESPACE_NAME::span<ElementType, Extent>> {
+class tuple_element<I, GENGINE_TCB_SPAN_NAMESPACE_NAME::span<ElementType, Extent>> {
 public:
-    static_assert(Extent != TCB_SPAN_NAMESPACE_NAME::dynamic_extent &&
+    static_assert(Extent != GENGINE_TCB_SPAN_NAMESPACE_NAME::dynamic_extent &&
                       I < Extent,
                   "");
     using type = ElementType;
@@ -630,4 +628,4 @@ public:
 
 } // end namespace std
 
-#endif // TCB_SPAN_HPP_INCLUDED
+#endif // GENGINE_GENGINE_TCB_SPAN_HPP_INCLUDED
