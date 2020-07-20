@@ -29,18 +29,20 @@ struct AppSettings {
         FlyCamera, TrackballCamera
     } camera;
 
+    bool useDisplayFPS = false;
+    int updateFPS = 60;
+
     static AppSettings defaultPhong() {
-        return AppSettings { Renderer::Phong, Camera::FlyCamera };
+        return AppSettings { Renderer::Phong, Camera::FlyCamera, false, 60};
     }
     static AppSettings defaultPBR() {
-        return AppSettings { Renderer::PBR, Camera::FlyCamera };
+        return AppSettings { Renderer::PBR, Camera::FlyCamera, false, 60};
     }
 };
 
 class App {
 public:
-    App(bool useDisplayFPS = false, AppSettings settings = AppSettings::defaultPhong()) :
-        useDisplayFPS(useDisplayFPS), settings(settings) {}
+    App(AppSettings settings = AppSettings::defaultPhong()) : settings(settings) {}
 
     virtual ~App();
 
@@ -53,12 +55,9 @@ public:
     virtual void render();
     virtual void release();
 
-    static constexpr Uint32 msPerFrame = 16;
-
 protected:
     PhongRenderer phongRenderer;
     PBRenderer pbRenderer;
-    GizmosRenderer gizmosRenderer;
     DebugRenderer imRenderer;
 
     AppSettings settings;
@@ -75,10 +74,8 @@ private:
     SDL_GLContext mainContext;
 
     bool quit = false;
-    int updateFPS = 240;
     float dt;
     int fps;
-    bool useDisplayFPS = false;
 };
 
 void APIENTRY glDebugOutput(GLenum source,

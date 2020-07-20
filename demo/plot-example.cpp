@@ -9,7 +9,7 @@
 struct ExamplePlotApp : public App {
     plt::ImPlot2DContext plt;
 
-    ExamplePlotApp() : App(false) {}
+    ExamplePlotApp() : App() {}
 
     void loadResources() override {
         // TODO: need static camera

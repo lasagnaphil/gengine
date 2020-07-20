@@ -23,7 +23,7 @@ struct PhysicsObject {
 
 class MyApp : public App {
 public:
-    MyApp() : App(false, AppSettings::defaultPBR()) {}
+    MyApp() : App(AppSettings::defaultPBR()) {}
 
     void loadResources() override {
         FlyCamera* camera = dynamic_cast<FlyCamera*>(this->camera.get());

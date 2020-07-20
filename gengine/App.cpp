@@ -185,9 +185,6 @@ void App::load() {
         pbRenderer.init();
     }
 
-    gizmosRenderer.setCamera(camera.get());
-    gizmosRenderer.init();
-
     imRenderer.setCamera(camera.get());
     imRenderer.init();
 
@@ -210,13 +207,13 @@ void App::startMainLoop() {
 
         internalProcessInput();
 
-        if (useDisplayFPS) {
+        if (settings.useDisplayFPS) {
             Time previousUpdate = Clock::now();
             internalUpdate(elapsed.count() * 1e-9);
             dt = duration_cast<Ns>(Clock::now() - previousUpdate).count() * 1e-9;
         }
         else {
-            uint64_t nsPerTick = 1e9 / updateFPS;
+            uint64_t nsPerTick = 1e9 / settings.updateFPS;
             while (lag.count() > nsPerTick) {
                 Time previousUpdate = Clock::now();
 
@@ -306,8 +303,8 @@ void App::internalRender() {
     ImGui::Begin("Simple Overlay", &overlayOpen, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar);
     ImGui::Text("Update: %f ms", 1000.f * dt);
     ImGui::Text("Total FPS: %d", fps);
-    if (useDisplayFPS) {
-        ImGui::Text("Update FPS: %d", updateFPS);
+    if (settings.useDisplayFPS) {
+        ImGui::Text("Update FPS: %d", settings.updateFPS);
     }
     ImGui::End();
 

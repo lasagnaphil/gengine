@@ -17,7 +17,7 @@
 
 class MyApp : public App {
 public:
-    MyApp() : App(true) {}
+    MyApp() : App() {}
 
     void loadResources() override {
         FlyCamera* camera = dynamic_cast<FlyCamera*>(this->camera.get());

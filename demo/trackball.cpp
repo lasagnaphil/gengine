@@ -13,7 +13,7 @@
 
 class MyApp : public App {
 public:
-    MyApp() : App(false, AppSettings { AppSettings::Renderer::Phong, AppSettings::Camera::TrackballCamera }) {}
+    MyApp() : App(AppSettings { AppSettings::Renderer::Phong, AppSettings::Camera::TrackballCamera }) {}
 
     void loadResources() override {
         TrackballCamera* camera = dynamic_cast<TrackballCamera*>(camera);
