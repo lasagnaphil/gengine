@@ -87,7 +87,7 @@ public:
         BVHData::loadFromFile("resources/motion/cmu/16_51_run, 90-degree left turn.bvh", runTurnLeftBVH, 0.01f);
         BVHData::loadFromFile("resources/motion/cmu/16_53_run, 90-degree right turn.bvh", runTurnRightBVH, 0.01f);
 
-        auto idlePoses = MotionClip::fromSinglePose(jumpBVH.clip.getFrame(0), 30);
+        auto idlePoses = MotionClip::fromSinglePose(jumpBVH.clip.getFrame(0), 30, walkBVH.clip.frameTime);
         auto walkPoses = walkBVH.clip.slice(0, walkBVH.clip.numFrames - 10);
         auto walkTurnLeftPoses = walkTurnLeftBVH.clip.slice(40, walkTurnLeftBVH.clip.numFrames - 20);
         auto walkTurnRightPoses = walkTurnRightBVH.clip.slice(40, walkTurnRightBVH.clip.numFrames - 20);

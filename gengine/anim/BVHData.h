@@ -28,8 +28,6 @@ struct BVHData {
         Xrot, Yrot, Zrot, Xpos, Ypos, Zpos
     };
 
-    float frameTime;
-
     static bool loadFromFile(const std::string& filename, BVHData& bvhData, float scale = 1.0f);
 
     void print() const;

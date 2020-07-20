@@ -140,7 +140,7 @@ public:
         currentPose = glmx::pose::empty(poseTree.numJoints);
 
         auto pickupPoses = pickupBVH.clip.slice(1, pickupBVH.clip.numFrames-1);
-        auto idlePoses = MotionClip::fromSinglePose(pickupBVH.clip.getFrame(pickupBVH.clip.numFrames - 1), 120);
+        auto idlePoses = MotionClip::fromSinglePose(pickupBVH.clip.getFrame(pickupBVH.clip.numFrames - 1), 120, walkBVH.clip.frameTime);
         // auto walkPoses = walkBVH.slice(240, walkBVH.numFrames);
         auto walkPoses = walkBVH.clip.slice(1063, 1201);
 

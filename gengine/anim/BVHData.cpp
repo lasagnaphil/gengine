@@ -216,11 +216,12 @@ bool BVHData::loadFromFile(const std::string& filename, BVHData& data, float sca
             }
             case ParseState::Motion: {
                 uint32_t numFrames;
+                float frameTime;
                 newLine() >> keyword >> numFrames;
                 std::string _;
-                newLine() >> keyword >> _ >> data.frameTime;
+                newLine() >> keyword >> _ >> frameTime;
 
-                data.clip = MotionClip::empty(data.poseTree.numJoints, numFrames);
+                data.clip = MotionClip::empty(data.poseTree.numJoints, numFrames, frameTime);
                 float num;
                 int offset = 0;
                 float* dataPtr = data.clip.data.data();
@@ -336,7 +337,7 @@ void BVHData::saveToFile(const std::string& filename, int eulerOrd) {
     saveToFileRecursive(0, ofs, 0, eulerOrd);
     ofs << "MOTION" << endl;
     ofs << "Frames: " << clip.numFrames << endl;
-    ofs << "Frame Time: " << frameTime << endl;
+    ofs << "Frame Time: " << clip.frameTime << endl;
     for (int f = 0; f < clip.numFrames; f++) {
         glmx::pose_view pose = clip.getFrame(f);
         ofs << pose.v().x << " " << pose.v().y << " " << pose.v().z << " ";
@@ -585,7 +586,7 @@ bool BVHData::checkValidity() {
 
 glmx::pose BVHData::samplePose(float time) {
     glmx::pose pose = glmx::pose::empty(clip.getFrame(0).size());
-    uint32_t u = time / frameTime;
+    uint32_t u = time / clip.frameTime;
     if (u <= 0) {
         pose = glmx::pose(clip.getFrame(0));
     }
@@ -593,7 +594,7 @@ glmx::pose BVHData::samplePose(float time) {
         pose = glmx::pose(clip.getFrame(clip.numFrames - 1));
     }
     else {
-        float t = std::fmod(time, frameTime);
+        float t = std::fmod(time, clip.frameTime);
         glmx::slerp(clip.getFrame(u), clip.getFrame(u + 1), t, pose.getView());
     }
     return pose;

@@ -10,6 +10,7 @@ struct MotionClipView {
     uint32_t numJoints = 0;
     uint32_t numChannels = 0;
     uint32_t numFrames = 0;
+    float frameTime = 1.f / 60.f;
 
     MotionClipView() = default;
     MotionClipView(float* data, uint32_t numJoints, uint32_t numChannels, uint32_t numFrames)
@@ -81,19 +82,21 @@ struct MotionClip {
     uint32_t numJoints = 0;
     uint32_t numChannels = 0;
     uint32_t numFrames = 0;
+    float frameTime = 1.f / 60.f;
 
     MotionClip() = default;
     MotionClip(MotionClipView view) :
-        numJoints(view.numJoints), numChannels(view.numChannels), numFrames(view.numFrames) {
+        numJoints(view.numJoints), numChannels(view.numChannels), numFrames(view.numFrames), frameTime(view.frameTime) {
 
         this->data = std::vector<float>(view.data, view.data + view.numFrames*view.numChannels);
     }
 
-    static MotionClip fromSinglePose(glmx::pose_view pose_view, uint32_t numFrames) {
+    static MotionClip fromSinglePose(glmx::pose_view pose_view, uint32_t numFrames, float frameTime) {
         MotionClip clip;
         clip.numFrames = numFrames;
         clip.numJoints = pose_view.size();
         clip.numChannels = 4 + 4*pose_view.size();
+        clip.frameTime = frameTime;
         clip.data.resize(clip.numFrames*clip.numChannels);
         for (int f = 0; f < numFrames; f++) {
             clip.getFrame(f).v() = pose_view.v();
@@ -104,11 +107,12 @@ struct MotionClip {
         return clip;
     }
 
-    static MotionClip empty(uint32_t numJoints, uint32_t numFrames) {
+    static MotionClip empty(uint32_t numJoints, uint32_t numFrames, float frameTime) {
         MotionClip clip;
         clip.numFrames = numFrames;
         clip.numJoints = numJoints;
         clip.numChannels = 4 + 4*numJoints;
+        clip.frameTime = frameTime;
         clip.data.resize(clip.numFrames*clip.numChannels);
         return clip;
     }

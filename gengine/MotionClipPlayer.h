@@ -97,7 +97,7 @@ struct BVHMotionClipPlayer : public MotionClipPlayer {
 
     float getFrameTime() override {
         assert(clip);
-        return clip->frameTime;
+        return clip->clip.frameTime;
     }
 
     std::string getName() override {
