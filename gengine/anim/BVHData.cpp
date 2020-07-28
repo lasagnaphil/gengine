@@ -544,22 +544,6 @@ bool BVHData::removeJoint(const std::string& nodeName) {
     }
 }
 
-void BVHData::moveStartingRoot(glm::vec3 pos) {
-    glm::vec3 offset = pos - clip.rootPos(0);
-    for (int f = 0; f < clip.numFrames; f++) {
-        clip.rootPos(f) += offset;
-    }
-}
-
-void BVHData::moveStartingRoot(glmx::transform t) {
-    glmx::transform offset = t / clip.getFrame(0).getRoot();
-    for (int f = 0; f < clip.numFrames; f++) {
-        glmx::pose_view pose = clip.getFrame(f);
-        pose.v() = offset.q * pose.v() + offset.v;
-        pose.q(0) = offset.q * pose.q(0);
-    }
-}
-
 bool BVHData::removeCMUPhantomJoints() {
     bool success = true;
     success &= removeJoint("LHipJoint");
@@ -584,6 +568,7 @@ bool BVHData::checkValidity() {
     return true;
 }
 
+// DEPRECATED
 glmx::pose BVHData::samplePose(float time) {
     glmx::pose pose = glmx::pose::empty(clip.getFrame(0).size());
     uint32_t u = time / clip.frameTime;

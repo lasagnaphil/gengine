@@ -44,10 +44,7 @@ struct BVHData {
 
     bool checkValidity();
 
-    void moveStartingRoot(glm::vec3 pos);
-
-    void moveStartingRoot(glmx::transform t);
-
+    // DEPRECATED
     glmx::pose samplePose(float time);
 
 private:

@@ -206,6 +206,39 @@ struct MotionClip {
         numChannels -= 4;
         data.resize(numFrames*numChannels);
     }
+
+
+    void moveStartingRoot(glm::vec3 pos) {
+        glm::vec3 offset = pos - rootPos(0);
+        for (int f = 0; f < numFrames; f++) {
+            rootPos(f) += offset;
+        }
+    }
+
+    void moveStartingRoot(glmx::transform t) {
+        glmx::transform offset = t / getFrame(0).getRoot();
+        for (int f = 0; f < numFrames; f++) {
+            glmx::pose_view pose = getFrame(f);
+            pose.v() = offset.q * pose.v() + offset.v;
+            pose.q(0) = offset.q * pose.q(0);
+        }
+    }
+
+    glmx::pose samplePose(float time) {
+        glmx::pose pose = glmx::pose::empty(getFrame(0).size());
+        uint32_t u = time / frameTime;
+        if (u <= 0) {
+            pose = glmx::pose(getFrame(0));
+        }
+        else if (u >= numFrames - 1) {
+            pose = glmx::pose(getFrame(numFrames - 1));
+        }
+        else {
+            float t = std::fmod(time, frameTime);
+            glmx::slerp(getFrame(u), getFrame(u + 1), t, pose.getView());
+        }
+        return pose;
+    }
 };
 
 #endif //DEEPMIMIC_MOTIONCLIP_H
