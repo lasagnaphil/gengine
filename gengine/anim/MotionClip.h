@@ -13,8 +13,8 @@ struct MotionClipView {
     float frameTime = 1.f / 60.f;
 
     MotionClipView() = default;
-    MotionClipView(float* data, uint32_t numJoints, uint32_t numChannels, uint32_t numFrames)
-        : data(data), numJoints(numJoints), numChannels(numChannels), numFrames(numFrames) {}
+    MotionClipView(float* data, uint32_t numJoints, uint32_t numChannels, uint32_t numFrames, float frameTime = 1.f / 60.f)
+        : data(data), numJoints(numJoints), numChannels(numChannels), numFrames(numFrames), frameTime(frameTime) {}
 
     glmx::pose_view getFrame(uint32_t frameIdx) {
         assert(frameIdx >= 0);
@@ -22,6 +22,14 @@ struct MotionClipView {
         float* v_ptr = data + frameIdx * numChannels;
         float* q_ptr = v_ptr + 4;
         return glmx::pose_view(v_ptr, q_ptr, numJoints);
+    }
+
+    glmx::const_pose_view getFrame(uint32_t frameIdx) const {
+        assert(frameIdx >= 0);
+        assert(frameIdx < numFrames);
+        const float* v_ptr = data + frameIdx * numChannels;
+        const float* q_ptr = v_ptr + 4;
+        return glmx::const_pose_view(v_ptr, q_ptr, numJoints);
     }
 
     void setFrame(uint32_t frameIdx, glmx::pose_view pose) {
@@ -72,8 +80,58 @@ struct MotionClipView {
         assert(start < end);
         view.data = data + start*numChannels;
         view.numChannels = numChannels;
-        view.numFrames = numFrames;
+        view.numFrames = end - start + 1;
+        view.frameTime = frameTime;
         return view;
+    }
+};
+
+struct ConstMotionClipView {
+    const float* data = nullptr;
+    uint32_t numJoints = 0;
+    uint32_t numChannels = 0;
+    uint32_t numFrames = 0;
+    float frameTime = 1.f / 60.f;
+
+    ConstMotionClipView() = default;
+    ConstMotionClipView(const float* data, uint32_t numJoints, uint32_t numChannels, uint32_t numFrames, float frameTime = 1.f / 60.f)
+            : data(data), numJoints(numJoints), numChannels(numChannels), numFrames(numFrames), frameTime(frameTime) {}
+
+    glmx::const_pose_view getFrame(uint32_t frameIdx) const {
+        assert(frameIdx >= 0);
+        assert(frameIdx < numFrames);
+        const float* v_ptr = data + frameIdx * numChannels;
+        const float* q_ptr = v_ptr + 4;
+        return glmx::const_pose_view(v_ptr, q_ptr, numJoints);
+    }
+
+    const glm::vec3& rootPos(uint32_t frameIdx) const {
+        assert(frameIdx >= 0);
+        assert(frameIdx < numFrames);
+        const float* v_ptr = data + frameIdx * numChannels;
+        return *((const glm::vec3*)v_ptr);
+    }
+
+    const glm::quat& jointRot(uint32_t frameIdx, uint32_t jointIdx) const {
+        assert(frameIdx > 0);
+        assert(frameIdx < numFrames);
+        assert(jointIdx >= 0);
+        assert(jointIdx < numJoints);
+        const float* q_ptr = data + frameIdx * numChannels + 4 + 4*jointIdx;
+        return *((const glm::quat*)q_ptr);
+    };
+
+    ConstMotionClipView slice(uint32_t start, uint32_t end) {
+        assert(start >= 0);
+        assert(end <= numFrames);
+        assert(start < end);
+        return ConstMotionClipView {
+            data + start*numChannels,
+            numJoints,
+            numChannels,
+            end - start + 1,
+            frameTime
+        };
     }
 };
 
@@ -87,7 +145,10 @@ struct MotionClip {
     MotionClip() = default;
     MotionClip(MotionClipView view) :
         numJoints(view.numJoints), numChannels(view.numChannels), numFrames(view.numFrames), frameTime(view.frameTime) {
-
+        this->data = std::vector<float>(view.data, view.data + view.numFrames*view.numChannels);
+    }
+    MotionClip(ConstMotionClipView view) :
+            numJoints(view.numJoints), numChannels(view.numChannels), numFrames(view.numFrames), frameTime(view.frameTime) {
         this->data = std::vector<float>(view.data, view.data + view.numFrames*view.numChannels);
     }
 
@@ -123,6 +184,14 @@ struct MotionClip {
         float* v_ptr = data.data() + frameIdx * numChannels;
         float* q_ptr = v_ptr + 4;
         return glmx::pose_view(v_ptr, q_ptr, numJoints);
+    }
+
+    glmx::const_pose_view getFrame(uint32_t frameIdx) const {
+        assert(frameIdx >= 0);
+        assert(frameIdx < numFrames);
+        const float* v_ptr = data.data() + frameIdx * numChannels;
+        const float* q_ptr = v_ptr + 4;
+        return glmx::const_pose_view(v_ptr, q_ptr, numJoints);
     }
 
     void setFrame(uint32_t frameIdx, glmx::pose_view pose) {
@@ -168,7 +237,11 @@ struct MotionClip {
     };
 
     MotionClipView getView() {
-        return MotionClipView(data.data(), numJoints, numChannels, numFrames);
+        return MotionClipView(data.data(), numJoints, numChannels, numFrames, frameTime);
+    }
+
+    ConstMotionClipView getView() const {
+        return ConstMotionClipView(data.data(), numJoints, numChannels, numFrames, frameTime);
     }
 
     MotionClipView slice(uint32_t start, uint32_t end) {
