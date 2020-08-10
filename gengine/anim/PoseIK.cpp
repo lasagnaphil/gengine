@@ -186,7 +186,13 @@ solveTwoJointIK(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 target,
     float ba_bc_1 = acos(clamp((lat*lat-lab*lab-lcb*lcb) / (-2*lab*lcb), -1.f, 1.f));
 
     vec3 axis0 = normalize(cross(c - a, b - a));
-    vec3 axis1 = normalize(cross(c - a, target - a));
+    vec3 axis1;
+    if (glm::distance2(c, target) <= 1e-6f) {
+        axis1 = glm::vec3(0);
+    }
+    else {
+        axis1 = normalize(cross(c - a, target - a));
+    }
 
     quat r0 = angleAxis(ac_ab_1 - ac_ab_0, inverse(a_gr) * axis0);
     quat r1 = angleAxis(ba_bc_1 - ba_bc_0, inverse(b_gr) * axis0);
