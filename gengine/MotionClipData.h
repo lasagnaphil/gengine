@@ -35,33 +35,13 @@ struct PoseTree {
     const PoseTreeNode& operator[](uint32_t idx) const { return allNodes[idx]; }
     PoseTreeNode& operator[](uint32_t idx) { return allNodes[idx]; }
 
-    const PoseTreeNode* operator[](const std::string& name) const {
-        auto it = std::find_if(allNodes.begin(), allNodes.end(), [&](const PoseTreeNode& node) {
-            return node.name == name;
-        });
-        if (it == allNodes.end()) {
-            return nullptr;
-        }
-        else {
-            return it.base();
-        }
-    }
+    const PoseTreeNode* operator[](const std::string& name) const;
 
     PoseTreeNode* operator[](const std::string& name) {
         return const_cast<PoseTreeNode*>(const_cast<const PoseTree*>(this)->operator[](name));
     }
 
-    uint32_t findIdx(const std::string& name) const {
-        auto it = std::find_if(allNodes.begin(), allNodes.end(), [&](const PoseTreeNode& node) {
-            return node.name == name;
-        });
-        if (it == allNodes.end()) {
-            return (uint32_t) -1;
-        }
-        else {
-            return it - allNodes.begin();
-        }
-    }
+    uint32_t findIdx(const std::string& name) const;
 
     const PoseTreeNode& getRootNode() const {
         return allNodes[0];

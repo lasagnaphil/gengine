@@ -7,10 +7,35 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <algorithm>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/quaternion.hpp>
+
+const PoseTreeNode* PoseTree::operator[](const std::string& name) const {
+    auto it = std::find_if(allNodes.begin(), allNodes.end(), [&](const PoseTreeNode& node) {
+        return node.name == name;
+    });
+    if (it == allNodes.end()) {
+        return nullptr;
+    }
+    else {
+        return it.base();
+    }
+}
+
+uint32_t PoseTree::findIdx(const std::string& name) const {
+    auto it = std::find_if(allNodes.begin(), allNodes.end(), [&](const PoseTreeNode& node) {
+        return node.name == name;
+    });
+    if (it == allNodes.end()) {
+        return (uint32_t) -1;
+    }
+    else {
+        return it - allNodes.begin();
+    }
+}
 
 std::optional<MotionClipData::ChannelType> stringToChannelType(const std::string& name) {
     switch (name[0]) {
